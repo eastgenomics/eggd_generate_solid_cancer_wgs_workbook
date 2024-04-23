@@ -162,6 +162,28 @@ class excel:
         self.write_SNV()
         self.write_SV()
 
+    def set_col_width(self, cell_width, sheet):
+        for cell, width in cell_width:
+            sheet.column_dimensions[cell].width = width
+    
+    def bold_cell(self, cells_to_bold, sheet):
+        for cell in cells_to_bold:
+            sheet[cell].font = Font(bold=True, name=DEFAULT_FONT.name)
+    
+    def colour_cell(self, cells_to_colour, sheet, fill):
+        for cell in cells_to_colour:
+            sheet[cell].fill = fill
+    
+    def all_border(self, row_ranges, sheet):
+        for row in row_ranges:
+            for cells in sheet[row]:
+                for cell in cells:
+                    cell.border = THIN_BORDER
+
+    def lower_border(self, cells_lower_border, sheet):
+        for cell in cells_lower_border:
+            self.soc[cell].border = LOWER_BORDER
+
     def write_soc(self) -> None:
         """
         Write soc sheet
@@ -200,36 +222,26 @@ class excel:
 
         # titles to set to bold
         to_bold = ["A1", "A8", "A12", "A16", "C1"]
-
-        for cell in to_bold:
-            self.soc[cell].font = Font(bold=True, name=DEFAULT_FONT.name)
+        self.bold_cell(to_bold, self.soc)
 
         # set column widths for readability
-        self.soc.column_dimensions["A"].width = 32
-        self.soc.column_dimensions["C"].width = 16
-        self.soc.column_dimensions["D"].width = 26
-        self.soc.column_dimensions["F"].width = 26
+        cell_col_width = (("A", 32), ("C", 16), ("E", 16), ("D", 26), ("F", 26))
+        self.set_col_width(cell_col_width, self.soc)
 
         # colour title cells
         blueFill = PatternFill(patternType="solid", start_color="90EE90")
-
         colour_cells = ["C3", "D3", "E3", "F3", "C4", "D4", "E4", "F4"]
-        for cell in colour_cells:
-            self.soc[cell].fill = blueFill
+        self.colour_cell(colour_cells, self.soc, blueFill)
 
         # set borders around table areas
         row_ranges = [
             "C1:F1", "C2:F2", "C3:F3", "C4:F4",
             "C5:F5", "C6:F6", "C7:F7", "C8:F8",
         ]
-        for row in row_ranges:
-            for cells in self.soc[row]:
-                for cell in cells:
-                    cell.border = THIN_BORDER
+        self.all_border(row_ranges, self.soc)
 
-        cell_lower_border = ["A1", "A8", "A12", "A16"]
-        for cell in cell_lower_border:
-            self.soc[cell].border = LOWER_BORDER
+        cells_lower_border = ["A1", "A8", "A12", "A16"]
+        self.lower_border(cells_lower_border, self.soc)
 
         # add dropdowns
         cells_for_concordance = []
@@ -282,70 +294,65 @@ class excel:
         germline_info = self.read_html_tables(3)
         seq_info = self.read_html_tables(4)
 
+        # PID table
         self.QC.cell(1, 1).value = "=SOC!A2"
-        self.QC.cell(1, 3).value = "Diagnosis Date"
-        self.QC.cell(1, 4).value = "Tumour Received"
-        self.QC.cell(1, 5).value = "Tumour ID"
-        self.QC.cell(1, 6).value = "Presentation"
-        self.QC.cell(1, 7).value = "Diagnosis"
-        self.QC.cell(1, 8).value = "Tumour Site"
-        self.QC.cell(1, 9).value = "Tumour Type"
-        self.QC.cell(1, 10).value = "Germline Sample"
         self.QC.cell(2, 1).value = "=SOC!A3"
         self.QC.cell(3, 1).value = "=SOC!A5"
         self.QC.cell(4, 1).value = "=SOC!A6"
-        self.QC.cell(4, 3).value = "Purity (Histo)"
-        self.QC.cell(4, 4).value = "Purity (Calculated)"
-        self.QC.cell(4, 5).value = "Ploidy"
-        self.QC.cell(4, 6).value = "Total SNVs"
-        self.QC.cell(4, 7).value = "Total Indels"
-        self.QC.cell(4, 8).value = "Total SVs"
-        self.QC.cell(4, 9).value = "TMB"
         self.QC.cell(6, 1).value = "=SOC!A9"
-        self.QC.cell(7, 3).value = "Sample type"
-        self.QC.cell(7, 4).value = "Mean depth, x"
-        self.QC.cell(7, 5).value = "Mapped reads, %"
-        self.QC.cell(7, 6).value = "Chimeric DNA frag, %"
-        self.QC.cell(7, 7).value = "Insert size, bp"
-        self.QC.cell(7, 8).value = "Unevenness, x"
         self.QC.cell(8, 1).value = "QC alerts"
-        self.QC.cell(9, 1).value = "None"  # need dropdown
-        self.QC.cell(2, 3).value = tumor_info[0]["Tumour Diagnosis Date"]
-        self.QC.cell(2, 4).value = germline_info[0]["Clinical Sample Date Time"]
-        self.QC.cell(2, 5).value = tumor_info[0][
-            "Histopathology or SIHMDS LAB ID"
-        ]
-        self.QC.cell(2, 6).value = tumor_info[0]["Presentation"] + " " + tumor_info[0]["Primary or Metastatic"] 
-        # self.QC.cell(7, 2).value = tumor_info['Primary or Metastatic']
-        self.QC.cell(2, 7).value = self.patient_info[0]["Clinical Indication"] 
-        self.QC.cell(2, 8).value = tumor_info[0]["Tumour Topography"] 
-        self.QC.cell(2, 9).value = sample_info[0]["Storage Medium"] + " " + sample_info[0]["Source"]
-        self.QC.cell(2, 10).value = germline_info[0]["Storage Medium"] + "(" + germline_info[0]["Source"] + ")"
+        self.QC.cell(9, 1).value = "None"
 
-        self.QC.cell(5, 3).value = sample_info[0]["Tumour Content"]
-        self.QC.cell(5, 4).value = sample_info[0]["Calculated Tumour Content"]
-        self.QC.cell(5, 5).value = sample_info[0]["Calculated Overall Ploidy"]
-        self.QC.cell(5, 6).value = seq_info[1]["Total somatic SNVs"]
-        self.QC.cell(5, 7).value = seq_info[1]["Total somatic indels"]
-        self.QC.cell(5, 8).value = seq_info[1]["Total somatic SVs"]
+        # table 1
+        table1_keys = ((3, "Diagnosis Date"), (4, "Tumour Received"),
+                       (5, "Tumour ID"), (6, "Presentation"),
+                       (7, "Diagnosis"), (8, "Tumour Site"),
+                       (9, "Tumour Type"),
+                       (10, "Germline Sample"))
+        for cell, key in table1_keys:            
+            self.QC.cell(1, cell).value = key
 
-        self.QC.cell(8, 3).value = seq_info[0]["Sample type"]
-        self.QC.cell(9, 3).value = seq_info[1]["Sample type"]
+        table1_values = ((3, tumor_info[0]["Tumour Diagnosis Date"]),
+                         (4, germline_info[0]["Clinical Sample Date Time"]),
+                         (5, tumor_info[0]["Histopathology or SIHMDS LAB ID"]),
+                         (6, tumor_info[0]["Presentation"] + " " + tumor_info[0]["Primary or Metastatic"]),
+                         (7, self.patient_info[0]["Clinical Indication"]),
+                         (8, tumor_info[0]["Tumour Topography"]),
+                         (9, sample_info[0]["Storage Medium"] + " " + sample_info[0]["Source"]),
+                         (10, germline_info[0]["Storage Medium"] + " (" + germline_info[0]["Source"] + ")"))
+        for cell, value in table1_values:
+            self.QC.cell(2, cell).value = value
 
-        self.QC.cell(8, 4).value = seq_info[0]["Genome-wide coverage mean, x"]
-        self.QC.cell(9, 4).value = seq_info[1]["Genome-wide coverage mean, x"]
+        # table 2
+        table2_keys = ((3, "Purity (Histo)"), (4, "Purity (Calculated)"), (5, "Ploidy"),
+                       (6, "Total SNVs"), (7, "Total Indels"), (8, "Total SVs"), (9, "TMB"))
+        for cell, key in table2_keys:
+            self.QC.cell(4, cell).value = key
+        table2_values = ((3, sample_info[0]["Tumour Content"]),
+                         (4, sample_info[0]["Tumour Content"]),
+                         (5, sample_info[0]["Calculated Overall Ploidy"]),
+                         (6, seq_info[1]["Total somatic SNVs"]),
+                         (7, seq_info[1]["Total somatic indels"]),
+                         (8, seq_info[1]["Total somatic SVs"]))
+        for cell, value in table2_values:
+            self.QC.cell(5, cell).value = value
 
-        self.QC.cell(8, 5).value = seq_info[0]["Mapped reads, %"]
-        self.QC.cell(9, 5).value = seq_info[1]["Mapped reads, %"]
+        # table 3
+        table3_keys = ((3, "Sample type"), (4, "Mean depth, x"),
+                       (5, "Mapped reads, %" ), (6, "Chimeric DNA frag, %"), 
+                       (7, "Insert size, bp"), (8, "Unevenness, x"))
+        for cell, key in table3_keys:
+            self.QC.cell(7, cell).value = key
 
-        self.QC.cell(8, 6).value = seq_info[0]["Chimeric DNA fragments, %"]
-        self.QC.cell(9, 6).value = seq_info[1]["Chimeric DNA fragments, %"]
+        seq_info_title = ["Sample type", "Genome-wide coverage mean, x",
+                          "Mapped reads, %", "Chimeric DNA fragments, %",
+                          "Insert size median, bp",
+                          "Unevenness of local genome coverage, x"]
+        for title in seq_info_title:
+            for i in range(3, 9):
+                self.QC.cell(8, i).value = seq_info[0][title]
+                self.QC.cell(9, i).value = seq_info[1][title]
 
-        self.QC.cell(8, 7).value = seq_info[0]["Insert size median, bp"]
-        self.QC.cell(9, 7).value = seq_info[1]["Insert size median, bp"]
-
-        self.QC.cell(8, 8).value = seq_info[0]["Unevenness of local genome coverage, x"]
-        self.QC.cell(9, 8).value = seq_info[1]["Unevenness of local genome coverage, x"]
 
         # titles to set to bold
         to_bold = [
@@ -354,26 +361,21 @@ class excel:
             "G4", "H4", "I4", "C7", "D7", "E7", "F7",
             "G7", "H7",
         ]
-
-        for cell in to_bold:
-            self.QC[cell].font = Font(bold=True, name=DEFAULT_FONT.name)
+        self.bold_cell(to_bold, self.QC)
 
         # set column widths for readability
-        self.QC.column_dimensions["A"].width = 32
-        self.QC.column_dimensions["B"].width = 8
-        for col in ["C", "D", "E", "F", "G", "H", "I", "J"]:
-            self.QC.column_dimensions[col].width = 22
+        cell_col_width = (("A", 32), ("B", 8), ("C", 22), ("D", 22),
+                          ("E", 22), ("F", 22), ("G", 22), ("H", 22),
+                          ("I", 22), ("J", 22))
+        self.set_col_width(cell_col_width, self.QC)
 
         # set borders around table areas
         row_ranges = [
             "C1:J1", "C2:J2", "C4:I4", "C5:I5",
             "C7:H7", "C8:H8", "C9:H9"
         ]
-        for row in row_ranges:
-            for cells in self.QC[row]:
-                for cell in cells:
-                    cell.border = THIN_BORDER
-        self.QC["A8"].border = LOWER_BORDER
+        self.all_border(row_ranges, self.QC)
+        self.lower_border(["A8"], self.QC)
 
         # add dropdowns
         cells_for_QC = ["A9"]
@@ -403,9 +405,7 @@ class excel:
 
         # titles to set to bold
         to_bold = ["A1", "A8"]
-
-        for cell in to_bold:
-            self.plot[cell].font = Font(bold=True, name=DEFAULT_FONT.name)
+        self.bold_cell(to_bold, self.plot)
 
         # set column widths for readability
         self.plot.column_dimensions["A"].width = 32
@@ -426,13 +426,8 @@ class excel:
 
         # titles to set to bold
         to_bold = ["A1", "A8", "A13"]
-
-        for cell in to_bold:
-            self.signatures[cell].font = Font(
-                bold=True, name=DEFAULT_FONT.name
-            )
-
-        self.signatures["A8"].border = LOWER_BORDER
+        self.bold_cell(to_bold, self.signatures)
+        self.lower_border(["A8"], self.signatures)
 
         # set column widths for readability
         self.signatures.column_dimensions["A"].width = 32
@@ -453,46 +448,41 @@ class excel:
 
         # Germline SNV table
         self.germline.cell(1, 3).value = "Germline SNV"
-        self.germline.cell(2, 3).value = "Gene"
-        self.germline.cell(2, 4).value = "GRCh38 Coordinates"
-        self.germline.cell(2, 5).value = "Variant"
-        self.germline.cell(2, 6).value = "Genotype"
-        self.germline.cell(2, 7).value = "Role in Cacer"
-        self.germline.cell(2, 8).value = "ClinVar"
-        self.germline.cell(2, 9).value = "gnomAD"
-        self.germline.cell(2, 10).value = "Tumour VAF"
+        snv_table_keys = ((3, "Gene"), (4, "GRCh38 Coordinates"),
+                          (5, "Variant"), (6, "Genotype"),
+                          (7, "Role in Cacer"), (8, "ClinVar"),
+                          (9, "gnomAD"), (10, "Tumour VAF"))
+        for cell, key in snv_table_keys:
+            self.germline.cell(2, cell).value = key
+
         for row in range(3, 12):
             ref_row = row + 22
             for col in ["C", "D", "E", "F", "G", "H"]:
                 self.germline[f"{col}{row}"] = f"=germline!{col}{ref_row}"
 
         self.germline.cell(13, 3).value = "Clinical genetics feedback"
-        self.germline.cell(24, 1).value = "Domain"
-        self.germline.cell(24, 2).value = "Origin"
-        self.germline.cell(24, 3).value = "Gene"
-        self.germline.cell(24, 4).value = "GRCh38 coordinates;ref/alt allele"
-        self.germline.cell(24, 5).value = "Transcript"
-        self.germline.cell(24, 6).value = "CDS change and protein change"
-        self.germline.cell(24, 7).value = "Predicted consequences"
-        self.germline.cell(
-            24, 8
-        ).value = "Population germline allele frequency (GE | gnomAD)"
-        self.germline.cell(24, 9).value = "VAF"
-        self.germline.cell(24, 10).value = "Alt allele/total read depth"
-        self.germline.cell(24, 11).value = "Genotype"
-        self.germline.cell(24, 12).value = "COSMIC ID"
-        self.germline.cell(24, 13).value = "ClinVar ID"
-        self.germline.cell(24, 14).value = "ClinVar review status"
-        self.germline.cell(24, 15).value = "ClinVar clinical significance"
-        self.germline.cell(24, 16).value = "Gene mode of action"
-        self.germline.cell(
-            24, 17
-        ).value = "Recruiting Clinical Trials 30 Jan 2023"
-        self.germline.cell(24, 18).value = "PharmGKB_ID"
+
+        domain_talbe_keys = ((1,"Domain"), (2, "Origin"), (3, "Gene"),
+                             (4, "GRCh38 coordinates;ref/alt allele"),
+                             (5, "Transcript"), (6, "CDS change and protein change"),
+                             (7, "Predicted consequences"),
+                             (8, "Population germline allele frequency (GE | gnomAD)"),
+                             (9, "VAF"), (10, "Alt allele/total read depth"),
+                             (11, "Genotype"), (12, "COSMIC ID"), (13, "ClinVar ID"), 
+                             (14, "ClinVar review status"), (15, "ClinVar clinical significance"),
+                             (16, "Gene mode of action"), (17, "Recruiting Clinical Trials 30 Jan 2023"),
+                             (18, "PharmGKB_ID"))
+        for cell, key in domain_talbe_keys:
+            self.germline.cell(24, cell).value = key
 
         # ACMG classification table
         self.germline.cell(40, 1).value = "ACMG classification table"
-        self.germline.cell(41, 1).value = "Theme"
+        ACMG_table_keys = ((1, "Theme"), (2, "Epic"), 
+                           (3, "Description (CanVIG-UK guidelines, v2.17)"),
+                           (4, "Criteria"), (5, "Strength"), (6, "Points"),
+                           (7, "Prelim"), (8, "Check"), (9, "Comments"))
+        for cell, key in ACMG_table_keys:
+            self.germline.cell(41, cell).value = key
         self.germline.cell(42, 1).value = "Population"
         self.germline.cell(46, 1).value = "Computational"
         self.germline.cell(55, 1).value = "Functional"
@@ -503,16 +493,7 @@ class excel:
         self.germline.cell(69, 1).value = "Guidelines:"
         self.germline.cell(70, 1).value = "E-mail:"
         self.germline.cell(71, 1).value = "Confirmations:"
-        self.germline.cell(41, 2).value = "Epic"
-        self.germline.cell(
-            41, 3
-        ).value = "Description (CanVIG-UK guidelines, v2.17)"
-        self.germline.cell(41, 4).value = "Criteria"
-        self.germline.cell(41, 5).value = "Strength"
-        self.germline.cell(41, 6).value = "Points"
-        self.germline.cell(41, 7).value = "Prelim"
-        self.germline.cell(41, 8).value = "Check"
-        self.germline.cell(41, 9).value = "Comments"
+
         self.germline.cell(68, 4).value = "Classification"
         self.germline.cell(
             69, 3
@@ -524,6 +505,7 @@ class excel:
             71, 3
         ).value = "TSO pan-cancer add-on (via specimen update)"
 
+        # Description column
         self.germline.cell(42, 3).value = "4sxb"
         self.germline.cell(
             43, 3
@@ -600,32 +582,17 @@ class excel:
         self.germline.cell(
             67, 3
         ).value = "Variant found in case with an alternate molecular basis"
-        self.germline.cell(42, 4).value = "PS4"
-        self.germline.cell(43, 4).value = "PM2"
-        self.germline.cell(44, 4).value = "BS1"
-        self.germline.cell(45, 4).value = "BA1"
-        self.germline.cell(46, 4).value = "PVS1"
-        self.germline.cell(47, 4).value = "PM4"
-        self.germline.cell(48, 4).value = "PS1"
-        self.germline.cell(49, 4).value = "PM5"
-        self.germline.cell(50, 4).value = "PP3"
-        self.germline.cell(51, 4).value = "BP4:"
-        self.germline.cell(52, 4).value = "BP1"
-        self.germline.cell(53, 4).value = "BP3"
-        self.germline.cell(54, 4).value = "BP7"
-        self.germline.cell(55, 4).value = "PS3"
-        self.germline.cell(56, 4).value = "PM1"
-        self.germline.cell(57, 4).value = "PP2"
-        self.germline.cell(58, 4).value = "BS3"
-        self.germline.cell(59, 4).value = "PP1"
-        self.germline.cell(60, 4).value = "BS4"
-        self.germline.cell(61, 4).value = "PS2"
-        self.germline.cell(62, 4).value = "PM6"
-        self.germline.cell(63, 4).value = "PM3"
-        self.germline.cell(64, 4).value = "BP2"
-        self.germline.cell(65, 4).value = "BS2"
-        self.germline.cell(66, 4).value = "PP4"
-        self.germline.cell(67, 4).value = "BP5"
+
+        # criteria column
+        criteria_col_values = ((42, "PS4"), (43, "PM2"), (44, "BS1"), (45, "BA1"),
+                             (46, "PVS1"), (47, "PM4"), (48, "PS1"), (49, "PM5"),
+                             (50, "PP3"), (51, "BP4"), (52, "BP1"), (53, "BP3"),
+                             (54, "BP7"), (55, "PS3"), (56, "PM1"), (57, "PP2"),
+                             (58, "BS3"), (59, "PP1"), (60, "BS4"), (61, "PS2"),
+                             (62, "PM6"), (63, "PM3"), (64, "BP2"), (65, "BS2"),
+                             (66, "PP4"), (67, "BP5"))
+        for cell, value in criteria_col_values:
+            self.germline.cell(cell, 4).value = value
         # add formula
         for row in range(42, 68):
             self.germline[
@@ -640,19 +607,16 @@ class excel:
             "A69", "A70", "A71", "B41", "C41", "D41",
             "E41", "F41", "G41", "H41", "I41", "D68",
         ]
+        self.bold_cell(to_bold, self.germline)
 
-        for cell in to_bold:
-            self.germline[cell].font = Font(bold=True)
-
-        cell_lower_border = [
+        cells_lower_border = [
             "A8", "C13", "A41", "A45", "A54", "A58",
             "A60", "A62", "A65", "A67", "C45", "C54",
             "C58", "C60", "C62", "C65", "C67", "D67",
             "E67", "F67", "G67", "H67", "I67", "D68",
             "E68", "F68", "G68", "H68", "I68"
         ]
-        for cell in cell_lower_border:
-            self.germline[cell].border = LOWER_BORDER
+        self.lower_border(cells_lower_border, self.germline)
 
         # set column widths for readability
         self.germline.column_dimensions["A"].width = 32
@@ -670,10 +634,7 @@ class excel:
             "D63:I63", "D64:I64", "D65:I65", "D66:I66",
             "D67:I67"
         ]
-        for row in row_ranges:
-            for cells in self.germline[row]:
-                for cell in cells:
-                    cell.border = THIN_BORDER
+        self.all_border(row_ranges, self.germline)
 
         # colour title cells
         blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
@@ -765,24 +726,15 @@ class excel:
             "E66",
             "F66",
         ]
-        for cell in blue_colour_cells:
-            self.germline[cell].fill = blueFill
-        for cell in green_colour_cells:
-            self.germline[cell].fill = greenFill
-        for cell in pink_colour_cells:
-            self.germline[cell].fill = pinkFill
+        self.colour_cell(blue_colour_cells, self.germline, blueFill)
+        self.colour_cell(green_colour_cells,self.germline, greenFill)
+        self.colour_cell(pink_colour_cells, self.germline, pinkFill)
 
         # set column widths for readability
-        self.germline.column_dimensions["A"].width = 36
-        self.germline.column_dimensions["B"].width = 10
-        for col in ["C", "G", "J"]:
-            self.germline.column_dimensions[col].width = 28
-        for col in ["D", "E"]:
-            self.germline.column_dimensions[col].width = 32
-        for col in ["F", "I"]:
-            self.germline.column_dimensions[col].width = 20
-        self.germline.column_dimensions["H"].width = 40
-
+        cell_col_width = (("A", 36), ("B", 10), ("C", 28), ("D", 32),
+                          ("E", 32), ("F", 20), ("G", 28), ("H", 40),
+                          ("I", 20), ("J", 28))
+        self.set_col_width(cell_col_width, self.germline)
         smaller_font = Font(size=8)
         for i in range(41, 72):
             for cell in self.germline[f"{i}:{i}"]:
@@ -803,28 +755,28 @@ class excel:
         ).value = '= _xlfn.TEXTJOIN(", ",TRUE,C21:C28,C33:C40)'
         self.summary.cell(12, 1).value = "Comments"
 
+        # snv table
         self.summary.cell(19, 3).value = "Somatic SNV"
-        self.summary.cell(20, 3).value = "Gene"
-        self.summary.cell(20, 4).value = "GRCh38 Coordinates"
-        self.summary.cell(20, 5).value = "Mutation"
-        self.summary.cell(20, 6).value = "VAF"
-        self.summary.cell(20, 7).value = "Variant Class"
-        self.summary.cell(20, 8).value = "Validation"
-        self.summary.cell(20, 9).value = "Actionability"
+        snv_table_keys = ((3, "Gene"), (4, "GRCh38 Coordinates"),
+                          (5, "Mutation"), (6, "VAF"),
+                          (7, "Variant Class"), (8, "Validation"),
+                          (9, "Actionability"))
+        for cell, key in snv_table_keys:
+            self.summary.cell(20, cell).value = key
         # add formula
         for row in range(21, 29):
             ref_row = row + 22
             for col in ["C", "D", "E", "F"]:
                 self.summary[f"{col}{row}"] = f"=summary!{col}{ref_row}"
-
+        
+        # cnv sv table
         self.summary.cell(30, 3).value = "Somatic CNV_SV"
-        self.summary.cell(31, 3).value = "Gene/Locus"
-        self.summary.cell(31, 4).value = "GRCh38 Coordinates"
-        self.summary.cell(31, 5).value = "Cytological Bands"
-        self.summary.cell(31, 6).value = "Variant Type"
-        self.summary.cell(31, 7).value = "Variant Class"
-        self.summary.cell(31, 8).value = "Validation"
-        self.summary.cell(31, 9).value = "Actionability"
+        cnv_sv_table_key = ((3, "Gene/Locus"), (4, "GRCh38 Coordinates"),
+                            (5, "Cytological Bands"), (6, "Variant Type"),
+                            (7, "Variant Class"), (8, "Validation"),
+                            (9, "Actionability"))
+        for cell, key in cnv_sv_table_key:
+            self.summary.cell(31, cell).value = key
         # add formula
         for row in range(32, 40):
             ref_row = row + 21
@@ -832,49 +784,41 @@ class excel:
                 self.summary[f"{col}{row}"] = f"=summary!{col}{ref_row}"
 
         self.summary.cell(41, 1).value = "SNV"
-        self.summary.cell(42, 1).value = "Domain"
-        self.summary.cell(42, 2).value = "Origin"
-        self.summary.cell(42, 3).value = "Gene"
-        self.summary.cell(42, 4).value = "GRCh38 coordinates;ref/alt allele"
-        self.summary.cell(42, 5).value = "Transcript"
-        self.summary.cell(42, 6).value = "CDS change and protein change"
-        self.summary.cell(42, 7).value = "Predicted consequences"
-        self.summary.cell(
-            42, 8
-        ).value = "Population germline allele frequency (GE | gnomAD)"
-        self.summary.cell(42, 9).value = "VAF"
-        self.summary.cell(42, 10).value = "Alt allele/total read depth"
-        self.summary.cell(42, 11).value = "Genotype"
-        self.summary.cell(42, 12).value = "COSMIC ID"
-        self.summary.cell(42, 13).value = "ClinVar ID"
-        self.summary.cell(42, 14).value = "ClinVar review status"
-        self.summary.cell(42, 15).value = "ClinVar clinical significance"
-        self.summary.cell(42, 16).value = "Gene mode of action"
-        self.summary.cell(
-            42, 17
-        ).value = "Recruiting Clinical Trials 30 Jan 2023"
-        self.summary.cell(42, 18).value = "PharmGKB_ID"
+        # snv title
+        snv_title_keys = ((1, "Domain"), (2, "Origin"), (3, "Gene"),
+                          (4, "GRCh38 coordinates;ref/alt allele"),
+                          (5, "Transcript"), (6, "CDS change and protein change"),
+                          (7, "Predicted consequences"),
+                          (8, "Population germline allele frequency (GE | gnomAD)"),
+                          (9, "VAF"), (10, "Alt allele/total read depth"), 
+                          (11, "Genotype"), (12, "COSMIC ID"), (13, "ClinVar ID"),
+                          (14, "ClinVar review status"), 
+                          (15, "ClinVar clinical significance"), (16, "Gene mode of action"),
+                          (17, "Recruiting Clinical Trials 30 Jan 2023"),
+                          (18, "PharmGKB_ID"))
+        for cell, key in snv_title_keys:
+            self.summary.cell(42, cell).value = key
 
         self.summary.cell(51, 1).value = "CNV_SV"
-        self.summary.cell(52, 2).value = "Origin"
-        self.summary.cell(52, 3).value = "Variant domain"
-        self.summary.cell(52, 4).value = "Event domain"
-        self.summary.cell(52, 5).value = "Gene"
-        self.summary.cell(52, 6).value = "Transcript"
-        self.summary.cell(52, 7).value = "Impacted transcript region"
-        self.summary.cell(52, 8).value = "GRCh38 coordinates"
-        self.summary.cell(52, 9).value = "Type"
-        self.summary.cell(52, 10).value = "Size"
+        self.summary.cell(52, 1).value = "Origin"
+        self.summary.cell(52, 2).value = "Variant domain"
+        self.summary.cell(52, 3).value = "Event domain"
+        self.summary.cell(52, 4).value = "Gene"
+        self.summary.cell(52, 5).value = "Transcript"
+        self.summary.cell(52, 6).value = "Impacted transcript region"
+        self.summary.cell(52, 7).value = "GRCh38 coordinates"
+        self.summary.cell(52, 8).value = "Type"
+        self.summary.cell(52, 9).value = "Size"
         self.summary.cell(
-            52, 11
+            52, 10
         ).value = "Population germline allele frequency (GESG | GECG for somatic SVs or AF | AUC for germline CNVs)"
-        self.summary.cell(52, 12).value = "Confidence/support"
-        self.summary.cell(52, 13).value = "Chromosomal bands"
+        self.summary.cell(52, 11).value = "Confidence/support"
+        self.summary.cell(52, 12).value = "Chromosomal bands"
         self.summary.cell(
-            52, 14
+            52, 13
         ).value = "Recruiting Clinical Trials 30 Jan 2023"
-        self.summary.cell(52, 15).value = "ClinVar clinical significance"
-        self.summary.cell(52, 16).value = "Gene mode of action"
+        self.summary.cell(52, 14).value = "ClinVar clinical significance"
+        self.summary.cell(52, 15).value = "Gene mode of action"
 
         # titles to set to bold
         to_bold = [
