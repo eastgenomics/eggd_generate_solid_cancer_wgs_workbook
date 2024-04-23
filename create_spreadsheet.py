@@ -1,5 +1,4 @@
 import argparse
-import openpyxl
 from openpyxl import load_workbook, drawing
 from openpyxl.styles import Alignment, Border, DEFAULT_FONT, Font, Side
 from openpyxl.styles.fills import PatternFill
@@ -8,37 +7,30 @@ import pandas as pd
 import urllib.request
 from bs4 import BeautifulSoup
 
+# ref files
+CYTO_REF = "./resources/CytoRef.txt"
+FUSION_REF = "./resources/fusions.txt"
+HTOSPOTS_REF = "./resources/Hotspots.txt"
+REFGENE_REF = "./resources/Ref_Gene.txt"
+REFGENEGP_REF = "./resources/RefGene_groups.txt"
+
 
 # openpyxl style settings
 THIN = Side(border_style="thin", color="000000")
-MEDIUM = Side(border_style="medium", color="000001")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
-
 DEFAULT_FONT.name = "Calibri"
 
-cyto_ref = "./resource/CytoRef.txt"
-fusion_ref = "./resource/fusions.txt"
-hotspots_ref = "./resource/Hotspots.txt"
-refgene_ref = "./resource/Ref_Gene.txt"
-refgenegp_ref = "./resource/RefGene_groups.txt"
 
 class excel:
     """
-    Functions for wrangling input csv files and html files and 
+    Functions for wrangling input csv files, ref files and html files and
     writing output xlsm file
 
     Attributes
     ----------
     args : argparse.Namespace
         arguments passed from command line
-    vcfs : list of pd.DataFrame
-        list of dataframes formatted to write to file from vcf() methods
-    additional_files : dict
-        (optional) if addition files have been passed, dict will be populated
-        with worksheet name : df of file data
-    refs : list
-        list of reference names parsed from vcf headers
     writer : pandas.io.excel._openpyxl.OpenpyxlWriter
         writer object for writing Excel data to file
     workbook : openpyxl.workbook.workbook.Workbook
@@ -48,7 +40,7 @@ class excel:
     Outputs
     -------
     {args.output}.xlsm : file
-        Excel file with variants and structural variants with ref sheets
+        Excel file with variants, structural variants and ref sheets
     """
 
     def __init__(self) -> None:
@@ -67,16 +59,16 @@ class excel:
         """
         parser = argparse.ArgumentParser()
 
-        parser.add_argument("--output", "--o", help="output xlsm file name")
-        parser.add_argument("--html", help="html input")
-        parser.add_argument("--variant", "--v", help="variant csv file")
-        parser.add_argument("--SV", "--sv", help="structural variant csv file")
+        parser.add_argument("--output", "--o", required=True, help="output xlsm file name")
+        parser.add_argument("--html", required=True, help="html input")
+        parser.add_argument("--variant", "--v", required=True, help="variant csv file")
+        parser.add_argument("--SV", "--sv", required=True, help="structural variant csv file")
 
         return parser.parse_args()
 
     def generate(self) -> None:
         """
-        Calls all methods in excel() to generate output file
+        Calls all methods in excel() to generate output xlsm
         """
         self.download_html_img()
         self.write_sheets()
@@ -90,27 +82,21 @@ class excel:
         """
         get the image links from html input file
         """
-        url = self.args.html
-        # "file:///home/winmintun/Desktop/workspace/solid_cancer_GEL/2024_04_02_1042440297_p28131153889_LP5101091-DNA_D05_LP5101090-DNA_B05.v3_6_2.supplementary.html"
-
-        f = urllib.request.urlopen(url)
-        page = f.read()
-        f.close()
-        soup = BeautifulSoup(page, features="lxml")
+        soup = self.get_soup()
         n = 1
         for link in soup.findAll("img"):
             img_link = link.get("src")
-            self.download_image(img_link, "./", "testing_" + str(n))
+            self.download_image(img_link, "./", f"figure_{n}")
             n = n + 1
 
     def download_image(self, url, file_path, file_name):
         """
-        donwnload the img from html file
+        Download the img from html file
         """
         full_path = file_path + file_name + ".jpg"
         urllib.request.urlretrieve(url, full_path)
 
-    def read_html_tables(self, table_num) -> dict:
+    def read_html_tables(self, table_num) -> list:
         """
         get the tables from html file
 
@@ -120,54 +106,67 @@ class excel:
 
         Returns
         -------
-        dict of each html table
+        list of each html table
+        """
+        soup = self.get_soup()
+        tables = soup.findAll("table")
+        info = tables[table_num]
+        headings = [th.get_text() for th in info.find("tr").find_all("th")]
+        datasets = []
+        for row in info.find_all("tr")[1:]:
+            dataset = dict(
+                zip(headings, (td.get_text() for td in row.find_all("td")))
+            )
+            datasets.append(dataset)
+
+        return datasets
+
+    def get_soup(self) -> BeautifulSoup:
+        """
+        get Beautiful soup obj from url
+
+        Returns
+        -------
+        Beautiful soup object
         """
         url = self.args.html
         f = urllib.request.urlopen(url)
         page = f.read()
         f.close()
         soup = BeautifulSoup(page, features="lxml")
-        tables = soup.findAll("table")
-        info = tables[table_num]
-        headings = [th.get_text() for th in info.find("tr").find_all("th")]
-        for row in info.find_all("tr")[1:]:
-            dataset = dict(
-                zip(headings, (td.get_text() for td in row.find_all("td")))
-            )
 
-        return dataset
+        return soup
 
     def write_sheets(self) -> None:
         """
-        Write summary sheet to xlsm file
+        Write sheets to xlsm file
         """
         print("Writing sheets")
-
-        self.soc = self.workbook.create_sheet("SOC")
-        self.create_soc()
-        self.QC = self.workbook.create_sheet("QC")
-        self.create_QC()
-        self.plot = self.workbook.create_sheet("Plot")
-        self.create_plot()
-        self.signatures = self.workbook.create_sheet("Signatures")
-        self.create_signatures()
-        self.germline = self.workbook.create_sheet("Germline")
-        self.create_germline()
-        self.summary = self.workbook.create_sheet("Summary")
-        self.create_summary()
-        self.write_fusion()
         self.write_refgene()
+        self.soc = self.workbook.create_sheet("SOC")
+        self.write_soc()
+        self.QC = self.workbook.create_sheet("QC")
+        self.write_QC()
+        self.plot = self.workbook.create_sheet("Plot")
+        self.write_plot()
+        self.signatures = self.workbook.create_sheet("Signatures")
+        self.write_signatures()
+        self.germline = self.workbook.create_sheet("Germline")
+        self.write_germline()
+        self.summary = self.workbook.create_sheet("Summary")
+        self.write_summary()
+        self.write_fusion()
         self.write_refgene_groups()
         self.write_cytoref()
         self.write_hotspots()
         self.write_SNV()
         self.write_SV()
 
-    def create_soc(self) -> None:
+    def write_soc(self) -> None:
         """
         Write soc sheet
         """
-        patient_info = self.read_html_tables(0)
+        self.patient_info = self.read_html_tables(0)
         # write titles for summary values
         self.soc.cell(1, 1).value = "Patient Details (Epic demographics)"
         self.soc.cell(1, 3).value = "Previous testing"
@@ -176,14 +175,14 @@ class excel:
         self.soc.cell(2, 4).value = "Assay"
         self.soc.cell(2, 5).value = "Result"
         self.soc.cell(2, 6).value = "WGS concordance"
-        self.soc.cell(3, 1).value = patient_info["Gender"]
-        self.soc.cell(4, 1).value = patient_info["Patient ID"]
+        self.soc.cell(3, 1).value = self.patient_info[0]["Gender"]
+        self.soc.cell(4, 1).value = self.patient_info[0]["Patient ID"]
         self.soc.cell(5, 1).value = "MRN"
         self.soc.cell(6, 1).value = "NHS Number"
         self.soc.cell(8, 1).value = "Histology"
         self.soc.cell(12, 1).value = "Comments"
         self.soc.cell(16, 1).value = "WGS in-house gene panel applied"
-        self.soc.cell(17, 1).value = "COSMIC_Cancer_Genes"
+        self.soc.cell(17, 1).value = "=RefGene!G2"
 
         # merge some title columns that have longer text
         self.soc.merge_cells(
@@ -274,13 +273,15 @@ class excel:
             cells=cells_for_assay,
         )
 
-    def create_QC(self) -> None:
+    def write_QC(self) -> None:
         """
         write QC sheet
         """
         tumor_info = self.read_html_tables(1)
         sample_info = self.read_html_tables(2)
-        germlline_info = self.read_html_tables(3)
+        germline_info = self.read_html_tables(3)
+        seq_info = self.read_html_tables(4)
+
         self.QC.cell(1, 1).value = "=SOC!A2"
         self.QC.cell(1, 3).value = "Diagnosis Date"
         self.QC.cell(1, 4).value = "Tumour Received"
@@ -309,15 +310,42 @@ class excel:
         self.QC.cell(7, 8).value = "Unevenness, x"
         self.QC.cell(8, 1).value = "QC alerts"
         self.QC.cell(9, 1).value = "None"  # need dropdown
-        self.QC.cell(2, 3).value = tumor_info["Tumour Diagnosis Date"]
-        self.QC.cell(2, 5).value = tumor_info[
+        self.QC.cell(2, 3).value = tumor_info[0]["Tumour Diagnosis Date"]
+        self.QC.cell(2, 4).value = germline_info[0]["Clinical Sample Date Time"]
+        self.QC.cell(2, 5).value = tumor_info[0][
             "Histopathology or SIHMDS LAB ID"
         ]
-        self.QC.cell(2, 6).value = tumor_info["Presentation"]
+        self.QC.cell(2, 6).value = tumor_info[0]["Presentation"] + " " + tumor_info[0]["Primary or Metastatic"] 
         # self.QC.cell(7, 2).value = tumor_info['Primary or Metastatic']
-        self.QC.cell(2, 8).value = tumor_info["Primary or Metastatic"]
-        self.QC.cell(2, 9).value = tumor_info["Tumour Type"]
-        self.QC.cell(2, 10).value = germlline_info["Sample ID"]
+        self.QC.cell(2, 7).value = self.patient_info[0]["Clinical Indication"] 
+        self.QC.cell(2, 8).value = tumor_info[0]["Tumour Topography"] 
+        self.QC.cell(2, 9).value = sample_info[0]["Storage Medium"] + " " + sample_info[0]["Source"]
+        self.QC.cell(2, 10).value = germline_info[0]["Storage Medium"] + "(" + germline_info[0]["Source"] + ")"
+
+        self.QC.cell(5, 3).value = sample_info[0]["Tumour Content"]
+        self.QC.cell(5, 4).value = sample_info[0]["Calculated Tumour Content"]
+        self.QC.cell(5, 5).value = sample_info[0]["Calculated Overall Ploidy"]
+        self.QC.cell(5, 6).value = seq_info[1]["Total somatic SNVs"]
+        self.QC.cell(5, 7).value = seq_info[1]["Total somatic indels"]
+        self.QC.cell(5, 8).value = seq_info[1]["Total somatic SVs"]
+
+        self.QC.cell(8, 3).value = seq_info[0]["Sample type"]
+        self.QC.cell(9, 3).value = seq_info[1]["Sample type"]
+
+        self.QC.cell(8, 4).value = seq_info[0]["Genome-wide coverage mean, x"]
+        self.QC.cell(9, 4).value = seq_info[1]["Genome-wide coverage mean, x"]
+
+        self.QC.cell(8, 5).value = seq_info[0]["Mapped reads, %"]
+        self.QC.cell(9, 5).value = seq_info[1]["Mapped reads, %"]
+
+        self.QC.cell(8, 6).value = seq_info[0]["Chimeric DNA fragments, %"]
+        self.QC.cell(9, 6).value = seq_info[1]["Chimeric DNA fragments, %"]
+
+        self.QC.cell(8, 7).value = seq_info[0]["Insert size median, bp"]
+        self.QC.cell(9, 7).value = seq_info[1]["Insert size median, bp"]
+
+        self.QC.cell(8, 8).value = seq_info[0]["Unevenness of local genome coverage, x"]
+        self.QC.cell(9, 8).value = seq_info[1]["Unevenness of local genome coverage, x"]
 
         # titles to set to bold
         to_bold = [
@@ -357,11 +385,10 @@ class excel:
             sheet=self.QC,
             cells=cells_for_QC,
         )
-
         # insert img from html
-        self.insert_img(self.QC, "testing_9.jpg", "C12", 400, 600)
+        self.insert_img(self.QC, "figure_9.jpg", "C12", 400, 600)
 
-    def create_plot(self) -> None:
+    def write_plot(self) -> None:
         """
         write plot sheet
         """
@@ -371,7 +398,7 @@ class excel:
         self.plot.cell(4, 1).value = "=SOC!A6"
         self.plot.cell(6, 1).value = "=SOC!A9"
         self.plot.cell(8, 1).value = "Pertinent chromosomal CNVs"
-        self.plot.cell(9, 1).value = "None"  
+        self.plot.cell(9, 1).value = "None"
         self.plot.cell(5, 4).value = "Insert"
 
         # titles to set to bold
@@ -383,7 +410,7 @@ class excel:
         # set column widths for readability
         self.plot.column_dimensions["A"].width = 32
 
-    def create_signatures(self) -> None:
+    def write_signatures(self) -> None:
         """
         write signatures sheet
         """
@@ -396,7 +423,6 @@ class excel:
         self.signatures.cell(9, 1).value = "v2 (March 2015)"
         self.signatures.cell(13, 1).value = "Pertinent signatures"
         self.signatures.cell(14, 1).value = "None"
-        self.signatures.cell(14, 5).value = "Insert"
 
         # titles to set to bold
         to_bold = ["A1", "A8", "A13"]
@@ -410,10 +436,10 @@ class excel:
 
         # set column widths for readability
         self.signatures.column_dimensions["A"].width = 32
-        self.insert_img(self.signatures, "testing_6.jpg", "C3", 700, 1000)
-        self.insert_img(self.signatures, "testing_7.jpg", "P3", 400, 600)
+        self.insert_img(self.signatures, "figure_6.jpg", "C3", 700, 1000)
+        self.insert_img(self.signatures, "figure_7.jpg", "P3", 400, 600)
 
-    def create_germline(self) -> None:
+    def write_germline(self) -> None:
         """
         write germline sheet
         """
@@ -762,7 +788,7 @@ class excel:
             for cell in self.germline[f"{i}:{i}"]:
                 cell.font = smaller_font
 
-    def create_summary(self) -> None:
+    def write_summary(self) -> None:
         """
         Write summary sheet
         """
@@ -991,14 +1017,14 @@ class excel:
         """
         write fusion sheet
         """
-        df = pd.read_csv(fusion_ref, sep="\t")
-        df.to_excel(self.writer, sheet_name="fusion", index=False)
+        df = pd.read_csv(FUSION_REF, sep="\t")
+        df.to_excel(self.writer, sheet_name="fusion", index=False, header=False)
 
     def write_refgene(self) -> None:
         """
         write RefGene sheet
         """
-        df = pd.read_csv(refgene_ref, sep="\t")
+        df = pd.read_csv(REFGENE_REF, sep="\t")
         df["Reference"] = "COSMIC [Somatic]; [Germline]"
         df["RefGene Group"] = "COSMIC_Cancer_Genes"
         df.to_excel(self.writer, sheet_name="RefGene", index=False)
@@ -1013,7 +1039,7 @@ class excel:
         """
         write RefGene_Groups sheet
         """
-        df = pd.read_csv(refgenegp_ref, sep="\t")
+        df = pd.read_csv(REFGENEGP_REF, sep="\t")
         df.to_excel(self.writer, sheet_name="RefGene_Groups", index=False)
         ref_gene_gp = self.writer.sheets["RefGene_Groups"]
         for col in ["D", "E", "F", "G"]:
@@ -1025,7 +1051,7 @@ class excel:
         """
         write CytoRef sheet
         """
-        df = pd.read_csv(cyto_ref, sep="\t")
+        df = pd.read_csv(CYTO_REF, sep="\t")
         df.to_excel(self.writer, sheet_name="CytoRef", index=False)
         cytoref = self.writer.sheets["CytoRef"]
         for col in ["D", "F", "G"]:
@@ -1038,7 +1064,7 @@ class excel:
         """
         write Hotspots sheet
         """
-        df = pd.read_csv(hotspots_ref, sep="\t")
+        df = pd.read_csv(HTOSPOTS_REF, sep="\t")
         df.to_excel(self.writer, sheet_name="Hotspots", index=False)
         hotspots = self.writer.sheets["Hotspots"]
         hotspots.column_dimensions["A"].width = 28
