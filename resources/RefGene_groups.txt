@@ -1788,4 +1788,3 @@ ZNF479	Missense; ; ; ; ; 	Somatic; 	[lung cancer, bladder carcinoma, prostate ca
 ZNF521	Translocation; ; ; ; ; 	Somatic; 	[ALL]; []	oncogene, fusion	COSMIC [Somatic]; [Germline]	COSMIC_Cancer_Genes
 ZNRF3	Nonsense; Frameshift; Missense; ; ; 	Somatic; 	[colorectal cancer, adrenocortical carcinoma, gastric cancer]; []	TSG	COSMIC [Somatic]; [Germline]	COSMIC_Cancer_Genes
 ZRSR2	Frameshift; Splice site; Missense; ; ; 	Somatic; 	[MDS, CLL]; []	TSG	COSMIC [Somatic]; [Germline]	COSMIC_Cancer_Genes
-
