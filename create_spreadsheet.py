@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import re
 from openpyxl import load_workbook, drawing
 from openpyxl.styles import Alignment, Border, DEFAULT_FONT, Font, Side
 from openpyxl.styles.fills import PatternFill
@@ -12,7 +13,6 @@ from bs4 import BeautifulSoup
 CYTO_REF = "./resources/CytoRef.txt"
 FUSION_REF = "./resources/fusions.txt"
 HTOSPOTS_REF = "./resources/Hotspots.txt"
-REFGENE_REF = "./resources/Ref_Gene.txt"
 REFGENEGP_REF = "./resources/RefGene_groups.txt"
 
 
@@ -61,14 +61,20 @@ class excel:
         parser = argparse.ArgumentParser()
 
         parser.add_argument(
-            "--output", "--o", required=True, help="output xlsm file name"
+            "--output", "-o", required=True, help="output xlsm file name"
         )
-        parser.add_argument("--html", required=True, help="html input")
+        parser.add_argument("-html", required=True, help="html input")
         parser.add_argument(
-            "--variant", "--v", required=True, help="variant csv file"
+            "--variant", "-v", required=True, help="variant csv file"
         )
         parser.add_argument(
-            "--SV", "--sv", required=True, help="structural variant csv file"
+            "--SV", "-sv", required=True, help="structural variant csv file"
+        )
+        parser.add_argument(
+            "--cancer_gp", "-cg", required=True,
+            help=("ref cancer group - has to be one of these "
+                  "(COSMIC_Cancer_Genes, Haem, Medulloblastoma,"
+                  " MPNST, Neuro, Ovarian, Scarcoma")
         )
 
         return parser.parse_args()
@@ -143,13 +149,41 @@ class excel:
         soup = BeautifulSoup(page, features="lxml")
 
         return soup
+    
+    def get_pid(self) -> None:
+        """
+        get pid from html
+        """
+        soup = self.get_soup()
+        pid_html = soup.find('div', id="pid")
+        pid_soup = BeautifulSoup(f"{pid_html}", features="lxml")
+        pid = pid_soup.get_text()
+        self.pt_name = re.search('Name: (.*)Date', pid).group(1)
+        self.dob = re.search('Birth: (.*)NHS', pid).group(1)
+        self.NHS_no = re.search('No.: (.*)', pid).group(1)
+
+    def get_tmb(self) -> float:
+        """
+        get tmb from html
+
+        Returns
+        -------
+        float for tmb
+        """
+        soup = self.get_soup()
+        pattern = re.compile(r'Total number of somatic non-synonymous small variants per megabase')
+        tmb = soup.find('b', text=pattern).next_sibling
+
+        return tmb
 
     def write_sheets(self) -> None:
         """
         Write sheets to xlsm file
         """
         print("Writing sheets")
+        self.write_refgene_groups()
         self.write_refgene()
+        self.get_pid()
         self.soc = self.workbook.create_sheet("SOC")
         self.write_soc()
         self.QC = self.workbook.create_sheet("QC")
@@ -162,8 +196,7 @@ class excel:
         self.write_germline()
         self.summary = self.workbook.create_sheet("Summary")
         self.write_summary()
-        self.write_fusion()
-        self.write_refgene_groups()
+        self.write_fusion()        
         self.write_cytoref()
         self.write_hotspots()
         self.write_SNV()
@@ -214,19 +247,19 @@ class excel:
         # write titles for summary values
         self.soc.cell(1, 1).value = "Patient Details (Epic demographics)"
         self.soc.cell(1, 3).value = "Previous testing"
-        self.soc.cell(2, 1).value = "Name"
+        self.soc.cell(2, 1).value = self.pt_name
         self.soc.cell(2, 3).value = "Alteration"
         self.soc.cell(2, 4).value = "Assay"
         self.soc.cell(2, 5).value = "Result"
         self.soc.cell(2, 6).value = "WGS concordance"
-        self.soc.cell(3, 1).value = self.patient_info[0]["Gender"]
+        self.soc.cell(3, 1).value = self.dob + "," + self.patient_info[0]["Gender"]
         self.soc.cell(4, 1).value = self.patient_info[0]["Patient ID"]
         self.soc.cell(5, 1).value = "MRN"
-        self.soc.cell(6, 1).value = "NHS Number"
+        self.soc.cell(6, 1).value = self.NHS_no
         self.soc.cell(8, 1).value = "Histology"
         self.soc.cell(12, 1).value = "Comments"
         self.soc.cell(16, 1).value = "WGS in-house gene panel applied"
-        self.soc.cell(17, 1).value = self.df_refgene["RefGene Group"][0]
+        self.soc.cell(17, 1).value = self.args.cancer_gp
 
         # merge some title columns that have longer text
         self.soc.merge_cells(
@@ -327,7 +360,7 @@ class excel:
         sample_info = self.read_html_tables(2)
         germline_info = self.read_html_tables(3)
         seq_info = self.read_html_tables(4)
-
+        tmb_value = self.get_tmb()
         # PID table
         self.QC.cell(1, 1).value = "=SOC!A2"
         self.QC.cell(2, 1).value = "=SOC!A3"
@@ -353,7 +386,7 @@ class excel:
 
         table1_values = (
             (3, tumor_info[0]["Tumour Diagnosis Date"]),
-            (4, germline_info[0]["Clinical Sample Date Time"]),
+            (4, sample_info[0]["Clinical Sample Date Time"]),
             (5, tumor_info[0]["Histopathology or SIHMDS LAB ID"]),
             (
                 6,
@@ -392,13 +425,15 @@ class excel:
         )
         for cell, key in table2_keys:
             self.QC.cell(4, cell).value = key
+
         table2_values = (
             (3, sample_info[0]["Tumour Content"]),
-            (4, sample_info[0]["Tumour Content"]),
+            (4, sample_info[0]["Calculated Tumour Content"]),
             (5, sample_info[0]["Calculated Overall Ploidy"]),
             (6, seq_info[1]["Total somatic SNVs"]),
             (7, seq_info[1]["Total somatic indels"]),
             (8, seq_info[1]["Total somatic SVs"]),
+            (9, str(tmb_value).strip())
         )
         for cell, value in table2_values:
             self.QC.cell(5, cell).value = value
@@ -415,18 +450,17 @@ class excel:
         for cell, key in table3_keys:
             self.QC.cell(7, cell).value = key
 
-        seq_info_title = [
-            "Sample type",
-            "Genome-wide coverage mean, x",
-            "Mapped reads, %",
-            "Chimeric DNA fragments, %",
-            "Insert size median, bp",
-            "Unevenness of local genome coverage, x",
-        ]
-        for title in seq_info_title:
-            for i in range(3, 9):
-                self.QC.cell(8, i).value = seq_info[0][title]
-                self.QC.cell(9, i).value = seq_info[1][title]
+        seq_info_title = (
+            (3, "Sample type"),
+            (4, "Genome-wide coverage mean, x"),
+            (5, "Mapped reads, %"),
+            (6, "Chimeric DNA fragments, %"),
+            (7, "Insert size median, bp"),
+            (8, "Unevenness of local genome coverage, x"),
+        )
+        for cell, title in seq_info_title:            
+            self.QC.cell(8, cell).value = seq_info[0][title]
+            self.QC.cell(9, cell).value = seq_info[1][title]
 
         # titles to set to bold
         to_bold = [
@@ -496,6 +530,7 @@ class excel:
         )
         # insert img from html
         self.insert_img(self.QC, "figure_9.jpg", "C12", 400, 600)
+        self.insert_img(self.QC, "figure_11.jpg", "G12", 400, 600)
 
     def write_plot(self) -> None:
         """
@@ -516,6 +551,7 @@ class excel:
 
         # set column widths for readability
         self.plot.column_dimensions["A"].width = 32
+        self.insert_img(self.plot, "figure_3.jpg", "C2", 400, 800)
 
     def write_signatures(self) -> None:
         """
@@ -1214,6 +1250,7 @@ class excel:
             sheet=self.summary,
             cells=cells_for_action,
         )
+        self.insert_img(self.summary, "figure_3.jpg", "C1", 300, 700)
 
     def write_fusion(self) -> None:
         """
@@ -1228,7 +1265,9 @@ class excel:
         """
         write RefGene sheet
         """
-        self.df_refgene = pd.read_csv(REFGENE_REF, sep="\t")
+        self.df_refgene = self.df_rgg[self.df_rgg["RefGene Group"] == self.args.cancer_gp]        
+        self.df_refgene.drop_duplicates(subset="Gene", keep="last", inplace=True) ####NEED TO REMOVE
+        self.df_refgene.reset_index(drop=True, inplace=True)
         self.df_refgene.to_excel(
             self.writer, sheet_name="RefGene", index=False
         )
@@ -1242,8 +1281,8 @@ class excel:
         """
         write RefGene_Groups sheet
         """
-        df = pd.read_csv(REFGENEGP_REF, sep="\t")
-        df.to_excel(self.writer, sheet_name="RefGene_Groups", index=False)
+        self.df_rgg = pd.read_csv(REFGENEGP_REF, sep="\t")
+        self.df_rgg.to_excel(self.writer, sheet_name="RefGene_Groups", index=False)
         ref_gene_gp = self.writer.sheets["RefGene_Groups"]
         cell_col_width = (("D", 32), ("E", 32), ("F", 32), ("G", 32))
         self.set_col_width(cell_col_width, ref_gene_gp)
@@ -1281,9 +1320,22 @@ class excel:
         write SNV sheet
         """
         df = pd.read_csv(self.args.variant, sep=",")
-        df[["A_variant", "B_variant"]] = df[
-            "CDS change and protein change"
-        ].str.split(";", expand=True)
+        df["';' count_Transcript."] = df["Transcript"].str.count(r"\;")
+        max_num_variant = df["';' count_Transcript."].max() + 1
+
+        if max_num_variant == 1:
+            df["A_Variant"] = df["CDS change and protein change"]
+            df[["B_Variant", "C_Variant", "D_Variant"]] = ""
+        elif max_num_variant == 2:
+            df[["A_Variant", "B_Variant"]] = df["CDS change and protein change"].str.split(";", expand=True)
+            df[["C_Variant", "D_Variant"]] = ""
+                        
+        elif max_num_variant == 3:
+            df[["A_Variant", "B_Variant", "C_Variant"]] = df["CDS change and protein change"].str.split(";", expand=True)
+            df[["D_Variant"]] = ""
+        elif max_num_variant == 4:
+            df[["A_Variant", "B_Variant", "C_Variant", "D_Variant"]] = df["CDS change and protein change"].str.split(";", expand=True)
+
         df["Report (Y/N)"] = ""
         df["Comments"] = ""
         df["Alteration_RefGene"] = df["Gene"].map(
@@ -1299,13 +1351,13 @@ class excel:
             self.df_refgene.set_index("Gene")["Comments"]
         )
         df = df.replace([None], [""], regex=True)
-        df["MTBP c."] = df["Gene"] + ":" + df["A_variant"]
-        df["MTBP p."] = df["Gene"] + ":" + df["B_variant"]
+        df["MTBP c."] = df["Gene"] + ":" + df["A_Variant"]
+        df["MTBP p."] = df["Gene"] + ":" + df["B_Variant"]
         df[["HS p.", "col1", "col2"]] = df["MTBP p."].str.split(
             r"([^\d]+)$", expand=True
         )
         df.drop(["col1", "col2"], axis=1, inplace=True)
-        df["';' count_Transcript."] = df["Transcript"].str.count(r"\;")
+        
         df["HS_Sample"] = df["HS p."].map(
             self.df_hotspots.set_index("HS_PROTEIN_ID")["HS_Samples"]
         )
@@ -1351,7 +1403,6 @@ class excel:
         )
         df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
         max_num_gene = df_SV["gene_count"].max() + 1
-        print(max_num_gene)
         if max_num_gene == 1:
             df_SV["A_Gene"] = df_SV["Gene"]
             df_SV[["B_Gene", "C_Gene", "D_Gene"]] = ""
