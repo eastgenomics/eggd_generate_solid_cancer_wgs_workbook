@@ -5,9 +5,11 @@ from openpyxl import load_workbook, drawing
 from openpyxl.styles import Alignment, Border, DEFAULT_FONT, Font, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 import urllib.request
 from bs4 import BeautifulSoup
+from PIL import Image
 
 # ref files
 CYTO_REF = "./resources/CytoRef.txt"
@@ -100,7 +102,10 @@ class excel:
         for link in soup.findAll("img"):
             img_link = link.get("src")
             self.download_image(img_link, "./", f"figure_{n}")
+            if n == 2:
+                self.crop_img("figure_2.jpg", 600, 600, 2400, 2400)
             n = n + 1
+
 
     def download_image(self, url, file_path, file_name):
         """
@@ -108,6 +113,22 @@ class excel:
         """
         full_path = file_path + file_name + ".jpg"
         urllib.request.urlretrieve(url, full_path)
+
+    def crop_img(self, img_to_crop, left, top, right, bottom) -> None:
+            """
+            crop image
+            Parameters
+            ---------
+            str - file name for img
+            int - left margin to crop
+            int - top margin to crop
+            int - right margin to crop
+            int - bottom margin to crop
+            """
+            im = Image.open(img_to_crop)
+            #width, height = im.size
+            im1 = im.crop((left, top, right, bottom))
+            im1.save("cropped_"+img_to_crop)
 
     def read_html_tables(self, table_num) -> list:
         """
@@ -262,15 +283,15 @@ class excel:
         # write titles for summary values
         self.soc.cell(1, 1).value = "Patient Details (Epic demographics)"
         self.soc.cell(1, 3).value = "Previous testing"
-        self.soc.cell(2, 1).value = self.pt_name
+        self.soc.cell(2, 1).value = "NAME" #self.pt_name
         self.soc.cell(2, 3).value = "Alteration"
         self.soc.cell(2, 4).value = "Assay"
         self.soc.cell(2, 5).value = "Result"
         self.soc.cell(2, 6).value = "WGS concordance"
-        self.soc.cell(3, 1).value = self.dob + "," + self.patient_info[0]["Gender"]
-        self.soc.cell(4, 1).value = self.patient_info[0]["Patient ID"]
+        self.soc.cell(3, 1).value = "DOB, SEX" #self.dob + "," + self.patient_info[0]["Gender"]
+        self.soc.cell(4, 1).value = "patient ID"#self.patient_info[0]["Patient ID"]
         self.soc.cell(5, 1).value = "MRN"
-        self.soc.cell(6, 1).value = self.NHS_no
+        self.soc.cell(6, 1).value = "NHS no."#self.NHS_no
         self.soc.cell(8, 1).value = "Histology"
         self.soc.cell(12, 1).value = "Comments"
         self.soc.cell(16, 1).value = "WGS in-house gene panel applied"
@@ -375,8 +396,8 @@ class excel:
         sample_info = self.read_html_tables(2)
         germline_info = self.read_html_tables(3)
         seq_info = self.read_html_tables(4)
-        germlin_table = self.read_html_tables(-1)
-        print(germlin_table)
+        #germlin_table = self.read_html_tables(-1)
+        #print(germlin_table)
         tmb_value = self.get_tmb()
         # PID table
         self.QC.cell(1, 1).value = "=SOC!A2"
@@ -568,7 +589,8 @@ class excel:
 
         # set column widths for readability
         self.plot.column_dimensions["A"].width = 32
-        self.insert_img(self.plot, "figure_3.jpg", "C2", 400, 800)
+        self.insert_img(self.plot, "cropped_figure_2.jpg", "C2", 500, 500)
+        self.insert_img(self.plot, "figure_3.jpg", "C26", 600, 1400)
 
     def write_signatures(self) -> None:
         """
@@ -599,32 +621,24 @@ class excel:
         write germline sheet
         """
         soup = self.get_soup()
-        snv_t1_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("small variants")').find_next('table')
-        snv_t2_table = soup.select_one('h4:-soup-contains("Tier 2 variants")' and 'h3:-soup-contains("small variants")').find_next('table')
-        snv_t3_table = soup.select_one('h4:-soup-contains("Tier 3 variants")' and 'h3:-soup-contains("small variants")').find_next('table')
-
-        cnv_t1_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("copy number")').find_next('table')
-        cnv_t2_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("copy number")').find_next('table')
-        cnv_t3_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("copy number")').find_next('table')
-        
-        if snv_t1_table:
+        snv_t1_table = soup.find('div', id="germline_domain1")
+        snv_t3_table = soup.find('div', id="germline_domain3")
+    
+        if snv_t1_table.find("tr"):
             snv_t1 = self.extract_data_from_html_table(snv_t1_table)
-            print("snvt1", snv_t1)
-        if snv_t2_table:
-            snv_t2 = self.extract_data_from_html_table(snv_t2_table)
-            print("snvt2", snv_t2)
-        if snv_t3_table:
+
+        if snv_t3_table.find("tr"):
             snv_t3 = self.extract_data_from_html_table(snv_t3_table)
-            print("snvt3", snv_t3)
-        if cnv_t1_table:
-            cnv_t1 = self.extract_data_from_html_table(cnv_t1_table)
-            print("cnvt1", cnv_t1)
-        if cnv_t2_table:
-            cnv_t2 = self.extract_data_from_html_table(cnv_t2_table)
-            prit("cnvt2", cnv_t2)
-        if cnv_t3_table:
-            cnv_t3 = self.extract_data_from_html_table(cnv_t3_table)
-            print("cnvt3", cnv_t3)
+            df_snv_t3 = pd.DataFrame(snv_t3)
+            rows = dataframe_to_rows(df_snv_t3)
+            for r_idx, row in enumerate(rows, 1):
+                for c_idx, value in enumerate(row, 1):
+                    if c_idx != 1:
+                        if r_idx == 1:
+                           self.germline.cell(row=r_idx+23, column=c_idx+1, value=value)
+                        else:
+                           self.germline.cell(row=r_idx+22, column=c_idx+1, value=value)
+
 
         self.germline.cell(1, 1).value = "=SOC!A2"
         self.germline.cell(2, 1).value = "=SOC!A3"
@@ -655,7 +669,7 @@ class excel:
                 self.germline[f"{col}{row}"] = f"=germline!{col}{ref_row}"
 
         self.germline.cell(13, 3).value = "Clinical genetics feedback"
-
+        """
         domain_talbe_keys = (
             (1, "Domain"),
             (2, "Origin"),
@@ -678,6 +692,7 @@ class excel:
         )
         for cell, key in domain_talbe_keys:
             self.germline.cell(24, cell).value = key
+        """
 
         # ACMG classification table
         self.germline.cell(40, 1).value = "ACMG classification table"
@@ -1295,7 +1310,8 @@ class excel:
             sheet=self.summary,
             cells=cells_for_action,
         )
-        self.insert_img(self.summary, "figure_3.jpg", "C1", 300, 700)
+        self.insert_img(self.summary, "cropped_figure_2.jpg", "C1", 350, 350)
+        self.insert_img(self.summary, "figure_3.jpg", "E1", 300, 700)
 
     def write_fusion(self) -> None:
         """
@@ -1355,7 +1371,7 @@ class excel:
             self.writer, sheet_name="Hotspots", index=False
         )
         hotspots = self.writer.sheets["Hotspots"]
-        cell_col_width = (("A", 28), ("B", 24), ("C", 52))
+        cell_col_width = (("A", 28), ("B", 14), ("C", 52))
         self.set_col_width(cell_col_width, hotspots)
         filters = hotspots.auto_filter
         filters.ref = "A:E"
@@ -1365,6 +1381,8 @@ class excel:
         write SNV sheet
         """
         df = pd.read_csv(self.args.variant, sep=",")
+        df["Report (Y/N)"] = ""
+        df["Comments"] = ""
         df["';' count_Transcript."] = df["Transcript"].str.count(r"\;")
         max_num_variant = df["';' count_Transcript."].max() + 1
 
@@ -1380,9 +1398,6 @@ class excel:
             df[["D_Variant"]] = ""
         elif max_num_variant == 4:
             df[["A_Variant", "B_Variant", "C_Variant", "D_Variant"]] = df["CDS change and protein change"].str.split(";", expand=True)
-
-        df["Report (Y/N)"] = ""
-        df["Comments"] = ""
         df["Alteration_RefGene"] = df["Gene"].map(
             self.df_refgene.set_index("Gene")["Alteration"]
         )
@@ -1418,8 +1433,10 @@ class excel:
             ("E", 24),
             ("F", 24),
             ("G", 24),
-            ("H", 24),
-        )
+            ("H", 24), ("V", 20), ("W", 20), ("X", 20), ("Y", 20), ("Z", 20), ("AA", 20),
+            ("AB", 20), ("AC", 20), ("AD", 20),
+            ("AE", 20), ("AF", 20), ("AG", 20), ("AH", 20))
+
         self.set_col_width(cell_col_width, self.SNV)
         filters = self.SNV.auto_filter
         filters.ref = "A:AF"
@@ -1484,8 +1501,9 @@ class excel:
                 ("E", 24),
                 ("F", 24),
                 ("G", 24),
-                ("H", 14),
-            )
+                ("H", 14), ("O", 20), ("P", 20),("Q", 20), ("R", 20),
+                ("S", 20), ("T", 20), ("U", 20),
+                ("V", 20), ("W", 20), ("X", 20), ("Y", 20), ("Z", 20))
             self.set_col_width(cell_col_width, sheet)
             filters = sheet.auto_filter
             filters.ref = "A:AA"
