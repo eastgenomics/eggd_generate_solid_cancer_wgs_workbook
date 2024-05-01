@@ -124,15 +124,30 @@ class excel:
         soup = self.get_soup()
         tables = soup.findAll("table")
         info = tables[table_num]
-        headings = [th.get_text() for th in info.find("tr").find_all("th")]
+        datasets = self.extract_data_from_html_table(info)
+        #headings = [th.get_text() for th in info.find("tr").find_all("th")]
+        #datasets = []
+        #for row in info.find_all("tr")[1:]:
+            #dataset = dict(
+            #    zip(headings, (td.get_text() for td in row.find_all("td")))
+            #)
+            #datasets.append(dataset)        
+
+        return datasets
+    
+    def extract_data_from_html_table(self, table_info):
+        """
+        strip html table and return as list
+        """
+        headings = [th.get_text() for th in table_info.find("tr").find_all("th")]
         datasets = []
-        for row in info.find_all("tr")[1:]:
+        for row in table_info.find_all("tr")[1:]:
             dataset = dict(
                 zip(headings, (td.get_text() for td in row.find_all("td")))
             )
             datasets.append(dataset)
-
         return datasets
+
 
     def get_soup(self) -> BeautifulSoup:
         """
@@ -360,6 +375,8 @@ class excel:
         sample_info = self.read_html_tables(2)
         germline_info = self.read_html_tables(3)
         seq_info = self.read_html_tables(4)
+        germlin_table = self.read_html_tables(-1)
+        print(germlin_table)
         tmb_value = self.get_tmb()
         # PID table
         self.QC.cell(1, 1).value = "=SOC!A2"
@@ -581,6 +598,34 @@ class excel:
         """
         write germline sheet
         """
+        soup = self.get_soup()
+        snv_t1_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("small variants")').find_next('table')
+        snv_t2_table = soup.select_one('h4:-soup-contains("Tier 2 variants")' and 'h3:-soup-contains("small variants")').find_next('table')
+        snv_t3_table = soup.select_one('h4:-soup-contains("Tier 3 variants")' and 'h3:-soup-contains("small variants")').find_next('table')
+
+        cnv_t1_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("copy number")').find_next('table')
+        cnv_t2_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("copy number")').find_next('table')
+        cnv_t3_table = soup.select_one('h4:-soup-contains("Tier 1 variants")' and 'h3:-soup-contains("copy number")').find_next('table')
+        
+        if snv_t1_table:
+            snv_t1 = self.extract_data_from_html_table(snv_t1_table)
+            print("snvt1", snv_t1)
+        if snv_t2_table:
+            snv_t2 = self.extract_data_from_html_table(snv_t2_table)
+            print("snvt2", snv_t2)
+        if snv_t3_table:
+            snv_t3 = self.extract_data_from_html_table(snv_t3_table)
+            print("snvt3", snv_t3)
+        if cnv_t1_table:
+            cnv_t1 = self.extract_data_from_html_table(cnv_t1_table)
+            print("cnvt1", cnv_t1)
+        if cnv_t2_table:
+            cnv_t2 = self.extract_data_from_html_table(cnv_t2_table)
+            prit("cnvt2", cnv_t2)
+        if cnv_t3_table:
+            cnv_t3 = self.extract_data_from_html_table(cnv_t3_table)
+            print("cnvt3", cnv_t3)
+
         self.germline.cell(1, 1).value = "=SOC!A2"
         self.germline.cell(2, 1).value = "=SOC!A3"
         self.germline.cell(3, 1).value = "=SOC!A5"
