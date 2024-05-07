@@ -11,11 +11,12 @@ import pandas as pd
 import urllib.request
 from bs4 import BeautifulSoup
 from PIL import Image
+import subprocess
 
 # ref files
 HTOSPOTS_REF = "./resources/Hotspots.csv"
 REFGENEGP_REF = "./resources/RefGene_Groups.csv"
-
+CLINVAR_REF = "./resources/clinvar_20240407_GRCh37.vcf.gz"
 
 # openpyxl style settings
 THIN = Side(border_style="thin", color="000000")
@@ -609,6 +610,27 @@ class excel:
         self.insert_img(self.signatures, "figure_6.jpg", "C3", 700, 1000)
         self.insert_img(self.signatures, "figure_7.jpg", "P3", 400, 600)
 
+    def get_clnsigconf(self, clinvarID) -> str:
+        """
+        get the get_clnsigconf from clinvar file for
+        clinvar ID
+
+        Parameters
+        ----------
+        int for clinvar ID
+        str for clinvar ref file
+
+        Returns
+        -------
+        str for CLNSIGCONF
+        """
+        cmd = f"zcat {CLINVAR_REF} | awk '$3=={clinvarID} {{print($8)}}' |  grep -o -P '(?<=CLNSIGCONF=).*?(?=;)'"
+        ps = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+        output = ps.communicate()[0]
+        return output.decode("utf-8").strip()
+
     def write_germline(self) -> None:
         """
         write germline sheet
@@ -638,6 +660,21 @@ class excel:
         # populate germline table
         germline_table = pd.read_csv(self.args.variant, sep=",")
         germline_table = germline_table[germline_table["Origin"] == "germline"]
+        germline_table.reset_index(drop=True, inplace=True)
+        clinvarID = list(germline_table["ClinVar ID"])
+        d = []
+        for id in clinvarID:
+            d.append(
+                {
+                    "ClinVar ID": id,
+                    "clnsigconf": self.get_clnsigconf(id),
+                }
+            )
+        clinvar_df = pd.DataFrame(d)
+
+        germline_table = germline_table.merge(
+            clinvar_df, on="ClinVar ID", how="left"
+        )
         germline_table = germline_table[
             [
                 "Gene",
@@ -645,7 +682,7 @@ class excel:
                 "CDS change and protein change",
                 "Genotype",
                 "Gene mode of action",
-                "ClinVar clinical significance",
+                "clnsigconf",
                 "Population germline allele frequency (GE | gnomAD)",
             ]
         ]
@@ -657,6 +694,7 @@ class excel:
             axis=1,
             inplace=True,
         )
+
         num_gene = germline_table.shape[0]
         rows = dataframe_to_rows(germline_table)
         for r_idx, row in enumerate(rows, 1):
@@ -745,8 +783,7 @@ class excel:
             (5, "Mutation"),
             (6, "VAF"),
             (7, "Variant Class"),
-            (8, "Validation"),
-            (9, "Actionability"),
+            (8, "Actionability"),
         )
         for cell, key in snv_table_keys:
             self.summary.cell(20, cell).value = key
@@ -764,8 +801,7 @@ class excel:
             (5, "Cytological Bands"),
             (6, "Variant Type"),
             (7, "Variant Class"),
-            (8, "Validation"),
-            (9, "Actionability"),
+            (8, "Actionability"),
         )
         for cell, key in cnv_sv_table_key:
             self.summary.cell(31, cell).value = key
@@ -988,6 +1024,8 @@ class excel:
         """
         self.df_hotspots = pd.read_csv(HTOSPOTS_REF)
         df = pd.read_csv(self.args.variant, sep=",")
+        df = df[df["Origin"] == "somatic"]
+        df.reset_index(drop=True, inplace=True)
         num_variant = df.shape[0]
         df["Report (Y/N)"] = ""
         df["Comments"] = ""
@@ -1030,6 +1068,7 @@ class excel:
         df = df[
             [
                 "Gene",
+                "Origin",
                 "GRCh38 coordinates;ref/alt allele",
                 "CDS change and protein change",
                 "Predicted consequences",
@@ -1037,8 +1076,6 @@ class excel:
                 "VAF",
                 "Genotype",
                 "COSMIC ID",
-                "ClinVar ID",
-                "ClinVar clinical significance",
                 "Gene mode of action",
                 "Alteration_RefGene",
                 "Origin_RefGene",
