@@ -208,10 +208,10 @@ class excel:
         """
         soup = self.get_soup()
         pattern = re.compile(
-            r"Total number of somatic non-synonymous small variants per megabase"
+            ("Total number of somatic non-synonymous"
+             " small variants per megabase")
         )
         tmb = soup.find("b", text=pattern).next_sibling
-        
         return tmb
 
     def write_sheets(self) -> None:
@@ -300,7 +300,7 @@ class excel:
             start_row=1, end_row=1, start_column=3, end_column=6
         )
         # align cells
-        cell_to_align = ["C1", "C2", "D2", "E2", "F2"]        
+        cell_to_align = ["C1", "C2", "D2", "E2", "F2"]
         for cell in cell_to_align:
             self.soc[cell].alignment = Alignment(
                 wrapText=True, horizontal="center"
@@ -338,7 +338,7 @@ class excel:
             "C7:F7",
             "C8:F8",
         ]
-        self.all_border(row_ranges, self.soc) 
+        self.all_border(row_ranges, self.soc)
         cells_lower_border = ["A1", "A8", "A12", "A16"]
         self.lower_border(cells_lower_border, self.soc)
 
@@ -638,7 +638,7 @@ class excel:
             cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         output = ps.communicate()[0]
-        return (output.decode("utf-8").strip())
+        return output.decode("utf-8").strip()
 
     def write_germline(self) -> None:
         """
@@ -737,7 +737,6 @@ class excel:
             f"C{num_gene+4}",
         ]
         self.bold_cell(to_bold, self.germline)
-        
         # set border
         cells_lower_border = [
             "A8",
@@ -867,7 +866,9 @@ class excel:
             (9, "Size"),
             (
                 10,
-                "Population germline allele frequency (GESG | GECG for somatic SVs or AF | AUC for germline CNVs)",
+                ("Population germline allele frequency"
+                 " (GESG | GECG for somatic SVs or AF |"
+                 " AUC for germline CNVs)"),
             ),
             (11, "Confidence/support"),
             (12, "Chromosomal bands"),
@@ -927,7 +928,7 @@ class excel:
             "E31",
             "F31",
             "G31",
-            "H31"
+            "H31",
         ]
         self.colour_cell(colour_cells, self.summary, blueFill)
 
@@ -983,7 +984,9 @@ class excel:
             if i not in [29, 30, 31]:
                 cells_for_action.append(f"H{i}")
 
-        action_options = '"1. Predicts therapeutic response, 2. Prognostic, 3. Defines diagnosis group, 4. Eligibility for trial, 5. Other"'
+        action_options = ('"1. Predicts therapeutic response,'
+                          ' 2. Prognostic, 3. Defines diagnosis group'
+                          ', 4. Eligibility for trial, 5. Other"')
         self.get_drop_down(
             dropdown_options=action_options,
             prompt="Select from the list",
@@ -1114,10 +1117,10 @@ class excel:
             ("P", 22),
             ("Q", 26),
             ("R", 18),
-            ("S", 18)
+            ("S", 18),
         )
         self.set_col_width(cell_col_width, self.SNV)
-        
+
         # get max col for dropdown
         max_col = df.shape[1]
         max_col_letter = get_column_letter(max_col)
@@ -1148,11 +1151,11 @@ class excel:
         # split gene col and create look up col for them
         if max_num_gene == 1:
             df_SV["A_Gene"] = df_SV["Gene"]
-            
+
         elif max_num_gene == 2:
             df_SV[["A_Gene", "B_Gene"]] = df_SV["Gene"].str.split(
                 ";", expand=True
-            )            
+            )
             df_SV["B_LOOKUP"] = np.where(
                 df_SV["B_Gene"].isin(list(self.df_refgene["Gene"])),
                 df_SV["B_Gene"],
@@ -1226,15 +1229,14 @@ class excel:
             "Comments_RefGene",
         ] + lookup_col
         df_SV = df_SV[selected_col]
-
         # split df into three df
         df_loss = df_SV[df_SV["Type"].str.lower().str.contains("loss|loh")]
         df_loss[["Type", "Type_num"]] = df_loss.Type.str.split(
-            "\(|\)", expand=True
+            r"\(|\)", expand=True
         ).iloc[:, [0, 1]]
         df_gain = df_SV[df_SV["Type"].str.lower().str.contains("gain")]
         df_gain[["Type", "Type_num"]] = df_gain.Type.str.split(
-            "\(|\)", expand=True
+            r"\(|\)", expand=True
         ).iloc[:, [0, 1]]
         df_other = df_SV[
             ~df_SV["Type"].str.lower().str.contains("loss|loh|gain")
