@@ -1,17 +1,17 @@
 import argparse
-import numpy as np
 import re
-from openpyxl import load_workbook, drawing
+import subprocess
+import urllib.request
+import numpy as np
+from openpyxl import drawing
 from openpyxl.styles import Alignment, Border, DEFAULT_FONT, Font, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils import get_column_letter
 import pandas as pd
-import urllib.request
 from bs4 import BeautifulSoup
 from PIL import Image
-import subprocess
 
 # ref files
 HTOSPOTS_REF = "./resources/Hotspots.csv"
@@ -61,7 +61,6 @@ class excel:
             Namespace of passed command line argument inputs
         """
         parser = argparse.ArgumentParser()
-
         parser.add_argument(
             "--output", "-o", required=True, help="output xlsm file name"
         )
@@ -77,8 +76,8 @@ class excel:
             "-cg",
             required=True,
             help=(
-                "ref cancer group - has to be one of these "
-                "(COSMIC_Cancer_Genes, Haem, Medulloblastoma,"
+                "ref cancer group - has to be one of these:"
+                " COSMIC_Cancer_Genes, Haem, Medulloblastoma,"
                 " MPNST, Neuro, Ovarian, Scarcoma"
             ),
         )
@@ -87,17 +86,16 @@ class excel:
 
     def generate(self) -> None:
         """
-        Calls all methods in excel() to generate output xlsm
+        Calls all methods in excel() to generate output xlsx
         """
         self.download_html_img()
         self.write_sheets()
         self.workbook.save(self.args.output)
-
         print("Done!")
 
     def download_html_img(self) -> None:
         """
-        get the image links from html input file
+        get the image links from html file
         """
         soup = self.get_soup()
         n = 1
@@ -108,19 +106,19 @@ class excel:
                 self.crop_img("figure_2.jpg", 600, 600, 2400, 2400)
             n = n + 1
 
-    def download_image(self, url, file_path, file_name):
+    def download_image(self, url, file_path, file_name) -> None:
         """
-        Download the img from html file
+        Download the img from html links
         """
         full_path = file_path + file_name + ".jpg"
         urllib.request.urlretrieve(url, full_path)
 
     def crop_img(self, img_to_crop, left, top, right, bottom) -> None:
         """
-        crop image
+        crop the image
         Parameters
         ---------
-        str - file name for img
+        str - img file name
         int - left margin to crop
         int - top margin to crop
         int - right margin to crop
@@ -136,11 +134,11 @@ class excel:
 
         Parameters
         ----------
-        table number
+        int - table number
 
         Returns
         -------
-        list of each html table
+        list of html table
         """
         soup = self.get_soup()
         tables = soup.findAll("table")
@@ -149,9 +147,16 @@ class excel:
 
         return datasets
 
-    def extract_data_from_html_table(self, table_info):
+    def extract_data_from_html_table(self, table_info) -> list:
         """
         strip html table and return as list
+        Parameters
+        ----------
+        bs4.element.Tag for html table table
+
+        Returns
+        -------
+        list of html table
         """
         headings = [
             th.get_text() for th in table_info.find("tr").find_all("th")
@@ -166,7 +171,7 @@ class excel:
 
     def get_soup(self) -> BeautifulSoup:
         """
-        get Beautiful soup obj from url
+        get Beautiful soup obj from html
 
         Returns
         -------
@@ -183,6 +188,7 @@ class excel:
     def get_pid(self) -> None:
         """
         get pid from html
+        ### to remove as this function no longer needed
         """
         soup = self.get_soup()
         pid_html = soup.find("div", id="pid")
@@ -192,25 +198,25 @@ class excel:
         self.dob = re.search("Birth: (.*)NHS", pid).group(1)
         self.NHS_no = re.search("No.: (.*)", pid).group(1)
 
-    def get_tmb(self) -> float:
+    def get_tmb(self) -> BeautifulSoup:
         """
-        get tmb from html
+        get tumor mutation burden (tmb) from html
 
         Returns
         -------
-        float for tmb
+        bs4.element.NavigableString for tmb
         """
         soup = self.get_soup()
         pattern = re.compile(
             r"Total number of somatic non-synonymous small variants per megabase"
         )
         tmb = soup.find("b", text=pattern).next_sibling
-
+        
         return tmb
 
     def write_sheets(self) -> None:
         """
-        Write sheets to xlsm file
+        Write sheets to xlsx file
         """
         print("Writing sheets")
         self.write_refgene()
@@ -230,28 +236,28 @@ class excel:
         self.write_SNV()
         self.write_SV()
 
-    def set_col_width(self, cell_width, sheet):
+    def set_col_width(self, cell_width, sheet) -> None:
         """
         set the column width for given col in given sheet
         """
         for cell, width in cell_width:
             sheet.column_dimensions[cell].width = width
 
-    def bold_cell(self, cells_to_bold, sheet):
+    def bold_cell(self, cells_to_bold, sheet) -> None:
         """
         bold the given cells in given sheet
         """
         for cell in cells_to_bold:
             sheet[cell].font = Font(bold=True, name=DEFAULT_FONT.name)
 
-    def colour_cell(self, cells_to_colour, sheet, fill):
+    def colour_cell(self, cells_to_colour, sheet, fill) -> None:
         """
         colour the given cells in given sheet
         """
         for cell in cells_to_colour:
             sheet[cell].fill = fill
 
-    def all_border(self, row_ranges, sheet):
+    def all_border(self, row_ranges, sheet) -> None:
         """
         create all borders for given cells in given sheet
         """
@@ -260,7 +266,7 @@ class excel:
                 for cell in cells:
                     cell.border = THIN_BORDER
 
-    def lower_border(self, cells_lower_border, sheet):
+    def lower_border(self, cells_lower_border, sheet) -> None:
         """
         create lower cell border for given cells in given sheet
         """
@@ -272,34 +278,29 @@ class excel:
         Write soc sheet
         """
         self.patient_info = self.read_html_tables(0)
-        # write titles for summary values
+        # write titles
         self.soc.cell(1, 1).value = "Patient Details (Epic demographics)"
         self.soc.cell(1, 3).value = "Previous testing"
-        self.soc.cell(2, 1).value = "NAME"  # self.pt_name
+        self.soc.cell(2, 1).value = "NAME"
         self.soc.cell(2, 3).value = "Alteration"
         self.soc.cell(2, 4).value = "Assay"
         self.soc.cell(2, 5).value = "Result"
         self.soc.cell(2, 6).value = "WGS concordance"
-        self.soc.cell(
-            3, 1
-        ).value = "DOB, SEX"  # self.dob + "," + self.patient_info[0]["Gender"]
-        self.soc.cell(
-            4, 1
-        ).value = "patient ID"  # self.patient_info[0]["Patient ID"]
+        self.soc.cell(3, 1).value = "DOB, SEX"
+        self.soc.cell(4, 1).value = "patient ID"
         self.soc.cell(5, 1).value = "MRN"
-        self.soc.cell(6, 1).value = "NHS no."  # self.NHS_no
+        self.soc.cell(6, 1).value = "NHS no."
         self.soc.cell(8, 1).value = "Histology"
         self.soc.cell(12, 1).value = "Comments"
         self.soc.cell(16, 1).value = "WGS in-house gene panel applied"
         self.soc.cell(17, 1).value = self.args.cancer_gp
 
-        # merge some title columns that have longer text
+        # merge columns that have longer text
         self.soc.merge_cells(
             start_row=1, end_row=1, start_column=3, end_column=6
         )
-
-        cell_to_align = ["C1", "C2", "D2", "E2", "F2"]
-        # make the coverage tile centre of merged rows
+        # align cells
+        cell_to_align = ["C1", "C2", "D2", "E2", "F2"]        
         for cell in cell_to_align:
             self.soc[cell].alignment = Alignment(
                 wrapText=True, horizontal="center"
@@ -321,7 +322,7 @@ class excel:
         )
         self.set_col_width(cell_col_width, self.soc)
 
-        # colour title cells
+        # colour cells
         greenFill = PatternFill(patternType="solid", start_color="90EE90")
         colour_cells = ["C3", "D3", "E3", "F3", "C4", "D4", "E4", "F4"]
         self.colour_cell(colour_cells, self.soc, greenFill)
@@ -337,8 +338,7 @@ class excel:
             "C7:F7",
             "C8:F8",
         ]
-        self.all_border(row_ranges, self.soc)
-
+        self.all_border(row_ranges, self.soc) 
         cells_lower_border = ["A1", "A8", "A12", "A16"]
         self.lower_border(cells_lower_border, self.soc)
 
@@ -388,6 +388,7 @@ class excel:
         """
         write QC sheet
         """
+        # get QC info from html tables
         tumor_info = self.read_html_tables(1)
         sample_info = self.read_html_tables(2)
         germline_info = self.read_html_tables(3)
@@ -568,6 +569,7 @@ class excel:
         """
         write plot sheet
         """
+        # pid table
         self.plot.cell(1, 1).value = "=SOC!A2"
         self.plot.cell(2, 1).value = "=SOC!A3"
         self.plot.cell(3, 1).value = "=SOC!A5"
@@ -583,6 +585,8 @@ class excel:
 
         # set column widths for readability
         self.plot.column_dimensions["A"].width = 32
+
+        # insert img from html file
         self.insert_img(self.plot, "cropped_figure_2.jpg", "C2", 500, 500)
         self.insert_img(self.plot, "figure_3.jpg", "C26", 600, 1400)
 
@@ -590,6 +594,7 @@ class excel:
         """
         write signatures sheet
         """
+        # pid table
         self.signatures.cell(1, 1).value = "=SOC!A2"
         self.signatures.cell(2, 1).value = "=SOC!A3"
         self.signatures.cell(3, 1).value = "=SOC!A5"
@@ -603,16 +608,19 @@ class excel:
         # titles to set to bold
         to_bold = ["A1", "A8", "A13"]
         self.bold_cell(to_bold, self.signatures)
+        # set lower border
         self.lower_border(["A8"], self.signatures)
 
         # set column widths for readability
         self.signatures.column_dimensions["A"].width = 32
+
+        # insert img from html file
         self.insert_img(self.signatures, "figure_6.jpg", "C3", 700, 1000)
         self.insert_img(self.signatures, "figure_7.jpg", "P3", 400, 600)
 
     def get_clnsigconf(self, clinvarID) -> str:
         """
-        get the get_clnsigconf from clinvar file for
+        get the clnsigconf from clinvar file for given
         clinvar ID
 
         Parameters
@@ -624,12 +632,13 @@ class excel:
         -------
         str for CLNSIGCONF
         """
-        cmd = f"zcat {CLINVAR_REF} | awk '$3=={clinvarID} {{print($8)}}' |  grep -o -P '(?<=CLNSIGCONF=).*?(?=;)'"
+        cmd = f"zcat {CLINVAR_REF} | awk '$3=={clinvarID} {{print($8)}}' |  \
+               grep -o -P '(?<=CLNSIGCONF=).*?(?=;)'"
         ps = subprocess.Popen(
             cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         output = ps.communicate()[0]
-        return output.decode("utf-8").strip()
+        return (output.decode("utf-8").strip())
 
     def write_germline(self) -> None:
         """
@@ -657,17 +666,20 @@ class excel:
         )
         for cell, key in snv_table_keys:
             self.germline.cell(2, cell).value = key
+
         # populate germline table
         germline_table = pd.read_csv(self.args.variant, sep=",")
         germline_table = germline_table[germline_table["Origin"] == "germline"]
         germline_table.reset_index(drop=True, inplace=True)
+
+        # get the clnsigconf from clinvar file based on clinvar ID
         clinvarID = list(germline_table["ClinVar ID"])
         d = []
-        for id in clinvarID:
+        for cid in clinvarID:
             d.append(
                 {
-                    "ClinVar ID": id,
-                    "clnsigconf": self.get_clnsigconf(id),
+                    "ClinVar ID": cid,
+                    "clnsigconf": self.get_clnsigconf(cid),
                 }
             )
         clinvar_df = pd.DataFrame(d)
@@ -686,6 +698,7 @@ class excel:
                 "Population germline allele frequency (GE | gnomAD)",
             ]
         ]
+        # split the col to get gnomAD
         germline_table[["GE", "gnomAD"]] = germline_table[
             "Population germline allele frequency (GE | gnomAD)"
         ].str.split("|", expand=True)
@@ -695,6 +708,7 @@ class excel:
             inplace=True,
         )
 
+        # write df into excel sheet
         num_gene = germline_table.shape[0]
         rows = dataframe_to_rows(germline_table)
         for r_idx, row in enumerate(rows, 1):
@@ -723,7 +737,8 @@ class excel:
             f"C{num_gene+4}",
         ]
         self.bold_cell(to_bold, self.germline)
-
+        
+        # set border
         cells_lower_border = [
             "A8",
             f"C{num_gene+4}",
@@ -764,6 +779,7 @@ class excel:
         """
         Write summary sheet
         """
+        # pid table
         self.summary.cell(1, 1).value = "=SOC!A2"
         self.summary.cell(2, 1).value = "=SOC!A3"
         self.summary.cell(3, 1).value = "=SOC!A5"
@@ -874,14 +890,12 @@ class excel:
             "F20",
             "G20",
             "H20",
-            "I20",
             "C31",
             "D31",
             "E31",
             "F31",
             "G31",
             "H31",
-            "I31",
             "A41",
             "A51",
         ]
@@ -908,37 +922,35 @@ class excel:
             "F20",
             "G20",
             "H20",
-            "I20",
             "C31",
             "D31",
             "E31",
             "F31",
             "G31",
-            "H31",
-            "I31",
+            "H31"
         ]
         self.colour_cell(colour_cells, self.summary, blueFill)
 
         # set borders around table areas
         row_ranges = [
-            "C20:I20",
-            "C21:I21",
-            "C22:I22",
-            "C23:I23",
-            "C24:I24",
-            "C25:I25",
-            "C26:I26",
-            "C27:I27",
-            "C28:I28",
-            "C31:I31",
-            "C32:I32",
-            "C33:I33",
-            "C34:I34",
-            "C35:I35",
-            "C36:I36",
-            "C37:I37",
-            "C38:I38",
-            "C39:I39",
+            "C20:H20",
+            "C21:H21",
+            "C22:H22",
+            "C23:H23",
+            "C24:H24",
+            "C25:H25",
+            "C26:H26",
+            "C27:H27",
+            "C28:H28",
+            "C31:H31",
+            "C32:H32",
+            "C33:H33",
+            "C34:H34",
+            "C35:H35",
+            "C36:H36",
+            "C37:H37",
+            "C38:H38",
+            "C39:H39",
         ]
         self.all_border(row_ranges, self.summary)
         cells_lower_border = ["A9", "A12", "A41", "A51"]
@@ -949,6 +961,7 @@ class excel:
             for cell in self.summary[f"{i}:{i}"]:
                 cell.font = smaller_font
 
+        # add dropdowns
         cells_for_class = []
         for i in range(21, 40):
             if i not in [29, 30, 31]:
@@ -965,26 +978,10 @@ class excel:
             cells=cells_for_class,
         )
 
-        cells_for_validation = []
-        for i in range(21, 40):
-            if i not in [29, 30, 31]:
-                cells_for_validation.append(f"H{i}")
-
-        validation_options = (
-            '"Not indicated, Previously detected, {In progress}, VALIDATED"'
-        )
-        self.get_drop_down(
-            dropdown_options=validation_options,
-            prompt="Select from the list",
-            title="Validation",
-            sheet=self.summary,
-            cells=cells_for_validation,
-        )
-
         cells_for_action = []
         for i in range(21, 40):
             if i not in [29, 30, 31]:
-                cells_for_action.append(f"I{i}")
+                cells_for_action.append(f"H{i}")
 
         action_options = '"1. Predicts therapeutic response, 2. Prognostic, 3. Defines diagnosis group, 4. Eligibility for trial, 5. Other"'
         self.get_drop_down(
@@ -994,6 +991,8 @@ class excel:
             sheet=self.summary,
             cells=cells_for_action,
         )
+
+        # insert img from html file
         self.insert_img(self.summary, "cropped_figure_2.jpg", "C1", 350, 350)
         self.insert_img(self.summary, "figure_3.jpg", "E1", 300, 700)
 
@@ -1007,14 +1006,12 @@ class excel:
         ]
         self.df_refgene.drop_duplicates(
             subset="Gene", keep="last", inplace=True
-        )  ####NEED TO REMOVE
+        )  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
         self.df_refgene.reset_index(drop=True, inplace=True)
         self.df_refgene.to_excel(
             self.writer, sheet_name="RefGene", index=False
         )
         ref_gene = self.writer.sheets["RefGene"]
-        cell_col_width = (("D", 32), ("E", 32), ("F", 32), ("G", 28))
-        self.set_col_width(cell_col_width, ref_gene)
         filters = ref_gene.auto_filter
         filters.ref = "A:G"
 
@@ -1024,6 +1021,7 @@ class excel:
         """
         self.df_hotspots = pd.read_csv(HTOSPOTS_REF)
         df = pd.read_csv(self.args.variant, sep=",")
+        # select only somatic rows
         df = df[df["Origin"] == "somatic"]
         df.reset_index(drop=True, inplace=True)
         num_variant = df.shape[0]
@@ -1036,6 +1034,7 @@ class excel:
         df["Alteration_RefGene"] = df["Gene"].map(
             self.df_refgene.set_index("Gene")["Alteration"]
         )
+        # look up genes from df_refgene
         df["Origin_RefGene"] = df["Gene"].map(
             self.df_refgene.set_index("Gene")["Origin"]
         )
@@ -1064,7 +1063,7 @@ class excel:
         df[["GE", "gnomAD"]] = df[
             "Population germline allele frequency (GE | gnomAD)"
         ].str.split("|", expand=True)
-        df["Variant_to_report"] = ""
+        df.loc[:, "Variant_to_report"] = ""
         df = df[
             [
                 "Gene",
@@ -1083,6 +1082,8 @@ class excel:
                 "Comments_RefGene",
                 "MTBP c.",
                 "MTBP p.",
+                "HS_Sample",
+                "HS_Tumour",
                 "Variant_to_report",
             ]
         ]
@@ -1113,15 +1114,21 @@ class excel:
             ("P", 22),
             ("Q", 26),
             ("R", 18),
+            ("S", 18)
         )
         self.set_col_width(cell_col_width, self.SNV)
+        
+        # get max col for dropdown
+        max_col = df.shape[1]
+        max_col_letter = get_column_letter(max_col)
+        # add filter in col
         filters = self.SNV.auto_filter
-        filters.ref = "A:R"
+        filters.ref = f"A:{max_col_letter}"
 
         report_options = '"yes, no"'
         cells_for_report = []
         for i in range(2, num_variant + 2):
-            cells_for_report.append(f"R{i}")
+            cells_for_report.append(f"{max_col_letter}{i}")
 
         self.get_drop_down(
             dropdown_options=report_options,
@@ -1138,14 +1145,14 @@ class excel:
         df_SV = pd.read_csv(self.args.SV, sep=",")
         df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
         max_num_gene = df_SV["gene_count"].max() + 1
+        # split gene col and create look up col for them
         if max_num_gene == 1:
             df_SV["A_Gene"] = df_SV["Gene"]
-            # df_SV[["B_Gene", "C_Gene", "D_Gene"]] = ""
+            
         elif max_num_gene == 2:
             df_SV[["A_Gene", "B_Gene"]] = df_SV["Gene"].str.split(
                 ";", expand=True
-            )
-            # df_SV[["C_Gene", "D_Gene"]] = ""
+            )            
             df_SV["B_LOOKUP"] = np.where(
                 df_SV["B_Gene"].isin(list(self.df_refgene["Gene"])),
                 df_SV["B_Gene"],
@@ -1156,7 +1163,6 @@ class excel:
             df_SV[["A_Gene", "B_Gene", "C_Gene"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
-            # df_SV[["D_Gene"]] = ""
             df_SV["B_LOOKUP"] = np.where(
                 df_SV["B_Gene"].isin(list(self.df_refgene["Gene"])),
                 df_SV["B_Gene"],
@@ -1188,6 +1194,7 @@ class excel:
             )
         df_SV["Report (Y/N)"] = ""
         df_SV["Comments"] = ""
+        # look up A_Gene in df_refgene
         df_SV["Alteration_RefGene"] = df_SV["A_Gene"].map(
             self.df_refgene.set_index("Gene")["Alteration"]
         )
@@ -1203,6 +1210,8 @@ class excel:
         df_SV["Comments_RefGene"] = df_SV["A_Gene"].map(
             self.df_refgene.set_index("Gene")["Comments"]
         )
+
+        # subset df
         lookup_col = [col for col in df_SV if col.endswith("LOOKUP")]
         selected_col = [
             "Gene",
@@ -1218,7 +1227,7 @@ class excel:
         ] + lookup_col
         df_SV = df_SV[selected_col]
 
-        # split df into three groups
+        # split df into three df
         df_loss = df_SV[df_SV["Type"].str.lower().str.contains("loss|loh")]
         df_loss[["Type", "Type_num"]] = df_loss.Type.str.split(
             "\(|\)", expand=True
@@ -1228,7 +1237,7 @@ class excel:
             "\(|\)", expand=True
         ).iloc[:, [0, 1]]
         df_other = df_SV[
-            df_SV["Type"].str.lower().str.contains("loss|loh|gain") == False
+            ~df_SV["Type"].str.lower().str.contains("loss|loh|gain")
         ]
         df_other[["Type1", "Type2"]] = df_other.Type.str.split(
             ";", expand=True
@@ -1238,6 +1247,7 @@ class excel:
             (df_gain, "SV_gain"),
             (df_other, "SV_others"),
         )
+        # write each df into sheet
         for df, sheet_name in df_to_write:
             num_variant = df.shape[0]
 
@@ -1257,7 +1267,7 @@ class excel:
                 ] + lookup_col
 
                 df = df[reordered_col]
-                df["Variant_to_report"] = ""
+                df.loc[:, "Variant_to_report"] = ""
             else:
                 reordered_col = [
                     "Gene",
@@ -1273,7 +1283,7 @@ class excel:
                     "Comments_RefGene",
                 ] + lookup_col
                 df = df[reordered_col]
-                df["Variant_to_report"] = ""
+                df.loc[:, "Variant_to_report"] = ""
             max_col = df.shape[1]
             df.to_excel(self.writer, sheet_name=sheet_name, index=False)
             sheet = self.writer.sheets[sheet_name]
@@ -1337,7 +1347,7 @@ class excel:
 
     def insert_img(self, sheet, img_to_insert, cell_to_insert, h, w) -> None:
         """
-        insert the img downloaed from html into spreadsheet
+        insert the img downloaded from html into spreadsheet
         """
         ws = sheet
         img = drawing.image.Image(img_to_insert)
