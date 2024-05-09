@@ -16,7 +16,7 @@ from PIL import Image
 # ref files
 HTOSPOTS_REF = "./resources/Hotspots.csv"
 REFGENEGP_REF = "./resources/RefGene_Groups.csv"
-CLINVAR_REF = "./resources/clinvar_20240407_GRCh37.vcf.gz"
+CLINVAR_REF = "./resources/clinvar_20240407_hg38_withchr.vcf.gz"
 
 # openpyxl style settings
 THIN = Side(border_style="thin", color="000000")
