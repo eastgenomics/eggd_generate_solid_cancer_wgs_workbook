@@ -423,9 +423,10 @@ class excel:
             (5, tumor_info[0]["Histopathology or SIHMDS LAB ID"]),
             (
                 6,
-                tumor_info[0]["Presentation"]
-                + " "
-                + tumor_info[0]["Primary or Metastatic"],
+                tumor_info[0]["Presentation"].split("_")[0]
+                + " ("
+                + tumor_info[0]["Primary or Metastatic"]
+                + ")"
             ),
             (7, self.patient_info[0]["Clinical Indication"]),
             (8, tumor_info[0]["Tumour Topography"]),
@@ -551,6 +552,13 @@ class excel:
         self.all_border(row_ranges, self.QC)
         self.lower_border(["A8"], self.QC)
 
+        # colour title cells
+        blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
+        blue_colour_cells = ["C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1",
+                             "C4", "D4", "E4", "F4", "G4", "H4", "I4",
+                             "C7", "D7", "E7", "F7", "G7", "H7"]
+        self.colour_cell(blue_colour_cells, self.QC, blueFill)
+
         # add dropdowns
         cells_for_QC = ["A9"]
         QC_options = '"None,<30% tumour purity,SNVs low VAF (<6%),TINC (<5%)"'
@@ -588,7 +596,7 @@ class excel:
 
         # insert img from html file
         self.insert_img(self.plot, "cropped_figure_2.jpg", "C2", 500, 500)
-        self.insert_img(self.plot, "figure_3.jpg", "C26", 600, 1400)
+        self.insert_img(self.plot, "figure_3.jpg", "C26", 600, 1200)
 
     def write_signatures(self) -> None:
         """
@@ -615,8 +623,8 @@ class excel:
         self.signatures.column_dimensions["A"].width = 32
 
         # insert img from html file
-        self.insert_img(self.signatures, "figure_6.jpg", "C3", 700, 1000)
-        self.insert_img(self.signatures, "figure_7.jpg", "P3", 400, 600)
+        self.insert_img(self.signatures, "figure_6.jpg", "C3", 600, 800)
+        self.insert_img(self.signatures, "figure_7.jpg", "N3", 600, 800)
 
     def get_clnsigconf(self, clinvarID) -> str:
         """
@@ -630,15 +638,26 @@ class excel:
 
         Returns
         -------
-        str for CLNSIGCONF
+        list for CLNSIG, CLNSIGCONF
         """
-        cmd = f"zcat {CLINVAR_REF} | awk '$3=={clinvarID} {{print($8)}}' |  \
-               grep -o -P '(?<=CLNSIGCONF=).*?(?=;)'"
-        ps = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        output = ps.communicate()[0]
-        return output.decode("utf-8").strip()
+        clinvar_dx = []
+        for c in ["CLNSIG", "CLNSIGCONF"]:
+            cmd = f"zcat {CLINVAR_REF} | awk '$3=={clinvarID} \
+                  {{print($8)}}' |  \
+                  grep -o -P '(?<={c}=).*?(?=;)'"
+            ps = subprocess.Popen(
+                cmd, shell=True, stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
+            output = ps.communicate()[0]
+            clinvar_dx.append(output.decode("utf-8").strip())
+        if all('' == s for s in clinvar_dx):
+            clinvar_dx = ""        
+        elif '' in clinvar_dx:
+            clinvar_dx = next(s for s in clinvar_dx if s)
+        else:
+            clinvar_dx = clinvar_dx[1]
+        return clinvar_dx
 
     def write_germline(self) -> None:
         """
@@ -726,6 +745,7 @@ class excel:
         to_bold = [
             "A1",
             "A8",
+            "C1",
             "C2",
             "D2",
             "E2",
@@ -885,7 +905,9 @@ class excel:
             "A9",
             "A12",
             "A16",
+            "C19",
             "C20",
+            "C30",
             "D20",
             "E20",
             "F20",
@@ -1079,6 +1101,8 @@ class excel:
                 "Genotype",
                 "COSMIC ID",
                 "Gene mode of action",
+                "Report (Y/N)",
+                "Comments",
                 "Alteration_RefGene",
                 "Origin_RefGene",
                 "Entities_RefGene",
@@ -1101,13 +1125,14 @@ class excel:
         self.SNV = self.writer.sheets["SNV"]
         cell_col_width = (
             ("A", 12),
-            ("B", 24),
+            ("B", 12),
             ("C", 28),
             ("D", 28),
             ("E", 14),
             ("F", 14),
             ("G", 8),
-            ("H", 24),
+            ("H", 12),
+            ("I", 14),
             ("J", 20),
             ("K", 20),
             ("L", 26),
@@ -1118,6 +1143,8 @@ class excel:
             ("Q", 26),
             ("R", 18),
             ("S", 18),
+            ("T", 16),
+            ("U", 16)
         )
         self.set_col_width(cell_col_width, self.SNV)
 
@@ -1217,6 +1244,7 @@ class excel:
         # subset df
         lookup_col = [col for col in df_SV if col.endswith("LOOKUP")]
         selected_col = [
+            "Variant domain",
             "Gene",
             "GRCh38 coordinates",
             "Type",
@@ -1227,7 +1255,7 @@ class excel:
             "Origin_RefGene",
             "Entities_RefGene",
             "Comments_RefGene",
-        ] + lookup_col
+        ] #+ lookup_col
         df_SV = df_SV[selected_col]
         # split df into three df
         df_loss = df_SV[df_SV["Type"].str.lower().str.contains("loss|loh")]
@@ -1254,7 +1282,9 @@ class excel:
             num_variant = df.shape[0]
 
             if sheet_name == "SV_others":
+                
                 reordered_col = [
+                    "Variant domain",
                     "Gene",
                     "GRCh38 coordinates",
                     "Type1",
@@ -1266,12 +1296,13 @@ class excel:
                     "Origin_RefGene",
                     "Entities_RefGene",
                     "Comments_RefGene",
-                ] + lookup_col
+                ] #+ lookup_col
 
                 df = df[reordered_col]
                 df.loc[:, "Variant_to_report"] = ""
             else:
                 reordered_col = [
+                    "Variant domain",
                     "Gene",
                     "GRCh38 coordinates",
                     "Type",
@@ -1283,7 +1314,7 @@ class excel:
                     "Origin_RefGene",
                     "Entities_RefGene",
                     "Comments_RefGene",
-                ] + lookup_col
+                ] #+ lookup_col
                 df = df[reordered_col]
                 df.loc[:, "Variant_to_report"] = ""
             max_col = df.shape[1]
@@ -1291,14 +1322,15 @@ class excel:
             sheet = self.writer.sheets[sheet_name]
             cell_col_width = (
                 ("A", 12),
-                ("B", 24),
-                ("E", 22),
+                ("B", 12),
+                ("C", 22),
                 ("F", 20),
                 ("G", 20),
                 ("H", 24),
                 ("I", 24),
                 ("J", 24),
                 ("K", 20),
+                ("L", 20)
             )
 
             self.set_col_width(cell_col_width, sheet)
