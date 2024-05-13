@@ -652,7 +652,7 @@ class excel:
             output = ps.communicate()[0]
             clinvar_dx.append(output.decode("utf-8").strip())
         if all('' == s for s in clinvar_dx):
-            clinvar_dx = ""        
+            clinvar_dx = ""
         elif '' in clinvar_dx:
             clinvar_dx = next(s for s in clinvar_dx if s)
         else:
@@ -1255,7 +1255,7 @@ class excel:
             "Origin_RefGene",
             "Entities_RefGene",
             "Comments_RefGene",
-        ] #+ lookup_col
+        ]  # + lookup_col
         df_SV = df_SV[selected_col]
         # split df into three df
         df_loss = df_SV[df_SV["Type"].str.lower().str.contains("loss|loh")]
@@ -1282,7 +1282,6 @@ class excel:
             num_variant = df.shape[0]
 
             if sheet_name == "SV_others":
-                
                 reordered_col = [
                     "Variant domain",
                     "Gene",
@@ -1296,7 +1295,7 @@ class excel:
                     "Origin_RefGene",
                     "Entities_RefGene",
                     "Comments_RefGene",
-                ] #+ lookup_col
+                ]  # + lookup_col
 
                 df = df[reordered_col]
                 df.loc[:, "Variant_to_report"] = ""
@@ -1314,7 +1313,7 @@ class excel:
                     "Origin_RefGene",
                     "Entities_RefGene",
                     "Comments_RefGene",
-                ] #+ lookup_col
+                ]  # + lookup_col
                 df = df[reordered_col]
                 df.loc[:, "Variant_to_report"] = ""
             max_col = df.shape[1]
