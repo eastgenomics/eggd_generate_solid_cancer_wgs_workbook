@@ -62,7 +62,7 @@ class excel:
         """
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "--output", "-o", required=True, help="output xlsm file name"
+            "--output", "-o", required=True, help="output xlsx file name"
         )
         parser.add_argument("-html", required=True, help="html input")
         parser.add_argument(
@@ -101,10 +101,9 @@ class excel:
         n = 1
         for link in soup.findAll("img"):
             img_link = link.get("src")
-            self.download_image(img_link, "./", f"figure_{n}")
-            if n == 2:
-                self.crop_img("figure_2.jpg", 600, 600, 2400, 2400)
+            self.download_image(img_link, "./", f"figure_{n}")        
             n = n + 1
+        self.crop_img("figure_2.jpg", 600, 600, 2400, 2400)
 
     def download_image(self, url, file_path, file_name) -> None:
         """
