@@ -101,7 +101,7 @@ class excel:
         n = 1
         for link in soup.findAll("img"):
             img_link = link.get("src")
-            self.download_image(img_link, "./", f"figure_{n}")        
+            self.download_image(img_link, "./", f"figure_{n}")
             n = n + 1
         self.crop_img("figure_2.jpg", 600, 600, 2400, 2400)
 
@@ -207,8 +207,10 @@ class excel:
         """
         soup = self.get_soup()
         pattern = re.compile(
-            ("Total number of somatic non-synonymous"
-             " small variants per megabase")
+            (
+                "Total number of somatic non-synonymous"
+                " small variants per megabase"
+            )
         )
         tmb = soup.find("b", text=pattern).next_sibling
         return tmb
@@ -519,7 +521,7 @@ class excel:
             "E7",
             "F7",
             "G7",
-            "H7",
+            "H7"
         ]
         self.bold_cell(to_bold, self.QC)
 
@@ -553,9 +555,29 @@ class excel:
 
         # colour title cells
         blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
-        blue_colour_cells = ["C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1",
-                             "C4", "D4", "E4", "F4", "G4", "H4", "I4",
-                             "C7", "D7", "E7", "F7", "G7", "H7"]
+        blue_colour_cells = [
+            "C1",
+            "D1",
+            "E1",
+            "F1",
+            "G1",
+            "H1",
+            "I1",
+            "J1",
+            "C4",
+            "D4",
+            "E4",
+            "F4",
+            "G4",
+            "H4",
+            "I4",
+            "C7",
+            "D7",
+            "E7",
+            "F7",
+            "G7",
+            "H7"
+        ]
         self.colour_cell(blue_colour_cells, self.QC, blueFill)
 
         # add dropdowns
@@ -645,14 +667,16 @@ class excel:
                   {{print($8)}}' |  \
                   grep -o -P '(?<={c}=).*?(?=;)'"
             ps = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE,
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
             )
             output = ps.communicate()[0]
             clinvar_dx.append(output.decode("utf-8").strip())
-        if all('' == s for s in clinvar_dx):
+        if all("" == s for s in clinvar_dx):
             clinvar_dx = ""
-        elif '' in clinvar_dx:
+        elif "" in clinvar_dx:
             clinvar_dx = next(s for s in clinvar_dx if s)
         else:
             clinvar_dx = clinvar_dx[1]
@@ -705,17 +729,7 @@ class excel:
         germline_table = germline_table.merge(
             clinvar_df, on="ClinVar ID", how="left"
         )
-        germline_table = germline_table[
-            [
-                "Gene",
-                "GRCh38 coordinates;ref/alt allele",
-                "CDS change and protein change",
-                "Genotype",
-                "Gene mode of action",
-                "clnsigconf",
-                "Population germline allele frequency (GE | gnomAD)",
-            ]
-        ]
+
         # split the col to get gnomAD
         germline_table[["GE", "gnomAD"]] = germline_table[
             "Population germline allele frequency (GE | gnomAD)"
@@ -725,6 +739,29 @@ class excel:
             axis=1,
             inplace=True,
         )
+        germline_table[["Alt allele", "total read depth"]] = germline_table[
+            "Alt allele/total read depth"
+        ].str.split("/", expand=True)
+        germline_table["Alt allele"] = germline_table["Alt allele"].astype(int)
+        germline_table["total read depth"] = germline_table[
+            "total read depth"
+        ].astype(int)
+        germline_table["VAF"] = (
+            germline_table["Alt allele"] / germline_table["total read depth"]
+        )
+        germline_table["VAF"] = germline_table["VAF"].round(2)
+        germline_table = germline_table[
+            [
+                "Gene",
+                "GRCh38 coordinates;ref/alt allele",
+                "CDS change and protein change",
+                "Genotype",
+                "Gene mode of action",
+                "clnsigconf",
+                "gnomAD",
+                "VAF"
+            ]
+        ]
 
         # write df into excel sheet
         num_gene = germline_table.shape[0]
@@ -781,15 +818,15 @@ class excel:
         # set column widths for readability
         cell_col_width = (
             ("A", 36),
-            ("B", 10),
-            ("C", 28),
-            ("D", 32),
-            ("E", 32),
-            ("F", 20),
-            ("G", 28),
+            ("B", 4),
+            ("C", 12),
+            ("D", 22),
+            ("E", 22),
+            ("F", 10),
+            ("G", 22),
             ("H", 40),
-            ("I", 20),
-            ("J", 28),
+            ("I", 10),
+            ("J", 12),
         )
         self.set_col_width(cell_col_width, self.germline)
 
@@ -885,9 +922,11 @@ class excel:
             (9, "Size"),
             (
                 10,
-                ("Population germline allele frequency"
-                 " (GESG | GECG for somatic SVs or AF |"
-                 " AUC for germline CNVs)"),
+                (
+                    "Population germline allele frequency"
+                    " (GESG | GECG for somatic SVs or AF |"
+                    " AUC for germline CNVs)"
+                ),
             ),
             (11, "Confidence/support"),
             (12, "Chromosomal bands"),
@@ -1005,9 +1044,11 @@ class excel:
             if i not in [29, 30, 31]:
                 cells_for_action.append(f"H{i}")
 
-        action_options = ('"1. Predicts therapeutic response,'
-                          ' 2. Prognostic, 3. Defines diagnosis group'
-                          ', 4. Eligibility for trial, 5. Other"')
+        action_options = (
+            '"1. Predicts therapeutic response,'
+            ' 2. Prognostic, 3. Defines diagnosis group'
+            ', 4. Eligibility for trial, 5. Other"'
+        )
         self.get_drop_down(
             dropdown_options=action_options,
             prompt="Select from the list",
