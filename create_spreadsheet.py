@@ -1080,6 +1080,28 @@ class excel:
         filters = ref_gene.auto_filter
         filters.ref = "A:G"
 
+    def lookup(
+        self, df_to_check, ref_df, col_to_map, ref_col, lookup_col
+    ) -> list:
+        """
+        get the list of look up col
+
+        Parameters
+        ----------
+        pd.DataFrame to check
+        pd.DataFrame to refer
+        str col name to map
+        str col name as ref col
+        str col to look up
+
+        Returns
+        -------
+        list - result of look up
+        """
+        return df_to_check[col_to_map].map(
+            ref_df.set_index(ref_col)[lookup_col]
+        )
+
     def write_SNV(self) -> None:
         """
         write SNV sheet
@@ -1096,18 +1118,18 @@ class excel:
             r"(?=p)", n=1, expand=True
         )
         df["c_dot"] = df["c_dot"].str.replace("(;$)", "", regex=True)
-        df["Alteration_RefGene"] = df["Gene"].map(
-            self.df_refgene.set_index("Gene")["Alteration"]
-        )
         # look up genes from df_refgene
-        df["Origin_RefGene"] = df["Gene"].map(
-            self.df_refgene.set_index("Gene")["Origin"]
+        df["Alteration_RefGene"] = self.lookup(
+            df, self.df_refgene, "Gene", "Gene", "Alteration"
         )
-        df["Entities_RefGene"] = df["Gene"].map(
-            self.df_refgene.set_index("Gene")["Entities"]
+        df["Origin_RefGene"] = self.lookup(
+            df, self.df_refgene, "Gene", "Gene", "Origin"
         )
-        df["Comments_RefGene"] = df["Gene"].map(
-            self.df_refgene.set_index("Gene")["Comments"]
+        df["Entities_RefGene"] = self.lookup(
+            df, self.df_refgene, "Gene", "Gene", "Entities"
+        )
+        df["Comments_RefGene"] = self.lookup(
+            df, self.df_refgene, "Gene", "Gene", "Comments"
         )
         df = df.replace([None], [""], regex=True)
         df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
@@ -1117,13 +1139,15 @@ class excel:
         )
         df.drop(["col1", "col2"], axis=1, inplace=True)
 
-        df["HS_Sample"] = df["HS p."].map(
-            self.df_hotspots.set_index("HS_PROTEIN_ID")["HS_Samples"]
+        df["HS_Sample"] = self.lookup(
+            df, self.df_hotspots, "HS p.", "HS_PROTEIN_ID", "HS_Samples"
         )
-        df["HS_Tumour"] = df["HS p."].map(
-            self.df_hotspots.set_index("HS_PROTEIN_ID")[
-                "HS_Tumor Type Composition"
-            ]
+        df["HS_Tumour"] = self.lookup(
+            df,
+            self.df_hotspots,
+            "HS p.",
+            "HS_PROTEIN_ID",
+            "HS_Tumor Type Composition",
         )
         df[["GE", "gnomAD"]] = df[
             "Population germline allele frequency (GE | gnomAD)"
@@ -1208,6 +1232,30 @@ class excel:
             cells=cells_for_report,
         )
 
+    def lookup_same_col(
+        self, df_to_check, ref_df, col_to_map, ref_col
+    ) -> list:
+        """
+        get the list of look up col
+
+        Parameters
+        ----------
+        pd.DataFrame to check
+        pd.DataFrame to refer
+        str col name to map
+        str col name to refer
+
+        Returns
+        -------
+        list - result from look up
+        """
+
+        return np.where(
+            df_to_check[col_to_map].isin(list(ref_df[ref_col])),
+            df_to_check[col_to_map],
+            "",
+        )
+
     def write_SV(self) -> None:
         """
         write SV, SV_loss and SV_gain sheets
@@ -1223,62 +1271,47 @@ class excel:
             df_SV[["A_Gene", "B_Gene"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
-            df_SV["B_LOOKUP"] = np.where(
-                df_SV["B_Gene"].isin(list(self.df_refgene["Gene"])),
-                df_SV["B_Gene"],
-                "",
+            df_SV["B_LOOKUP"] = self.lookup_same_col(
+                df_SV, self.df_refgene, "B_Gene", "Gene"
             )
 
         elif max_num_gene == 3:
             df_SV[["A_Gene", "B_Gene", "C_Gene"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
-            df_SV["B_LOOKUP"] = np.where(
-                df_SV["B_Gene"].isin(list(self.df_refgene["Gene"])),
-                df_SV["B_Gene"],
-                "",
+            df_SV["B_LOOKUP"] = self.lookup_same_col(
+                df_SV, self.df_refgene, "B_Gene", "Gene"
             )
-            df_SV["C_LOOKUP"] = np.where(
-                df_SV["C_Gene"].isin(list(self.df_refgene["Gene"])),
-                df_SV["C_Gene"],
-                "",
+            df_SV["C_LOOKUP"] = self.lookup_same_col(
+                df_SV, self.df_refgene, "C_Gene", "Gene"
             )
         elif max_num_gene == 4:
             df_SV[["A_Gene", "B_Gene", "C_gene", "D_gene"]] = df_SV[
                 "Gene"
             ].str.split(";", expand=True)
-            df_SV["B_LOOKUP"] = np.where(
-                df_SV["B_Gene"].isin(list(self.df_refgene["Gene"])),
-                df_SV["B_Gene"],
-                "",
+            df_SV["B_LOOKUP"] = self.lookup_same_col(
+                df_SV, self.df_refgene, "B_Gene", "Gene"
             )
-            df_SV["C_LOOKUP"] = np.where(
-                df_SV["C_Gene"].isin(list(self.df_refgene["Gene"])),
-                df_SV["C_Gene"],
-                "",
+            df_SV["C_LOOKUP"] = self.lookup_same_col(
+                df_SV, self.df_refgene, "C_Gene", "Gene"
             )
-            df_SV["D_LOOKUP"] = np.where(
-                df_SV["D_Gene"].isin(list(self.df_refgene["Gene"])),
-                df_SV["D_Gene"],
-                "",
+            df_SV["D_LOOKUP"] = self.lookup_same_col(
+                df_SV, self.df_refgene, "D_Gene", "Gene"
             )
         df_SV["Report (Y/N)"] = ""
         df_SV["Comments"] = ""
         # look up A_Gene in df_refgene
-        df_SV["Alteration_RefGene"] = df_SV["A_Gene"].map(
-            self.df_refgene.set_index("Gene")["Alteration"]
+        df_SV["Alteration_RefGene"] = self.lookup(
+            df_SV, self.df_refgene, "A_Gene", "Gene", "Alteration"
         )
-        df_SV["Origin_RefGene"] = df_SV["A_Gene"].map(
-            self.df_refgene.set_index("Gene")["Origin"]
+        df_SV["Origin_RefGene"] = self.lookup(
+            df_SV, self.df_refgene, "A_Gene", "Gene", "Origin"
         )
-        df_SV["Entities_RefGene"] = df_SV["A_Gene"].map(
-            self.df_refgene.set_index("Gene")["Entities"]
+        df_SV["Entities_RefGene"] = self.lookup(
+            df_SV, self.df_refgene, "A_Gene", "Gene", "Entities"
         )
-        df_SV["Comments_RefGene"] = df_SV["A_Gene"].map(
-            self.df_refgene.set_index("Gene")["Comments"]
-        )
-        df_SV["Comments_RefGene"] = df_SV["A_Gene"].map(
-            self.df_refgene.set_index("Gene")["Comments"]
+        df_SV["Comments_RefGene"] = self.lookup(
+            df_SV, self.df_refgene, "A_Gene", "Gene", "Comments"
         )
 
         # subset df
