@@ -392,6 +392,22 @@ class excel:
             cells=cells_for_assay,
         )
 
+    def write_pid_table(self, sheet_name) -> None:
+        """
+        write pid table in a given sheet
+        Parameters
+        ---------
+        str for sheet name to write pid table
+        """
+        pid_keys = ((1, "=SOC!A2"),
+                    (2, "=SOC!A3"),
+                    (3, "=SOC!A5"),
+                    (4, "=SOC!A6"),
+                    (6, "=SOC!A9")
+                    )
+        for cell, key in pid_keys:
+            sheet_name.cell(cell, 1).value = key
+
     def write_QC(self) -> None:
         """
         write QC sheet
@@ -403,11 +419,7 @@ class excel:
         seq_info = self.read_html_tables(4)
         tmb_value = self.get_tmb()
         # PID table
-        self.QC.cell(1, 1).value = "=SOC!A2"
-        self.QC.cell(2, 1).value = "=SOC!A3"
-        self.QC.cell(3, 1).value = "=SOC!A5"
-        self.QC.cell(4, 1).value = "=SOC!A6"
-        self.QC.cell(6, 1).value = "=SOC!A9"
+        self.write_pid_table(self.QC)
         self.QC.cell(8, 1).value = "QC alerts"
         self.QC.cell(9, 1).value = "None"
 
@@ -606,11 +618,7 @@ class excel:
         write plot sheet
         """
         # pid table
-        self.plot.cell(1, 1).value = "=SOC!A2"
-        self.plot.cell(2, 1).value = "=SOC!A3"
-        self.plot.cell(3, 1).value = "=SOC!A5"
-        self.plot.cell(4, 1).value = "=SOC!A6"
-        self.plot.cell(6, 1).value = "=SOC!A9"
+        self.write_pid_table(self.plot)
         self.plot.cell(8, 1).value = "Pertinent chromosomal CNVs"
         self.plot.cell(9, 1).value = "None"
         self.plot.cell(5, 4).value = "Insert"
@@ -631,11 +639,7 @@ class excel:
         write signatures sheet
         """
         # pid table
-        self.signatures.cell(1, 1).value = "=SOC!A2"
-        self.signatures.cell(2, 1).value = "=SOC!A3"
-        self.signatures.cell(3, 1).value = "=SOC!A5"
-        self.signatures.cell(4, 1).value = "=SOC!A6"
-        self.signatures.cell(6, 1).value = "=SOC!A9"
+        self.write_pid_table(self.signatures)
         self.signatures.cell(8, 1).value = "Signature version"
         self.signatures.cell(9, 1).value = "v2 (March 2015)"
         self.signatures.cell(13, 1).value = "Pertinent signatures"
@@ -693,11 +697,7 @@ class excel:
         """
         write germline sheet
         """
-        self.germline.cell(1, 1).value = "=SOC!A2"
-        self.germline.cell(2, 1).value = "=SOC!A3"
-        self.germline.cell(3, 1).value = "=SOC!A5"
-        self.germline.cell(4, 1).value = "=SOC!A6"
-        self.germline.cell(6, 1).value = "=SOC!A9"
+        self.write_pid_table(self.germline)
         self.germline.cell(8, 1).value = "Pertinent germline variants"
         self.germline.cell(9, 1).value = "None"
 
@@ -842,11 +842,7 @@ class excel:
         Write summary sheet
         """
         # pid table
-        self.summary.cell(1, 1).value = "=SOC!A2"
-        self.summary.cell(2, 1).value = "=SOC!A3"
-        self.summary.cell(3, 1).value = "=SOC!A5"
-        self.summary.cell(4, 1).value = "=SOC!A6"
-        self.summary.cell(6, 1).value = "=SOC!A9"
+        self.write_pid_table(self.summary)
         self.summary.cell(9, 1).value = "Reportable genes"
         self.summary.cell(
             10, 1
