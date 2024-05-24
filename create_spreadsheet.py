@@ -1,4 +1,5 @@
 import argparse
+import os
 import re
 import sys
 import subprocess
@@ -54,8 +55,9 @@ class excel:
                                        "Neuro", "Ovarian", "Scarcoma2"]:
             print(self.args.cancer_gp, "is not in Reference Gene Groups")
             sys.exit(1)
-
-        self.writer = pd.ExcelWriter(self.args.output, engine="openpyxl")
+        basename = os.path.basename(self.args.variant)
+        self.output_file = basename.rsplit('-', 1)[0] + '.xlsx'
+        self.writer = pd.ExcelWriter(self.output_file, engine="openpyxl")
         self.workbook = self.writer.book
 
     def parse_args(self) -> argparse.Namespace:
@@ -68,9 +70,6 @@ class excel:
             Namespace of passed command line argument inputs
         """
         parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "--output", "-o", required=True, help="output xlsx file name"
-        )
         parser.add_argument("-html", required=True, help="html input")
         parser.add_argument(
             "--variant", "-v", required=True, help="variant csv file"
@@ -97,7 +96,7 @@ class excel:
         """
         self.download_html_img()
         self.write_sheets()
-        self.workbook.save(self.args.output)
+        self.workbook.save(self.output_file)
         print("Done!")
 
     def download_html_img(self) -> None:
