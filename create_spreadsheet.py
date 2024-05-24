@@ -1,5 +1,6 @@
 import argparse
 import re
+import sys
 import subprocess
 import urllib.request
 import numpy as np
@@ -48,6 +49,12 @@ class excel:
 
     def __init__(self) -> None:
         self.args = self.parse_args()
+        if self.args.cancer_gp not in ["COSMIC_Cancer_Genes", "Haem",
+                                       "Medulloblastoma", "MPNST",
+                                       "Neuro", "Ovarian", "Scarcoma2"]:
+            print(self.args.cancer_gp, "is not in Reference Gene Groups")
+            sys.exit(1)
+
         self.writer = pd.ExcelWriter(self.args.output, engine="openpyxl")
         self.workbook = self.writer.book
 
@@ -1118,19 +1125,15 @@ class excel:
             r"(?=p)", n=1, expand=True
         )
         df["c_dot"] = df["c_dot"].str.replace("(;$)", "", regex=True)
+
         # look up genes from df_refgene
-        df["Alteration_RefGene"] = self.lookup(
-            df, self.df_refgene, "Gene", "Gene", "Alteration"
-        )
-        df["Origin_RefGene"] = self.lookup(
-            df, self.df_refgene, "Gene", "Gene", "Origin"
-        )
-        df["Entities_RefGene"] = self.lookup(
-            df, self.df_refgene, "Gene", "Gene", "Entities"
-        )
-        df["Comments_RefGene"] = self.lookup(
-            df, self.df_refgene, "Gene", "Gene", "Comments"
-        )
+        lookup_dict_refgene = {"Alteration_RefGene": "Alteration",
+                               "Origin_RefGene": "Origin",
+                               "Entities_RefGene": "Entities",
+                               "Comments_RefGene": "Comments"}
+        for k, v in lookup_dict_refgene.items():
+            df[k] = self.lookup(df, self.df_refgene, "Gene", "Gene", v)
+
         df = df.replace([None], [""], regex=True)
         df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
         df["MTBP p."] = df["Gene"] + ":" + df["p_dot"]
@@ -1139,16 +1142,13 @@ class excel:
         )
         df.drop(["col1", "col2"], axis=1, inplace=True)
 
-        df["HS_Sample"] = self.lookup(
-            df, self.df_hotspots, "HS p.", "HS_PROTEIN_ID", "HS_Samples"
-        )
-        df["HS_Tumour"] = self.lookup(
-            df,
-            self.df_hotspots,
-            "HS p.",
-            "HS_PROTEIN_ID",
-            "HS_Tumor Type Composition",
-        )
+        # look up from hotspots
+        lookup_dict_hotspots = {"HS_Sample": "HS_Samples",
+                                "HS_Tumour": "HS_Tumor Type Composition"
+                                }
+        for k, v in lookup_dict_hotspots.items():
+            df[k] = self.lookup(df, self.df_hotspots, "HS p.",
+                                "HS_PROTEIN_ID", v)
         df[["GE", "gnomAD"]] = df[
             "Population germline allele frequency (GE | gnomAD)"
         ].str.split("|", expand=True)
@@ -1279,40 +1279,32 @@ class excel:
             df_SV[["A_Gene", "B_Gene", "C_Gene"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
-            df_SV["B_LOOKUP"] = self.lookup_same_col(
-                df_SV, self.df_refgene, "B_Gene", "Gene"
-            )
-            df_SV["C_LOOKUP"] = self.lookup_same_col(
-                df_SV, self.df_refgene, "C_Gene", "Gene"
-            )
+            lookup_dict = {"B_LOOKUP": "B_Gene",
+                           "C_LOOKUP": "C_Gene"}
+            for k, v in lookup_dict.items():
+                df_SV[k] = self.lookup_same_col(df_SV, self.df_refgene,
+                                                v, "Gene")
         elif max_num_gene == 4:
             df_SV[["A_Gene", "B_Gene", "C_gene", "D_gene"]] = df_SV[
                 "Gene"
             ].str.split(";", expand=True)
-            df_SV["B_LOOKUP"] = self.lookup_same_col(
-                df_SV, self.df_refgene, "B_Gene", "Gene"
-            )
-            df_SV["C_LOOKUP"] = self.lookup_same_col(
-                df_SV, self.df_refgene, "C_Gene", "Gene"
-            )
-            df_SV["D_LOOKUP"] = self.lookup_same_col(
-                df_SV, self.df_refgene, "D_Gene", "Gene"
-            )
+            lookup_dict = {"B_LOOKUP": "B_Gene",
+                           "C_LOOKUP": "C_Gene",
+                           "D_LOOKUP": "D_Gene"}
+            for k, v in lookup_dict.items():
+                df_SV[k] = self.lookup_same_col(df_SV, self.df_refgene,
+                                                v, "Gene")
         df_SV["Report (Y/N)"] = ""
         df_SV["Comments"] = ""
+
         # look up A_Gene in df_refgene
-        df_SV["Alteration_RefGene"] = self.lookup(
-            df_SV, self.df_refgene, "A_Gene", "Gene", "Alteration"
-        )
-        df_SV["Origin_RefGene"] = self.lookup(
-            df_SV, self.df_refgene, "A_Gene", "Gene", "Origin"
-        )
-        df_SV["Entities_RefGene"] = self.lookup(
-            df_SV, self.df_refgene, "A_Gene", "Gene", "Entities"
-        )
-        df_SV["Comments_RefGene"] = self.lookup(
-            df_SV, self.df_refgene, "A_Gene", "Gene", "Comments"
-        )
+        lookup_dict_refgene = {"Alteration_RefGene": "Alteration",
+                               "Origin_RefGene": "Origin",
+                               "Entities_RefGene": "Entities",
+                               "Comments_RefGene": "Comments"}
+        for k, v in lookup_dict_refgene.items():
+            df_SV[k] = self.lookup(df_SV, self.df_refgene,
+                                   "A_Gene", "Gene", v)
 
         # subset df
         lookup_col = [col for col in df_SV if col.endswith("LOOKUP")]
