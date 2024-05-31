@@ -1,0 +1,37 @@
+{
+  "description": "app/applet parameters",
+  "type": "object",
+  "definitions": {
+    "inputs": {
+      "title": "Inputs",
+      "type": "object",
+      "description": "",
+      "properties": {
+          "hotspots": {
+            "type": "string",
+            "format": "file-path",
+            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6j4Yj36y2VXZzqB09J5"
+          },
+          "refgenegp": {
+            "type": "string",
+            "format": "file-path",
+            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q784Yj3J3pjKpq3110gJ"
+          },
+          "clinvar": {
+            "type": "string",
+            "format": "file-path",
+            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q484Yj300qjXX1vg8f6J"
+          },
+          "clinvar_index": {
+            "type": "string",
+            "format": "file-path",
+            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6Q4Yj354zfXJBXg408z"
+          },
+          "cancer_gp": {
+            "type": "string",
+            "default": ""
+          }
+      }
+    }
+  }
+}

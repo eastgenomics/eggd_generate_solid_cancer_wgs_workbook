@@ -15,10 +15,6 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from PIL import Image
 
-# ref files
-HTOSPOTS_REF = "./resources/Hotspots.csv"
-REFGENEGP_REF = "./resources/RefGene_Groups.csv"
-CLINVAR_REF = "./resources/clinvar_20240407_hg38_withchr.vcf.gz"
 
 # openpyxl style settings
 THIN = Side(border_style="thin", color="000000")
@@ -85,9 +81,17 @@ class excel:
                 "ref cancer group - has to be one of these:"
                 " COSMIC_Cancer_Genes, Haem, Medulloblastoma,"
                 " MPNST, Neuro, Ovarian, Scarcoma"
-            ),
+            )
         )
-
+        parser.add_argument(
+            "--hotspots", "-hs", required=True, help="hotspots ref file"
+        )
+        parser.add_argument(
+            "--refgenegp", "-rgg", required=True, help="refgenegroup ref file"
+        )
+        parser.add_argument(
+            "--clinvar", "-c", required=True, help="clinvar ref file"
+        )
         return parser.parse_args()
 
     def generate(self) -> None:
@@ -183,25 +187,9 @@ class excel:
         Beautiful soup object
         """
         url = self.args.html
-        f = urllib.request.urlopen(url)
-        page = f.read()
-        f.close()
-        soup = BeautifulSoup(page, features="lxml")
-
+        page = open(url)
+        soup = BeautifulSoup(page.read())
         return soup
-
-    def get_pid(self) -> None:
-        """
-        get pid from html
-        ### to remove as this function no longer needed
-        """
-        soup = self.get_soup()
-        pid_html = soup.find("div", id="pid")
-        pid_soup = BeautifulSoup(f"{pid_html}", features="lxml")
-        pid = pid_soup.get_text()
-        self.pt_name = re.search("Name: (.*)Date", pid).group(1)
-        self.dob = re.search("Birth: (.*)NHS", pid).group(1)
-        self.NHS_no = re.search("No.: (.*)", pid).group(1)
 
     def get_tmb(self) -> BeautifulSoup:
         """
@@ -227,7 +215,6 @@ class excel:
         """
         print("Writing sheets")
         self.write_refgene()
-        self.get_pid()
         self.soc = self.workbook.create_sheet("SOC")
         self.write_soc()
         self.QC = self.workbook.create_sheet("QC")
@@ -673,7 +660,7 @@ class excel:
         """
         clinvar_dx = []
         for c in ["CLNSIG", "CLNSIGCONF"]:
-            cmd = f"zcat {CLINVAR_REF} | awk '$3=={clinvarID} \
+            cmd = f"zcat {self.args.clinvar} | awk '$3=={clinvarID} \
                   {{print($8)}}' |  \
                   grep -o -P '(?<={c}=).*?(?=;)'"
             ps = subprocess.Popen(
@@ -745,17 +732,6 @@ class excel:
             axis=1,
             inplace=True,
         )
-        germline_table[["Alt allele", "total read depth"]] = germline_table[
-            "Alt allele/total read depth"
-        ].str.split("/", expand=True)
-        germline_table["Alt allele"] = germline_table["Alt allele"].astype(int)
-        germline_table["total read depth"] = germline_table[
-            "total read depth"
-        ].astype(int)
-        germline_table["VAF"] = (
-            germline_table["Alt allele"] / germline_table["total read depth"]
-        )
-        germline_table["VAF"] = germline_table["VAF"].round(2)
         germline_table = germline_table[
             [
                 "Gene",
@@ -764,8 +740,7 @@ class excel:
                 "Genotype",
                 "Gene mode of action",
                 "clnsigconf",
-                "gnomAD",
-                "VAF"
+                "gnomAD"
             ]
         ]
 
@@ -1067,7 +1042,7 @@ class excel:
         """
         write RefGene sheet
         """
-        self.df_rgg = pd.read_csv(REFGENEGP_REF)
+        self.df_rgg = pd.read_csv(self.args.refgenegp)
         self.df_refgene = self.df_rgg[
             self.df_rgg["RefGene Group"] == self.args.cancer_gp
         ]
@@ -1108,7 +1083,7 @@ class excel:
         """
         write SNV sheet
         """
-        self.df_hotspots = pd.read_csv(HTOSPOTS_REF)
+        self.df_hotspots = pd.read_csv(self.args.hotspots)
         df = pd.read_csv(self.args.variant, sep=",")
         # select only somatic rows
         df = df[df["Origin"] == "somatic"]
