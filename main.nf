@@ -56,17 +56,3 @@ wgs_solidCA_workbook(v1_ch
     
 }
 
-
-
-
-
-
-
-
-
-
-
-  
-   
-
-
