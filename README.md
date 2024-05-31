@@ -13,8 +13,8 @@ This is nexflow applet to generate the workbook for WGS solid cancer variants pr
 - excel spreadsheet for variants
 
 ### How to develop applet on DNAnexus
-`git clone` the repo
-`cd` into `eggd_generate_wgs_solid_cancer_workbook`
-`dx build --nextflow`
+- `git clone` the repo
+- `cd` into `eggd_generate_wgs_solid_cancer_workbook`
+- `dx build --nextflow`
 
 
