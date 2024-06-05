@@ -21,7 +21,7 @@ This is nexflow applet to generate the workbook for WGS solid cancer variants pr
 ### How to run the applet
 Example command
 ```
-dx run applet-GkGyvGj4Yj3135yV5jqVJgbq \
+dx run applet-xxxx \
 -ihotspots="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6j4Yj36y2VXZzqB09J5" \
 -irefgenegp="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q784Yj3J3pjKpq3110gJ" \
 -iclinvar="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q484Yj300qjXX1vg8f6J" \
