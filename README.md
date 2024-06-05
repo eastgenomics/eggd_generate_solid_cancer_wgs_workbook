@@ -24,8 +24,8 @@ Example command
 dx run applet-xxxx \
 -ihotspots="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6j4Yj36y2VXZzqB09J5" \
 -irefgenegp="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q784Yj3J3pjKpq3110gJ" \
--iclinvar="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q484Yj300qjXX1vg8f6J" \
--iclinvar_index="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6Q4Yj354zfXJBXg408z" \
+-iclinvar="project-Fkb6Gkj433GVVvj73J7x8KbV:file-GjP2v0j42VYfY5qfYGVKxy79" \
+-iclinvar_index="project-Fkb6Gkj433GVVvj73J7x8KbV:file-GjP2vG842VYjBz0VfGQBZ7F8" \
 -icancer_gp="xxxx" \
 -inextflow_pipeline_params="--file_path=dx://project-xxx:/xx/xxx" # file path where csv and html are located
 ```
