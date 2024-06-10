@@ -1,7 +1,6 @@
 import argparse
 import os
 import re
-import sys
 import subprocess
 import urllib.request
 import numpy as np
@@ -46,11 +45,6 @@ class excel:
 
     def __init__(self) -> None:
         self.args = self.parse_args()
-        if self.args.cancer_gp not in ["COSMIC_Cancer_Genes", "Haem",
-                                       "Medulloblastoma", "MPNST",
-                                       "Neuro", "Ovarian", "Scarcoma2"]:
-            print(self.args.cancer_gp, "is not in Reference Gene Groups")
-            sys.exit(1)
         basename = os.path.basename(self.args.variant)
         self.output_file = basename.rsplit('-', 1)[0] + '.xlsx'
         self.writer = pd.ExcelWriter(self.output_file, engine="openpyxl")
@@ -72,16 +66,6 @@ class excel:
         )
         parser.add_argument(
             "--SV", "-sv", required=True, help="structural variant csv file"
-        )
-        parser.add_argument(
-            "--cancer_gp",
-            "-cg",
-            required=True,
-            help=(
-                "ref cancer group - has to be one of these:"
-                " COSMIC_Cancer_Genes, Haem, Medulloblastoma,"
-                " MPNST, Neuro, Ovarian, Scarcoma"
-            )
         )
         parser.add_argument(
             "--hotspots", "-hs", required=True, help="hotspots ref file"
@@ -228,7 +212,7 @@ class excel:
         self.summary = self.workbook.create_sheet("Summary")
         self.write_summary()
         self.write_SNV()
-        self.write_SV()
+        #self.write_SV()
 
     def set_col_width(self, cell_width, sheet) -> None:
         """
@@ -280,14 +264,12 @@ class excel:
         self.soc.cell(2, 4).value = "Assay"
         self.soc.cell(2, 5).value = "Result"
         self.soc.cell(2, 6).value = "WGS concordance"
-        self.soc.cell(3, 1).value = "DOB, SEX"
-        self.soc.cell(4, 1).value = "patient ID"
+        self.soc.cell(3, 1).value = "Sex, Age, DOB"
+        self.soc.cell(4, 1).value = "Phone number"
         self.soc.cell(5, 1).value = "MRN"
-        self.soc.cell(6, 1).value = "NHS no."
+        self.soc.cell(6, 1).value = "NHS Number"
         self.soc.cell(8, 1).value = "Histology"
         self.soc.cell(12, 1).value = "Comments"
-        self.soc.cell(16, 1).value = "WGS in-house gene panel applied"
-        self.soc.cell(17, 1).value = self.args.cancer_gp
 
         # merge columns that have longer text
         self.soc.merge_cells(
@@ -333,7 +315,7 @@ class excel:
             "C8:F8",
         ]
         self.all_border(row_ranges, self.soc)
-        cells_lower_border = ["A1", "A8", "A12", "A16"]
+        cells_lower_border = ["A1", "A8", "A12"]
         self.lower_border(cells_lower_border, self.soc)
 
         # add dropdowns
@@ -366,10 +348,10 @@ class excel:
         cells_for_assay = []
         for i in range(3, 17):
             cells_for_assay.append(f"D{i}")
-        assay_options = '"FISH,IHC,NGS,Sanger,NGS multi-gene panel, \
-                        RNA fusion panel,SNP array, Methylation array, \
-                        MALDI-TOF, MLPA, MS-MLPA, Chromosome breakage, \
-                        Digital droplet PCR, RT-PCR, LR-PCR"'
+        assay_options = ('"FISH,IHC,NGS,Sanger,NGS multi-gene panel,'
+                         'RNA fusion panel,SNP array, Methylation array,'
+                         'MALDI-TOF, MLPA, MS-MLPA, Chromosome breakage,'
+                         'Digital droplet PCR, RT-PCR, LR-PCR"')
         self.get_drop_down(
             dropdown_options=assay_options,
             prompt="Select from the list",
@@ -385,14 +367,14 @@ class excel:
         ---------
         str for sheet name to write pid table
         """
-        pid_keys = ((1, "=SOC!A2"),
-                    (2, "=SOC!A3"),
-                    (3, "=SOC!A5"),
-                    (4, "=SOC!A6"),
-                    (6, "=SOC!A9")
+        pid_keys = ((1, 1, "=SOC!A2"),
+                    (2, 1, "=SOC!A3"),
+                    (1, 3, "=SOC!A5"),
+                    (2, 3, "=SOC!A6"),
+                    (1, 5, "=SOC!A9")
                     )
-        for cell, key in pid_keys:
-            sheet_name.cell(cell, 1).value = key
+        for row, col, key in pid_keys:
+            sheet_name.cell(row, col).value = key
 
     def write_QC(self) -> None:
         """
@@ -406,44 +388,44 @@ class excel:
         tmb_value = self.get_tmb()
         # PID table
         self.write_pid_table(self.QC)
-        self.QC.cell(8, 1).value = "QC alerts"
-        self.QC.cell(9, 1).value = "None"
+        self.QC.cell(15, 1).value = "QC alerts"
+        self.QC.cell(16, 1).value = "None"
 
         # table 1
         table1_keys = (
-            (3, "Diagnosis Date"),
-            (4, "Tumour Received"),
-            (5, "Tumour ID"),
-            (6, "Presentation"),
-            (7, "Diagnosis"),
-            (8, "Tumour Site"),
-            (9, "Tumour Type"),
-            (10, "Germline Sample"),
+            (1, "Diagnosis Date"),
+            (2, "Tumour Received"),
+            (3, "Tumour ID"),
+            (4, "Presentation"),
+            (5, "Diagnosis"),
+            (6, "Tumour Site"),
+            (7, "Tumour Type"),
+            (8, "Germline Sample"),
         )
         for cell, key in table1_keys:
-            self.QC.cell(1, cell).value = key
+            self.QC.cell(4, cell).value = key
 
         table1_values = (
-            (3, tumor_info[0]["Tumour Diagnosis Date"]),
-            (4, sample_info[0]["Clinical Sample Date Time"]),
-            (5, tumor_info[0]["Histopathology or SIHMDS LAB ID"]),
+            (1, tumor_info[0]["Tumour Diagnosis Date"]),
+            (2, sample_info[0]["Clinical Sample Date Time"]),
+            (3, tumor_info[0]["Histopathology or SIHMDS LAB ID"]),
             (
-                6,
+                4,
                 tumor_info[0]["Presentation"].split("_")[0]
                 + " ("
                 + tumor_info[0]["Primary or Metastatic"]
                 + ")"
             ),
-            (7, self.patient_info[0]["Clinical Indication"]),
-            (8, tumor_info[0]["Tumour Topography"]),
+            (5, self.patient_info[0]["Clinical Indication"]),
+            (6, tumor_info[0]["Tumour Topography"]),
             (
-                9,
+                7,
                 sample_info[0]["Storage Medium"]
                 + " "
                 + sample_info[0]["Source"],
             ),
             (
-                10,
+                8,
                 germline_info[0]["Storage Medium"]
                 + " ("
                 + germline_info[0]["Source"]
@@ -451,89 +433,89 @@ class excel:
             ),
         )
         for cell, value in table1_values:
-            self.QC.cell(2, cell).value = value
+            self.QC.cell(5, cell).value = value
 
         # table 2
         table2_keys = (
-            (3, "Purity (Histo)"),
-            (4, "Purity (Calculated)"),
-            (5, "Ploidy"),
-            (6, "Total SNVs"),
-            (7, "Total Indels"),
-            (8, "Total SVs"),
-            (9, "TMB"),
+            (1, "Purity (Histo)"),
+            (2, "Purity (Calculated)"),
+            (3, "Ploidy"),
+            (4, "Total SNVs"),
+            (5, "Total Indels"),
+            (6, "Total SVs"),
+            (7, "TMB"),
         )
         for cell, key in table2_keys:
-            self.QC.cell(4, cell).value = key
+            self.QC.cell(7, cell).value = key
 
         table2_values = (
-            (3, sample_info[0]["Tumour Content"]),
-            (4, sample_info[0]["Calculated Tumour Content"]),
-            (5, sample_info[0]["Calculated Overall Ploidy"]),
-            (6, seq_info[1]["Total somatic SNVs"]),
-            (7, seq_info[1]["Total somatic indels"]),
-            (8, seq_info[1]["Total somatic SVs"]),
-            (9, str(tmb_value).strip()),
+            (1, sample_info[0]["Tumour Content"]),
+            (2, sample_info[0]["Calculated Tumour Content"]),
+            (3, sample_info[0]["Calculated Overall Ploidy"]),
+            (4, seq_info[1]["Total somatic SNVs"]),
+            (5, seq_info[1]["Total somatic indels"]),
+            (6, seq_info[1]["Total somatic SVs"]),
+            (7, str(tmb_value).strip()),
         )
         for cell, value in table2_values:
-            self.QC.cell(5, cell).value = value
+            self.QC.cell(8, cell).value = value
 
         # table 3
         table3_keys = (
-            (3, "Sample type"),
-            (4, "Mean depth, x"),
-            (5, "Mapped reads, %"),
-            (6, "Chimeric DNA frag, %"),
-            (7, "Insert size, bp"),
-            (8, "Unevenness, x"),
+            (1, "Sample type"),
+            (2, "Mean depth, x"),
+            (3, "Mapped reads, %"),
+            (4, "Chimeric DNA frag, %"),
+            (5, "Insert size, bp"),
+            (6, "Unevenness, x"),
         )
         for cell, key in table3_keys:
-            self.QC.cell(7, cell).value = key
+            self.QC.cell(10, cell).value = key
 
         seq_info_title = (
-            (3, "Sample type"),
-            (4, "Genome-wide coverage mean, x"),
-            (5, "Mapped reads, %"),
-            (6, "Chimeric DNA fragments, %"),
-            (7, "Insert size median, bp"),
-            (8, "Unevenness of local genome coverage, x"),
+            (1, "Sample type"),
+            (2, "Genome-wide coverage mean, x"),
+            (3, "Mapped reads, %"),
+            (4, "Chimeric DNA fragments, %"),
+            (5, "Insert size median, bp"),
+            (6, "Unevenness of local genome coverage, x"),
         )
         for cell, title in seq_info_title:
-            self.QC.cell(8, cell).value = seq_info[0][title]
-            self.QC.cell(9, cell).value = seq_info[1][title]
+            self.QC.cell(11, cell).value = seq_info[0][title]
+            self.QC.cell(12, cell).value = seq_info[1][title]
 
         # titles to set to bold
         to_bold = [
             "A1",
-            "A8",
-            "C1",
-            "D1",
-            "E1",
-            "F1",
-            "G1",
-            "H1",
-            "I1",
-            "J1",
+            "A4",
+            "A7",
+            "A10",
+            "A15",
+            "B4",
+            "B7",
+            "B10",
             "C4",
-            "D4",
-            "E4",
-            "F4",
-            "G4",
-            "H4",
-            "I4",
             "C7",
+            "C10",
+            "D4",
             "D7",
+            "D10",
+            "E4",
             "E7",
+            "E10",
+            "F4",
             "F7",
+            "F10",
+            "G4",
             "G7",
-            "H7"
+            "H4"
         ]
         self.bold_cell(to_bold, self.QC)
 
         # set column widths for readability
         cell_col_width = (
-            ("A", 32),
-            ("B", 8),
+            ("A", 22),
+            ("B", 22),
             ("C", 22),
             ("D", 22),
             ("E", 22),
@@ -547,47 +529,48 @@ class excel:
 
         # set borders around table areas
         row_ranges = [
-            "C1:J1",
-            "C2:J2",
-            "C4:I4",
-            "C5:I5",
-            "C7:H7",
-            "C8:H8",
-            "C9:H9",
+            "A4:H4",
+            "A5:H5",
+            "A7:G7",
+            "A8:G8",
+            "A10:F10",
+            "A11:F11",
+            "A12:F12",
         ]
         self.all_border(row_ranges, self.QC)
-        self.lower_border(["A8"], self.QC)
+        self.lower_border(["A15"], self.QC)
 
         # colour title cells
         blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
         blue_colour_cells = [
-            "C1",
-            "D1",
-            "E1",
-            "F1",
-            "G1",
-            "H1",
-            "I1",
-            "J1",
+            "A4",
+            "B4",
             "C4",
             "D4",
             "E4",
             "F4",
             "G4",
             "H4",
-            "I4",
+            "A7",
+            "B7",
             "C7",
             "D7",
             "E7",
             "F7",
             "G7",
-            "H7"
+            "A10",
+            "B10",
+            "C10",
+            "D10",
+            "E10",
+            "F10"
         ]
         self.colour_cell(blue_colour_cells, self.QC, blueFill)
 
         # add dropdowns
-        cells_for_QC = ["A9"]
-        QC_options = '"None,<30% tumour purity,SNVs low VAF (<6%),TINC (<5%)"'
+        cells_for_QC = ["A16"]
+        QC_options = ('"None,<30% tumour purity,SNVs low VAF (<6%),TINC (<5%),'
+                      'Somatic CNV, Germline CNV"')
         self.get_drop_down(
             dropdown_options=QC_options,
             prompt="Select from the list",
@@ -596,8 +579,8 @@ class excel:
             cells=cells_for_QC,
         )
         # insert img from html
-        self.insert_img(self.QC, "figure_9.jpg", "C12", 400, 600)
-        self.insert_img(self.QC, "figure_11.jpg", "G12", 400, 600)
+        self.insert_img(self.QC, "figure_9.jpg", "C16", 400, 600)
+        self.insert_img(self.QC, "figure_11.jpg", "F16", 400, 600)
 
     def write_plot(self) -> None:
         """
@@ -605,20 +588,26 @@ class excel:
         """
         # pid table
         self.write_pid_table(self.plot)
-        self.plot.cell(8, 1).value = "Pertinent chromosomal CNVs"
-        self.plot.cell(9, 1).value = "None"
-        self.plot.cell(5, 4).value = "Insert"
+        self.plot.cell(21, 1).value = "Pertinent chromosomal CNVs"
+        self.plot.cell(22, 1).value = "None"
 
         # titles to set to bold
-        to_bold = ["A1", "A8"]
+        to_bold = ["A1", "A21"]
         self.bold_cell(to_bold, self.plot)
 
         # set column widths for readability
-        self.plot.column_dimensions["A"].width = 32
+        cell_col_width = (
+            ("A", 18),
+            ("B", 22),
+            ("C", 18),
+            ("D", 22),
+            ("E", 22),
+        )
+        self.set_col_width(cell_col_width, self.plot)
 
         # insert img from html file
-        self.insert_img(self.plot, "cropped_figure_2.jpg", "C2", 500, 500)
-        self.insert_img(self.plot, "figure_3.jpg", "C26", 600, 1200)
+        self.insert_img(self.plot, "figure_3.jpg", "A4", 600, 1000)
+        self.insert_img(self.plot, "cropped_figure_2.jpg", "H4", 500, 500)
 
     def write_signatures(self) -> None:
         """
@@ -626,23 +615,31 @@ class excel:
         """
         # pid table
         self.write_pid_table(self.signatures)
-        self.signatures.cell(8, 1).value = "Signature version"
-        self.signatures.cell(9, 1).value = "v2 (March 2015)"
-        self.signatures.cell(13, 1).value = "Pertinent signatures"
-        self.signatures.cell(14, 1).value = "None"
+        self.signatures.cell(21, 1).value = "Signature version"
+        self.signatures.cell(22, 1).value = "v2 (March 2015)"
+        self.signatures.cell(21, 3).value = "Pertinent signatures"
+        self.signatures.cell(22, 3).value = "None"
 
         # titles to set to bold
-        to_bold = ["A1", "A8", "A13"]
+        to_bold = ["A1", "A21", "C21"]
         self.bold_cell(to_bold, self.signatures)
         # set lower border
-        self.lower_border(["A8"], self.signatures)
+        self.lower_border(["A21", "C21"], self.signatures)
 
         # set column widths for readability
-        self.signatures.column_dimensions["A"].width = 32
+        cell_col_width = (
+            ("A", 18),
+            ("B", 22),
+            ("C", 18),
+            ("D", 22),
+            ("E", 22),
+        )
+        self.set_col_width(cell_col_width, self.signatures)
 
         # insert img from html file
-        self.insert_img(self.signatures, "figure_6.jpg", "C3", 600, 800)
-        self.insert_img(self.signatures, "figure_7.jpg", "N3", 600, 800)
+        self.insert_img(self.signatures, "figure_6.jpg", "A4", 600, 800)
+        self.insert_img(self.signatures, "figure_7.jpg", "E4", 600, 800)
+        self.insert_img(self.signatures, "figure_8.jpg", "M4", 600, 1100)
 
     def get_clnsigconf(self, clinvarID) -> str:
         """
@@ -684,23 +681,20 @@ class excel:
         write germline sheet
         """
         self.write_pid_table(self.germline)
-        self.germline.cell(8, 1).value = "Pertinent germline variants"
-        self.germline.cell(9, 1).value = "None"
-
         # Germline SNV table
-        self.germline.cell(1, 3).value = "Germline SNV"
         snv_table_keys = (
-            (3, "Gene"),
-            (4, "GRCh38 Coordinates"),
-            (5, "Variant"),
-            (6, "Genotype"),
-            (7, "Role in Cancer"),
-            (8, "ClinVar"),
-            (9, "gnomAD"),
-            (10, "Tumour VAF"),
+            (1, "Gene"),
+            (2, "GRCh38 Coordinates"),
+            (3, "Variant"),
+            (4, "Genotype"),
+            (5, "Role in Cancer"),
+            (6, "ClinVar"),
+            (7, "gnomAD"),
+            (8, "Tumour VAF"),
+            (9, "Variant class")
         )
         for cell, key in snv_table_keys:
-            self.germline.cell(2, cell).value = key
+            self.germline.cell(4, cell).value = key
 
         # populate germline table
         germline_table = pd.read_csv(self.args.variant, sep=",")
@@ -751,65 +745,77 @@ class excel:
             for c_idx, value in enumerate(row, 1):
                 if c_idx != 1 and r_idx != 1:
                     self.germline.cell(
-                        row=r_idx, column=c_idx + 1, value=value
+                        row=r_idx+2, column=c_idx - 1, value=value
                     )
 
         self.germline.cell(
-            num_gene + 4, 3
-        ).value = "Clinical genetics feedback"
+            num_gene + 6, 1
+        ).value = "Pertinent variants/feedback"
+        self.germline.cell(
+            num_gene + 7, 1
+        ).value = "None"
 
         # titles to set to bold
         to_bold = [
             "A1",
-            "A8",
-            "C1",
-            "C2",
-            "D2",
-            "E2",
-            "F2",
-            "G2",
-            "H2",
-            "I2",
-            "J2",
-            f"C{num_gene+4}",
+            "A4",
+            "B4",
+            "A10",
+            "C4",
+            "D4",
+            "E4",
+            "F4",
+            "G4",
+            "H4",
+            "I4",
+            f"C{num_gene+6}",
         ]
         self.bold_cell(to_bold, self.germline)
         # set border
         cells_lower_border = [
-            "A8",
-            f"C{num_gene+4}",
+            f"A{num_gene+6}",
         ]
         self.lower_border(cells_lower_border, self.germline)
 
-        # set column widths for readability
-        self.germline.column_dimensions["A"].width = 32
-
         # set borders around table areas
         row_ranges = []
-        for i in range(1, num_gene + 3):
-            row_ranges.append(f"C{i}:J{i}")
+        for i in range(4, num_gene+5):
+            row_ranges.append(f"A{i}:I{i}")
         self.all_border(row_ranges, self.germline)
 
         # colour title cells
         blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
-        blue_colour_cells = ["C2", "D2", "E2", "F2", "G2", "H2", "I2", "J2"]
+        blue_colour_cells = ["A4", "B4", "C4", "D4", "E4", "F4",
+                             "G4", "H4", "I4"]
 
         self.colour_cell(blue_colour_cells, self.germline, blueFill)
 
         # set column widths for readability
         cell_col_width = (
-            ("A", 36),
-            ("B", 4),
-            ("C", 12),
-            ("D", 22),
+            ("A", 20),
+            ("B", 18),
+            ("C", 22),
+            ("D", 14),
             ("E", 22),
-            ("F", 10),
-            ("G", 22),
-            ("H", 40),
-            ("I", 10),
-            ("J", 12),
+            ("F", 22),
+            ("G", 18),
+            ("H", 8),
+            ("I", 22)
         )
         self.set_col_width(cell_col_width, self.germline)
+        cells_for_variant_class = []
+        for i in range(5, num_gene+5):
+            cells_for_variant_class.append(f"I{i}")
+        variant_class_options = ('"Pathogenic", "Likely pathogenic",'
+                                 '"Uncertain", "Likely passenger",'
+                                 '"Likely artefact"')
+        self.get_drop_down(
+            dropdown_options=variant_class_options,
+            prompt="Select from the list",
+            title="Variant class",
+            sheet=self.germline,
+            cells=cells_for_variant_class
+        )
 
     def write_summary(self) -> None:
         """
@@ -1042,20 +1048,28 @@ class excel:
         """
         write RefGene sheet
         """
-        self.df_rgg = pd.read_csv(self.args.refgenegp)
-        self.df_refgene = self.df_rgg[
-            self.df_rgg["RefGene Group"] == self.args.cancer_gp
-        ]
-        self.df_refgene.drop_duplicates(
-            subset="Gene", keep="last", inplace=True
-        )  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
-        self.df_refgene.reset_index(drop=True, inplace=True)
-        self.df_refgene.to_excel(
-            self.writer, sheet_name="RefGene", index=False
-        )
-        ref_gene = self.writer.sheets["RefGene"]
-        filters = ref_gene.auto_filter
-        filters.ref = "A:G"
+        ref_sheets = (('cosmic', "COSMIC"), ('paed', "Paediatric"),
+                      ('sarc', "Sarcoma"), ('neuro', "Neuro"),
+                      ('ovarian', "Ovarian"), ('haem', "Haem-onc"))
+        self.df_cosmic = pd.read_excel(self.args.refgenegp,
+                                       sheet_name="cosmic")
+        self.df_paed = pd.read_excel(self.args.refgenegp, sheet_name="paed")
+        self.df_sarc = pd.read_excel(self.args.refgenegp, sheet_name="sarc")
+        self.df_neuro = pd.read_excel(self.args.refgenegp, sheet_name="neuro")
+        self.df_ovarian = pd.read_excel(self.args.refgenegp,
+                                        sheet_name="ovarian")
+        self.df_haem = pd.read_excel(self.args.refgenegp, sheet_name="haem")
+        for df in [self.df_cosmic, self.df_paed, self.df_sarc, self.df_neuro,
+                   self.df_ovarian, self.df_haem]:
+            df.drop_duplicates(subset="Gene", keep="last", inplace=True)  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
+            df.reset_index(drop=True, inplace=True)
+        # write sheets
+        for ref, tab in ref_sheets:
+            self.df = pd.read_excel(self.args.refgenegp, sheet_name=ref)
+            self.df.to_excel(self.writer, sheet_name=tab, index=False)
+            ref = self.writer.sheets[tab]
+            filters = ref.auto_filter
+            filters.ref = "A:G"
 
     def lookup(
         self, df_to_check, ref_df, col_to_map, ref_col, lookup_col
@@ -1079,6 +1093,28 @@ class excel:
             ref_df.set_index(ref_col)[lookup_col]
         )
 
+    def get_col_letter(self, worksheet, col_name) -> str:
+        """
+        Getting the column letter with specific col name
+
+        Parameters
+        ----------
+        worksheet: openpyxl.Writer
+               writer object of current sheet
+        col_name: str
+               name of column to get col letter
+        Return
+        -------
+        str
+            column letter for specific column name
+        """
+        col_letter = None
+        for column_cell in worksheet.iter_cols(1, worksheet.max_column):
+            if column_cell[0].value == col_name:
+                col_letter = column_cell[0].column_letter
+
+        return col_letter
+
     def write_SNV(self) -> None:
         """
         write SNV sheet
@@ -1089,20 +1125,20 @@ class excel:
         df = df[df["Origin"] == "somatic"]
         df.reset_index(drop=True, inplace=True)
         num_variant = df.shape[0]
-        df["Report (Y/N)"] = ""
-        df["Comments"] = ""
         df[["c_dot", "p_dot"]] = df["CDS change and protein change"].str.split(
             r"(?=p)", n=1, expand=True
         )
         df["c_dot"] = df["c_dot"].str.replace("(;$)", "", regex=True)
 
         # look up genes from df_refgene
-        lookup_dict_refgene = {"Alteration_RefGene": "Alteration",
-                               "Origin_RefGene": "Origin",
-                               "Entities_RefGene": "Entities",
-                               "Comments_RefGene": "Comments"}
-        for k, v in lookup_dict_refgene.items():
-            df[k] = self.lookup(df, self.df_refgene, "Gene", "Gene", v)
+        lookup_refgene = (("COSMIC", self.df_cosmic, "Entities"),
+                          ("Paed", self.df_paed, "Driver"),
+                          ("Sarc", self.df_sarc, "Driver"),
+                          ("Neuro", self.df_neuro, "Driver"),
+                          ("Ovary", self.df_ovarian, "Driver_SNV"),
+                          ("Haem", self.df_haem, "Driver"))
+        for l, m, n in lookup_refgene:
+            df[l] = self.lookup(df, m, "Gene", "Gene", n)
 
         df = df.replace([None], [""], regex=True)
         df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
@@ -1119,33 +1155,40 @@ class excel:
         for k, v in lookup_dict_hotspots.items():
             df[k] = self.lookup(df, self.df_hotspots, "HS p.",
                                 "HS_PROTEIN_ID", v)
-        df[["GE", "gnomAD"]] = df[
-            "Population germline allele frequency (GE | gnomAD)"
-        ].str.split("|", expand=True)
+        df[["Predicted consequences", "Error flag"]] = df[
+            "Predicted consequences"
+        ].str.split(";", expand=True)
+        df[["VAF", "LOH"]] = df[
+            "VAF"
+        ].str.split(";", expand=True)
         df.loc[:, "Variant_to_report"] = ""
+        df.loc[:, "Variant class"] = ""
+        df.loc[:, "Actionability"] = ""
+        df["Comments"] = ""
         df = df[
-            [
+            [   "Domain",
                 "Gene",
-                "Origin",
                 "GRCh38 coordinates;ref/alt allele",
                 "CDS change and protein change",
                 "Predicted consequences",
-                "gnomAD",
+                "Error flag",
                 "VAF",
-                "Genotype",
-                "COSMIC ID",
+                "LOH",
+                "Alt allele/total read depth",
                 "Gene mode of action",
-                "Report (Y/N)",
+                "Variant class",
+                "Actionability",
                 "Comments",
-                "Alteration_RefGene",
-                "Origin_RefGene",
-                "Entities_RefGene",
-                "Comments_RefGene",
-                "MTBP c.",
-                "MTBP p.",
+                "Variant_to_report",
+                'COSMIC',
+                'Paed',
+                'Sarc',
+                'Neuro',
+                'Haem',
                 "HS_Sample",
                 "HS_Tumour",
-                "Variant_to_report",
+                "MTBP c.",
+                "MTBP p."   
             ]
         ]
         df.rename(
@@ -1189,10 +1232,21 @@ class excel:
         filters = self.SNV.auto_filter
         filters.ref = f"A:{max_col_letter}"
 
+        # add dropdowns
         report_options = '"yes, no"'
+        variant_class_options = ('"Pathogenic", "Likely pathogenic",'
+                                 '"Uncertain", "Likely passenger",'
+                                 '"Likely artefact"')
+        action_options = ('"1. Predicts therapeutic response,'
+                          ' 2. Prognostic, 3. Defines diagnosis group'
+                          ', 4. Eligibility for trial, 5. Other"'
+                          )
+        col_letter_report = self.get_col_letter(self.SNV, 'Variant_to_report')
+        col_letter_class = self.get_col_letter(self.SNV, 'Variant class')
+        col_letter_action = self.get_col_letter(self.SNV, 'Actionability')
         cells_for_report = []
         for i in range(2, num_variant + 2):
-            cells_for_report.append(f"{max_col_letter}{i}")
+            cells_for_report.append(f"{col_letter_report}{i}")
 
         self.get_drop_down(
             dropdown_options=report_options,
@@ -1200,6 +1254,28 @@ class excel:
             title="yes or no",
             sheet=self.SNV,
             cells=cells_for_report,
+        )
+
+        cells_for_class = []
+        for i in range(2, num_variant + 2):
+            cells_for_class.append(f"{col_letter_class}{i}")
+        self.get_drop_down(
+            dropdown_options=variant_class_options,
+            prompt="Select from the list",
+            title="Variant class",
+            sheet=self.SNV,
+            cells=cells_for_class,
+        )
+        cells_for_action = []
+        for i in range(2, num_variant + 2):
+            cells_for_action.append(f"{col_letter_action}{i}")
+
+        self.get_drop_down(
+            dropdown_options=action_options,
+            prompt="Select from the list",
+            title="Actionability",
+            sheet=self.SNV,
+            cells=cells_for_action,
         )
 
     def lookup_same_col(
@@ -1264,17 +1340,21 @@ class excel:
             for k, v in lookup_dict.items():
                 df_SV[k] = self.lookup_same_col(df_SV, self.df_refgene,
                                                 v, "Gene")
-        df_SV["Report (Y/N)"] = ""
         df_SV["Comments"] = ""
 
         # look up A_Gene in df_refgene
         lookup_dict_refgene = {"Alteration_RefGene": "Alteration",
-                               "Origin_RefGene": "Origin",
-                               "Entities_RefGene": "Entities",
-                               "Comments_RefGene": "Comments"}
-        for k, v in lookup_dict_refgene.items():
-            df_SV[k] = self.lookup(df_SV, self.df_refgene,
-                                   "A_Gene", "Gene", v)
+                               #"Origin_RefGene": "Origin",
+                               "Entities_RefGene": "Entities"}
+                               #"Comments_RefGene": "Comments"}
+        for c in self.cancer_gp:
+            temp_df_refgene = self.df_refgene[self.df_refgene['RefGene Group'] == c]
+            temp_df_refgene.drop_duplicates(subset="Gene", keep="last", inplace=True
+            )  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
+            temp_df_refgene.reset_index(drop=True, inplace=True)
+            for k, v in lookup_dict_refgene.items():
+                df_SV[k+"_"+c] = self.lookup(df_SV, temp_df_refgene,
+                                             "A_Gene", "Gene", v)
 
         # subset df
         lookup_col = [col for col in df_SV if col.endswith("LOOKUP")]
@@ -1284,12 +1364,16 @@ class excel:
             "GRCh38 coordinates",
             "Type",
             "Gene mode of action",
-            "Report (Y/N)",
             "Comments",
-            "Alteration_RefGene",
-            "Origin_RefGene",
-            "Entities_RefGene",
-            "Comments_RefGene",
+            'Alteration_RefGene_Neuro',
+            'Entities_RefGene_Neuro', 'Alteration_RefGene_Medulloblastoma',
+            'Entities_RefGene_Medulloblastoma', 'Alteration_RefGene_Sarcoma',
+            'Entities_RefGene_Sarcoma', 'Alteration_RefGene_Ovarian',
+            'Entities_RefGene_Ovarian', 'Alteration_RefGene_Haem',
+            'Entities_RefGene_Haem', 'Alteration_RefGene_COSMIC_Cancer_Genes',
+            'Entities_RefGene_COSMIC_Cancer_Genes', 'Alteration_RefGene_MPNST',
+            'Entities_RefGene_MPNST'
+            #"Comments_RefGene",
         ]  # + lookup_col
         df_SV = df_SV[selected_col]
         # split df into three df
@@ -1324,12 +1408,17 @@ class excel:
                     "Type1",
                     "Type2",
                     "Gene mode of action",
-                    "Report (Y/N)",
+                    #"Report (Y/N)",
                     "Comments",
-                    "Alteration_RefGene",
-                    "Origin_RefGene",
-                    "Entities_RefGene",
-                    "Comments_RefGene",
+                    'Alteration_RefGene_Neuro',
+                    'Entities_RefGene_Neuro', 'Alteration_RefGene_Medulloblastoma',
+                    'Entities_RefGene_Medulloblastoma', 'Alteration_RefGene_Sarcoma',
+                    'Entities_RefGene_Sarcoma', 'Alteration_RefGene_Ovarian',
+                    'Entities_RefGene_Ovarian', 'Alteration_RefGene_Haem',
+                    'Entities_RefGene_Haem', 'Alteration_RefGene_COSMIC_Cancer_Genes',
+                    'Entities_RefGene_COSMIC_Cancer_Genes', 'Alteration_RefGene_MPNST',
+                    'Entities_RefGene_MPNST'
+                    #"Comments_RefGene",
                 ]  # + lookup_col
 
                 df = df[reordered_col]
@@ -1342,12 +1431,17 @@ class excel:
                     "Type",
                     "Type_num",
                     "Gene mode of action",
-                    "Report (Y/N)",
+                    #"Report (Y/N)",
                     "Comments",
-                    "Alteration_RefGene",
-                    "Origin_RefGene",
-                    "Entities_RefGene",
-                    "Comments_RefGene",
+                    'Alteration_RefGene_Neuro',
+                    'Entities_RefGene_Neuro', 'Alteration_RefGene_Medulloblastoma',
+                    'Entities_RefGene_Medulloblastoma', 'Alteration_RefGene_Sarcoma',
+                    'Entities_RefGene_Sarcoma', 'Alteration_RefGene_Ovarian',
+                    'Entities_RefGene_Ovarian', 'Alteration_RefGene_Haem',
+                    'Entities_RefGene_Haem', 'Alteration_RefGene_COSMIC_Cancer_Genes',
+                    'Entities_RefGene_COSMIC_Cancer_Genes', 'Alteration_RefGene_MPNST',
+                    'Entities_RefGene_MPNST'
+                    #"Comments_RefGene",
                 ]  # + lookup_col
                 df = df[reordered_col]
                 df.loc[:, "Variant_to_report"] = ""
