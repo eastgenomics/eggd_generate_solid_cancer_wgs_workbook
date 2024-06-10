@@ -1278,6 +1278,34 @@ class excel:
             cells=cells_for_action,
         )
 
+        col_color = (("K", "N", PatternFill(patternType="solid",
+                      start_color="FFDBBB")),
+                     ("N", "S", PatternFill(patternType="solid",
+                      start_color="c4d9ef")),
+                     ("T", "U", PatternFill(patternType="solid",
+                      start_color="A7C7E7")),
+                     ("V", "W", PatternFill(patternType="solid",
+                      start_color="dabcff")))
+        for start_col, end_col, fill_color in col_color:
+            self.color_col(self.SNV, start_col, end_col, num_variant + 2,
+                           fill_color)
+
+    def color_col(self, sheet, start_col, end_col, max_row, color_to_fill) -> None:
+        """
+        color the cols in given sheet
+        Parameters
+        ----------
+        sheet name
+        str for start col
+        str for end col
+        int for max row
+        PatternFill for hex color code
+
+        """
+        for row in sheet[f"{start_col}1:{end_col}{max_row}"]:
+            for cell in row:
+                cell.fill = color_to_fill
+
     def lookup_same_col(
         self, df_to_check, ref_df, col_to_map, ref_col
     ) -> list:
