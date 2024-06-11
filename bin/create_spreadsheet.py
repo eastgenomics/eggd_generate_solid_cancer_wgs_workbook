@@ -214,7 +214,7 @@ class excel:
         self.write_summary()
         self.write_SNV()
         self.write_gain_loss()
-        #self.write_SV()
+        self.write_SV()
 
     def set_col_width(self, cell_width, sheet) -> None:
         """
@@ -1334,151 +1334,154 @@ class excel:
 
     def write_SV(self) -> None:
         """
-        write SV, SV_loss and SV_gain sheets
+        write SV sheet
+        Note: epexted max 2 fusion and 3 genes
         """
         df_SV = pd.read_csv(self.args.SV, sep=",")
+        # subset df for SV
+        df_SV = df_SV[
+            ~df_SV["Type"].str.lower().str.contains("loss|loh|gain")
+        ]
+        # split fusion columns
+        df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
+        if df_SV["fusion_count"].max() == 1:
+            df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(
+                   ";", expand=True
+                )
+            df_SV[["Fusion", "Fusion Consequence"]] = df_SV["Fusion"].str.split(
+                    " - ", expand=True
+                  )
+        elif df_SV["fusion_count"].max() == 2:
+            df_SV[["Type", "Fusion_1", "Fusion_2"]] = df_SV.Type.str.split(
+                ";", expand=True
+            )
+            df_SV[["Fusion_1", "Fusion_1 Consequence"]] = df_SV["Fusion_1"].str.split(
+                   "-", expand=True
+            )
+            df_SV[["Fusion_2", "Fusion_2 Consequence"]] = df_SV["Fusion_2"].str.split(
+                   "-", expand=True
+            )
+        elif df_SV["fusion_count"].max()> 2:
+            print("More than 2 fusion")
+            sys.exit(1)
+
+        df_SV[["Paired reads", "Split reads"]] = df_SV["Confidence/support"].str.split(
+            ";", expand=True
+        )
+        df_SV[["col1", "Paired reads"]] = df_SV["Paired reads"].str.split(
+            "-", expand=True
+        )
+        df_SV[["col2", "Split reads"]] = df_SV["Split reads"].str.split(
+            "-", expand=True
+        )
+        # get thousands separator
+        df_SV['Size'] = df_SV.apply(lambda x: "{:,.0f}".format(x['Size']),
+                                    axis=1)
+        # get gene counts and look up for each gene
         df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
         max_num_gene = df_SV["gene_count"].max() + 1
         # split gene col and create look up col for them
         if max_num_gene == 1:
-            df_SV["A_Gene"] = df_SV["Gene"]
-
+            # look up genes from df_refgene
+            lookup_refgene = (("COSMIC", self.df_cosmic, "Entities"),
+                              ("Paed", self.df_paed, "Driver"),
+                              ("Sarc", self.df_sarc, "Driver"),
+                              ("Neuro", self.df_neuro, "Driver"),
+                              ("Ovary", self.df_ovarian, "Driver_SNV"),
+                              ("Haem", self.df_haem, "Driver"))
+            for j, k, v in lookup_refgene:
+                df_SV[j] = self.lookup(df_SV, k, "Gene", "Gene", v)
         elif max_num_gene == 2:
-            df_SV[["A_Gene", "B_Gene"]] = df_SV["Gene"].str.split(
+            df_SV[["Gene1", "Gene2"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
-            df_SV["B_LOOKUP"] = self.lookup_same_col(
-                df_SV, self.df_refgene, "B_Gene", "Gene"
-            )
-
+            lookup_refgene = (("COSMIC", self.df_cosmic, "Entities"),
+                              ("Paed", self.df_paed, "Driver"),
+                              ("Sarc", self.df_sarc, "Driver"),
+                              ("Neuro", self.df_neuro, "Driver"),
+                              ("Ovary", self.df_ovarian, "Driver_SNV"),
+                              ("Haem", self.df_haem, "Driver"))
+            for j, k, v in lookup_refgene:
+                df_SV[j+"_1"] = self.lookup(df_SV, k, "Gene1", "Gene", v)
+                if (list(df_SV['Gene2'].unique())) != ["N/A"]:
+                    df_SV[j+"_2"] = self.lookup(df_SV, k, "Gene2", "Gene", v)
         elif max_num_gene == 3:
-            df_SV[["A_Gene", "B_Gene", "C_Gene"]] = df_SV["Gene"].str.split(
+            df_SV[["Gene1", "Gene2", "Gene3"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
-            lookup_dict = {"B_LOOKUP": "B_Gene",
-                           "C_LOOKUP": "C_Gene"}
-            for k, v in lookup_dict.items():
-                df_SV[k] = self.lookup_same_col(df_SV, self.df_refgene,
-                                                v, "Gene")
-        elif max_num_gene == 4:
-            df_SV[["A_Gene", "B_Gene", "C_gene", "D_gene"]] = df_SV[
-                "Gene"
-            ].str.split(";", expand=True)
-            lookup_dict = {"B_LOOKUP": "B_Gene",
-                           "C_LOOKUP": "C_Gene",
-                           "D_LOOKUP": "D_Gene"}
-            for k, v in lookup_dict.items():
-                df_SV[k] = self.lookup_same_col(df_SV, self.df_refgene,
-                                                v, "Gene")
-        df_SV["Comments"] = ""
+            lookup_refgene = (("COSMIC", self.df_cosmic, "Entities"),
+                              ("Paed", self.df_paed, "Driver"),
+                              ("Sarc", self.df_sarc, "Driver"),
+                              ("Neuro", self.df_neuro, "Driver"),
+                              ("Ovary", self.df_ovarian, "Driver_SNV"),
+                              ("Haem", self.df_haem, "Driver"))
 
-        # look up A_Gene in df_refgene
-        lookup_dict_refgene = {"Alteration_RefGene": "Alteration",
-                               #"Origin_RefGene": "Origin",
-                               "Entities_RefGene": "Entities"}
-                               #"Comments_RefGene": "Comments"}
-        for c in self.cancer_gp:
-            temp_df_refgene = self.df_refgene[self.df_refgene['RefGene Group'] == c]
-            temp_df_refgene.drop_duplicates(subset="Gene", keep="last", inplace=True
-            )  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
-            temp_df_refgene.reset_index(drop=True, inplace=True)
-            for k, v in lookup_dict_refgene.items():
-                df_SV[k+"_"+c] = self.lookup(df_SV, temp_df_refgene,
-                                             "A_Gene", "Gene", v)
-
-        # subset df
-        lookup_col = [col for col in df_SV if col.endswith("LOOKUP")]
-        selected_col = [
-            "Variant domain",
-            "Gene",
-            "GRCh38 coordinates",
-            "Type",
-            "Gene mode of action",
-            "Comments",
-            'Alteration_RefGene_Neuro',
-            'Entities_RefGene_Neuro', 'Alteration_RefGene_Medulloblastoma',
-            'Entities_RefGene_Medulloblastoma', 'Alteration_RefGene_Sarcoma',
-            'Entities_RefGene_Sarcoma', 'Alteration_RefGene_Ovarian',
-            'Entities_RefGene_Ovarian', 'Alteration_RefGene_Haem',
-            'Entities_RefGene_Haem', 'Alteration_RefGene_COSMIC_Cancer_Genes',
-            'Entities_RefGene_COSMIC_Cancer_Genes', 'Alteration_RefGene_MPNST',
-            'Entities_RefGene_MPNST'
-            #"Comments_RefGene",
-        ]  # + lookup_col
+            for j, k, v in lookup_refgene:
+                df_SV[j+"_1"] = self.lookup(df_SV, k, "Gene1", "Gene", v)
+                if (list(df_SV['Gene2'].unique())) != ["N/A"]:
+                    df_SV[j+"_2"] = self.lookup(df_SV, k, "Gene2", "Gene", v)
+                if (list(df_SV['Gene3'].unique())) != ["N/A"]:
+                    df_SV[j+"_3"] = self.lookup(df_SV, k, "Gene3", "Gene", v)
+        else:
+            print("SV got more than 3 genes")
+            sys.exit(1)
+        df_SV.loc[:, "Variant_to_report"] = ""
+        df_SV.loc[:, "Variant class"] = ""
+        df_SV.loc[:, "Actionability"] = ""
+        df_SV.loc[:, "Comments"] = ""
+        lookup_col = [col for col in df_SV if col.startswith("COSMIC")
+                      or col.startswith("Paed")
+                      or col.startswith("Sarc")
+                      or col.startswith("Neuro")
+                      or col.startswith("Ovary")
+                      or col.startswith("Haem")]
+        if df_SV["fusion_count"].max() == 1:
+            selected_col = [
+                            "Event domain",
+                            "Gene",
+                            "Impacted transcript region",
+                            "GRCh38 coordinates",
+                            "Type",
+                            "Fusion",
+                            "Fusion Consequence",
+                            "Size",
+                            "Population germline allele frequency (GESG | GECG for somatic SVs or AF | AUC for germline CNVs)",
+                            "Paired reads",
+                            "Split reads",
+                            "Chromosomal bands",
+                            "Gene mode of action",
+                            "Variant class",
+                            "Actionability",
+                            "Comments",
+                            "Variant_to_report"] + lookup_col
+        elif df_SV["fusion_count"].max() == 2:
+            selected_col = [
+             "Event domain",
+             "Gene",
+             "Impacted transcript region",
+             "GRCh38 coordinates",
+             "Type",
+             "Fusion_1",
+             "Fusion_1 Consequence"
+             "Fusion_2",
+             "Fusion_2 Consequence"
+             "Size",
+             "Population germline allele frequency (GESG | GECG for somatic SVs or AF | AUC for germline CNVs)",
+             "Paired reads",
+             "Split reads",
+             "Chromosomal bands",
+             "Gene mode of action",
+             "Variant class",
+             "Actionability",
+             "Comments",
+             "Variant_to_report"] + lookup_col
         df_SV = df_SV[selected_col]
-        # split df into three df
-        df_loss = df_SV[df_SV["Type"].str.lower().str.contains("loss|loh")]
-        df_loss[["Type", "Type_num"]] = df_loss.Type.str.split(
-            r"\(|\)", expand=True
-        ).iloc[:, [0, 1]]
-        df_gain = df_SV[df_SV["Type"].str.lower().str.contains("gain")]
-        df_gain[["Type", "Type_num"]] = df_gain.Type.str.split(
-            r"\(|\)", expand=True
-        ).iloc[:, [0, 1]]
-        df_other = df_SV[
-            ~df_SV["Type"].str.lower().str.contains("loss|loh|gain")
-        ]
-        df_other[["Type1", "Type2"]] = df_other.Type.str.split(
-            ";", expand=True
-        )
-        df_to_write = (
-            (df_loss, "SV_loss"),
-            (df_gain, "SV_gain"),
-            (df_other, "SV_others"),
-        )
         # write each df into sheet
-        for df, sheet_name in df_to_write:
-            num_variant = df.shape[0]
-
-            if sheet_name == "SV_others":
-                reordered_col = [
-                    "Variant domain",
-                    "Gene",
-                    "GRCh38 coordinates",
-                    "Type1",
-                    "Type2",
-                    "Gene mode of action",
-                    #"Report (Y/N)",
-                    "Comments",
-                    'Alteration_RefGene_Neuro',
-                    'Entities_RefGene_Neuro', 'Alteration_RefGene_Medulloblastoma',
-                    'Entities_RefGene_Medulloblastoma', 'Alteration_RefGene_Sarcoma',
-                    'Entities_RefGene_Sarcoma', 'Alteration_RefGene_Ovarian',
-                    'Entities_RefGene_Ovarian', 'Alteration_RefGene_Haem',
-                    'Entities_RefGene_Haem', 'Alteration_RefGene_COSMIC_Cancer_Genes',
-                    'Entities_RefGene_COSMIC_Cancer_Genes', 'Alteration_RefGene_MPNST',
-                    'Entities_RefGene_MPNST'
-                    #"Comments_RefGene",
-                ]  # + lookup_col
-
-                df = df[reordered_col]
-                df.loc[:, "Variant_to_report"] = ""
-            else:
-                reordered_col = [
-                    "Variant domain",
-                    "Gene",
-                    "GRCh38 coordinates",
-                    "Type",
-                    "Type_num",
-                    "Gene mode of action",
-                    #"Report (Y/N)",
-                    "Comments",
-                    'Alteration_RefGene_Neuro',
-                    'Entities_RefGene_Neuro', 'Alteration_RefGene_Medulloblastoma',
-                    'Entities_RefGene_Medulloblastoma', 'Alteration_RefGene_Sarcoma',
-                    'Entities_RefGene_Sarcoma', 'Alteration_RefGene_Ovarian',
-                    'Entities_RefGene_Ovarian', 'Alteration_RefGene_Haem',
-                    'Entities_RefGene_Haem', 'Alteration_RefGene_COSMIC_Cancer_Genes',
-                    'Entities_RefGene_COSMIC_Cancer_Genes', 'Alteration_RefGene_MPNST',
-                    'Entities_RefGene_MPNST'
-                    #"Comments_RefGene",
-                ]  # + lookup_col
-                df = df[reordered_col]
-                df.loc[:, "Variant_to_report"] = ""
-            max_col = df.shape[1]
-            df.to_excel(self.writer, sheet_name=sheet_name, index=False)
-            sheet = self.writer.sheets[sheet_name]
-            cell_col_width = (
+        num_variant = df_SV.shape[0]
+        max_col = df_SV.shape[1]
+        df_SV.to_excel(self.writer, sheet_name="SV", index=False)
+        self.SV = self.writer.sheets["SV"]
+        cell_col_width = (
                 ("A", 12),
                 ("B", 12),
                 ("C", 22),
@@ -1490,23 +1493,65 @@ class excel:
                 ("K", 20),
                 ("L", 20)
             )
+        self.set_col_width(cell_col_width, self.SV)
+        max_col_letter = get_column_letter(max_col)
+        filters = self.SV.auto_filter
+        filters.ref = f"A:{max_col_letter}"
+        # add dropdowns
+        report_options = '"yes, no"'
+        variant_class_options = ('"Pathogenic", "Likely pathogenic",'
+                                 '"Uncertain", "Likely passenger",'
+                                 '"Likely artefact"')
+        action_options = ('"1. Predicts therapeutic response,'
+                          ' 2. Prognostic, 3. Defines diagnosis group'
+                          ', 4. Eligibility for trial, 5. Other"'
+                          )
+        col_letter_report = self.get_col_letter(self.SV, 'Variant_to_report')
+        col_letter_class = self.get_col_letter(self.SV, 'Variant class')
+        col_letter_action = self.get_col_letter(self.SV, 'Actionability')
+        cells_for_report = []
+        for i in range(2, num_variant + 2):
+            cells_for_report.append(f"{col_letter_report}{i}")
 
-            self.set_col_width(cell_col_width, sheet)
-            max_col_letter = get_column_letter(max_col)
-            filters = sheet.auto_filter
-            filters.ref = f"A:{max_col_letter}"
-            report_options = '"yes, no"'
-            cells_for_report = []
-            for i in range(2, num_variant + 2):
-                cells_for_report.append(f"{max_col_letter}{i}")
-
-            self.get_drop_down(
-                dropdown_options=report_options,
-                prompt="Select from the list",
-                title="yes or no",
-                sheet=sheet,
-                cells=cells_for_report,
+        self.get_drop_down(
+            dropdown_options=report_options,
+            prompt="Select from the list",
+            title="yes or no",
+            sheet=self.SV,
+            cells=cells_for_report,
             )
+        cells_for_class = []
+        for i in range(2, num_variant + 2):
+            cells_for_class.append(f"{col_letter_class}{i}")
+        self.get_drop_down(
+            dropdown_options=variant_class_options,
+            prompt="Select from the list",
+            title="Variant class",
+            sheet=self.SV,
+            cells=cells_for_class,
+            )
+        cells_for_action = []
+        for i in range(2, num_variant + 2):
+            cells_for_action.append(f"{col_letter_action}{i}")
+
+        self.get_drop_down(
+            dropdown_options=action_options,
+            prompt="Select from the list",
+            title="Actionability",
+            sheet=self.SV,
+            cells=cells_for_action,
+            )
+        col_letter_lookup1 = self.get_col_letter(self.SV, lookup_col[0])
+        col_letter_lookup2 = self.get_col_letter(self.SV, lookup_col[-1])
+        col_color = ((col_letter_class, col_letter_report,
+                      PatternFill(patternType="solid",
+                                  start_color="FFDBBB")),
+                     (col_letter_lookup1, col_letter_lookup2,
+                      PatternFill(patternType="solid",
+                                  start_color="c4d9ef")))
+        for start_col, end_col, fill_color in col_color:
+            self.color_col(self.SV, start_col, end_col, num_variant + 2,
+                           fill_color)
 
     def write_gain_loss(self) -> None:
         """
