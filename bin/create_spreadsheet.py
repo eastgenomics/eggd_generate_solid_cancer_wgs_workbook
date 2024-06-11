@@ -210,11 +210,11 @@ class excel:
         self.write_signatures()
         self.germline = self.workbook.create_sheet("Germline")
         self.write_germline()
-        self.summary = self.workbook.create_sheet("Summary")
-        self.write_summary()
         self.write_SNV()
         self.write_gain_loss()
         self.write_SV()
+        self.summary = self.workbook.create_sheet("Summary")
+        self.write_summary()
 
     def set_col_width(self, cell_width, sheet) -> None:
         """
@@ -693,12 +693,14 @@ class excel:
             (1, "Gene"),
             (2, "GRCh38 Coordinates"),
             (3, "Variant"),
-            (4, "Genotype"),
-            (5, "Role in Cancer"),
-            (6, "ClinVar"),
-            (7, "gnomAD"),
-            (8, "Tumour VAF"),
-            (9, "Variant class")
+            (4, "Consequence"),
+            (5, "Genotype"),
+            (6, "Variant Class"),
+            (7, "Actionability"),
+            (8, "Role in Cancer"),
+            (9, "ClinVar"),
+            (10, "gnomAD"),
+            (11, "Tumour VAF")
         )
         for cell, key in snv_table_keys:
             self.germline.cell(4, cell).value = key
@@ -733,12 +735,17 @@ class excel:
             axis=1,
             inplace=True,
         )
+        germline_table.loc[:, "Variant Class"] = ""
+        germline_table.loc[:, "Actionability"] = ""
         germline_table = germline_table[
             [
                 "Gene",
                 "GRCh38 coordinates;ref/alt allele",
                 "CDS change and protein change",
+                "Predicted consequences",
                 "Genotype",
+                "Variant Class",
+                "Actionability",
                 "Gene mode of action",
                 "clnsigconf",
                 "gnomAD"
@@ -773,6 +780,8 @@ class excel:
             "G4",
             "H4",
             "I4",
+            "J4",
+            "K4",
             f"C{num_gene+6}",
         ]
         self.bold_cell(to_bold, self.germline)
@@ -785,7 +794,7 @@ class excel:
         # set borders around table areas
         row_ranges = []
         for i in range(4, num_gene + 5):
-            row_ranges.append(f"A{i}:I{i}")
+            row_ranges.append(f"A{i}:K{i}")
         self.all_border(row_ranges, self.germline)
 
         # colour title cells
@@ -800,6 +809,8 @@ class excel:
             "G4",
             "H4",
             "I4",
+            "J4",
+            "K4"
         ]
 
         self.colour_cell(blue_colour_cells, self.germline, blueFill)
@@ -817,9 +828,10 @@ class excel:
             ("I", 22)
         )
         self.set_col_width(cell_col_width, self.germline)
+        # dropdowns
         cells_for_variant_class = []
         for i in range(5, num_gene + 5):
-            cells_for_variant_class.append(f"I{i}")
+            cells_for_variant_class.append(f"F{i}")
         variant_class_options = (
             '"Pathogenic", "Likely pathogenic",'
             '"Uncertain", "Likely passenger",'
@@ -832,6 +844,21 @@ class excel:
             sheet=self.germline,
             cells=cells_for_variant_class
         )
+        cells_for_action = []
+        for i in range(5, num_gene + 5):
+            cells_for_action.append(f"G{i}")
+        action_options = (
+            '"1. Predicts therapeutic response,'
+            ' 2. Prognostic, 3. Defines diagnosis group'
+            ', 4. Eligibility for trial, 5. Other"'
+        )
+        self.get_drop_down(
+            dropdown_options=action_options,
+            prompt="Select from the list",
+            title="Actionability",
+            sheet=self.germline,
+            cells=cells_for_action
+        )
 
     def write_summary(self) -> None:
         """
@@ -839,125 +866,105 @@ class excel:
         """
         # pid table
         self.write_pid_table(self.summary)
-        self.summary.cell(9, 1).value = "Reportable genes"
-        self.summary.cell(
-            10, 1
-        ).value = '= _xlfn.TEXTJOIN(", ",TRUE,C21:C28,C33:C40)'
-        self.summary.cell(12, 1).value = "Comments"
-
-        # snv table
-        self.summary.cell(19, 3).value = "Somatic SNV"
+        # germline table
+        self.summary.cell(23, 1).value = "Germline SNV"
         snv_table_keys = (
-            (3, "Gene"),
-            (4, "GRCh38 Coordinates"),
-            (5, "Mutation"),
-            (6, "VAF"),
-            (7, "Variant Class"),
-            (8, "Actionability"),
+            (1, "Gene"),
+            (2, "GRCh38 Coordinates"),
+            (3, "Variant"),
+            (4, "Consequence"),
+            (5, "Zygosity"),
+            (6, "Variant Class"),
+            (7, "Actionability"),
+            (8, "Comments")
         )
         for cell, key in snv_table_keys:
-            self.summary.cell(20, cell).value = key
-        # add formula
-        for row in range(21, 29):
-            ref_row = row + 22
-            for col in ["C", "D", "E", "F"]:
-                self.summary[f"{col}{row}"] = f"=summary!{col}{ref_row}"
+            self.summary.cell(24, cell).value = key
+        # snv table
+        self.summary.cell(30, 1).value = "Somatic SNV"
+        snv_table_keys = (
+            (1, "Gene"),
+            (2, "GRCh38 Coordinates"),
+            (3, "Mutation"),
+            (4, "Consequence"),
+            (5, "VAF"),
+            (6, "Variant Class"),
+            (7, "Actionability"),
+            (8, "Comments")
+        )
+        for cell, key in snv_table_keys:
+            self.summary.cell(31, cell).value = key
 
         # cnv sv table
-        self.summary.cell(30, 3).value = "Somatic CNV_SV"
+        self.summary.cell(43, 1).value = "Somatic CNV_SV"
         cnv_sv_table_key = (
-            (3, "Gene/Locus"),
-            (4, "GRCh38 Coordinates"),
-            (5, "Cytological Bands"),
-            (6, "Variant Type"),
-            (7, "Variant Class"),
-            (8, "Actionability"),
+            (1, "Gene/Locus"),
+            (2, "GRCh38 Coordinates"),
+            (3, "Cytological Bands"),
+            (4, "Variant Type"),
+            (5, "Consequence"),
+            (6, "Variant Class"),
+            (7, "Actionability"),
+            (8, "Comments"),
         )
         for cell, key in cnv_sv_table_key:
-            self.summary.cell(31, cell).value = key
-        # add formula
-        for row in range(32, 40):
-            ref_row = row + 21
-            for col in ["C", "D", "E", "F"]:
-                self.summary[f"{col}{row}"] = f"=summary!{col}{ref_row}"
+            self.summary.cell(44, cell).value = key
 
-        self.summary.cell(41, 1).value = "SNV"
-        # snv title
-        snv_title_keys = (
-            (1, "Domain"),
-            (2, "Origin"),
-            (3, "Gene"),
-            (4, "GRCh38 coordinates;ref/alt allele"),
-            (5, "Transcript"),
-            (6, "CDS change and protein change"),
-            (7, "Predicted consequences"),
-            (8, "Population germline allele frequency (GE | gnomAD)"),
-            (9, "VAF"),
-            (10, "Alt allele/total read depth"),
-            (11, "Genotype"),
-            (12, "COSMIC ID"),
-            (13, "ClinVar ID"),
-            (14, "ClinVar review status"),
-            (15, "ClinVar clinical significance"),
-            (16, "Gene mode of action"),
-            (17, "Recruiting Clinical Trials 30 Jan 2023"),
-            (18, "PharmGKB_ID"),
+        # gain/loss table
+        self.summary.cell(57, 1).value = "GAIN/LOSS"
+        cnv_sv_table_key = (
+            (1, "Gene/Locus"),
+            (2, "GRCh38 Coordinates"),
+            (3, "Cytological Bands"),
+            (4, "Variant Type"),
+            (5, "Consequence"),
+            (6, "Variant Class"),
+            (7, "Actionability"),
+            (8, "Comments"),
         )
-        for cell, key in snv_title_keys:
-            self.summary.cell(42, cell).value = key
-
-        self.summary.cell(51, 1).value = "CNV_SV"
-
-        # cnv_sv title
-        cnv_sv_title_keys = (
-            (1, "Origin"),
-            (2, "Variant domain"),
-            (3, "Event domain"),
-            (4, "Gene"),
-            (5, "Transcript"),
-            (6, "Impacted transcript region"),
-            (7, "GRCh38 coordinates"),
-            (8, "Type"),
-            (9, "Size"),
-            (
-                10,
-                (
-                    "Population germline allele frequency"
-                    " (GESG | GECG for somatic SVs or AF |"
-                    " AUC for germline CNVs)"
-                ),
-            ),
-            (11, "Confidence/support"),
-            (12, "Chromosomal bands"),
-            (13, "Recruiting Clinical Trials 30 Jan 2023"),
-            (14, "ClinVar clinical significance"),
-            (15, "Gene mode of action"),
-        )
-        for cell, key in cnv_sv_title_keys:
-            self.summary.cell(52, cell).value = key
+        for cell, key in cnv_sv_table_key:
+            self.summary.cell(58, cell).value = key        
 
         # titles to set to bold
         to_bold = [
             "A1",
-            "A9",
-            "A12",
-            "A16",
-            "C19",
-            "C20",
-            "C30",
-            "D20",
-            "E20",
-            "F20",
-            "G20",
-            "H20",
+            "A23",
+            "A24",
+            "A30",
+            "A31",
+            "A43",
+            "A44",
+            "A57",
+            "A58",
+            "B24",
+            "B31",
+            "B44",
+            "B58",
+            "C24",
             "C31",
+            "C44",
+            "C58",
+            "D24",
             "D31",
+            "D44",
+            "D58",
+            "E24",
             "E31",
+            "E44",
+            "E58",
+            "F24",
             "F31",
+            "F44",
+            "F58",
+            "G24",
             "G31",
+            "G44",
+            "G58",
+            "H24",
             "H31",
-            "A41",
-            "A51",
+            "H44",
+            "H58",
+            
         ]
         self.bold_cell(to_bold, self.summary)
 
@@ -973,92 +980,27 @@ class excel:
         self.set_col_width(cell_col_width, self.summary)
 
         # colour title cells
-        blueFill = PatternFill(patternType="solid", start_color="90EE90")
-
-        colour_cells = [
-            "C20",
-            "D20",
-            "E20",
-            "F20",
-            "G20",
-            "H20",
-            "C31",
-            "D31",
-            "E31",
-            "F31",
-            "G31",
-            "H31",
-        ]
+        blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
+        colour_cells = []
+        for cell in [24, 31, 44, 58]:
+            for col in ["A", "B", "C", "D", "E", "F", "G", "H"]:
+                colour_cells.append(f"{col}{cell}")        
         self.colour_cell(colour_cells, self.summary, blueFill)
 
         # set borders around table areas
-        row_ranges = [
-            "C20:H20",
-            "C21:H21",
-            "C22:H22",
-            "C23:H23",
-            "C24:H24",
-            "C25:H25",
-            "C26:H26",
-            "C27:H27",
-            "C28:H28",
-            "C31:H31",
-            "C32:H32",
-            "C33:H33",
-            "C34:H34",
-            "C35:H35",
-            "C36:H36",
-            "C37:H37",
-            "C38:H38",
-            "C39:H39",
-        ]
+        row_ranges = []
+        for cell in range(24, 29):
+            row_ranges.append(f"A{cell}:H{cell}")
+        for cell in range(30, 42):
+            row_ranges.append(f"A{cell}:H{cell}")
+        for cell in range(44, 56):
+            row_ranges.append(f"A{cell}:H{cell}")
+        for cell in range(58, 70):
+            row_ranges.append(f"A{cell}:H{cell}")
         self.all_border(row_ranges, self.summary)
-        cells_lower_border = ["A9", "A12", "A41", "A51"]
-        self.lower_border(cells_lower_border, self.summary)
-
-        smaller_font = Font(size=8)
-        for i in range(41, 72):
-            for cell in self.summary[f"{i}:{i}"]:
-                cell.font = smaller_font
-
-        # add dropdowns
-        cells_for_class = []
-        for i in range(21, 40):
-            if i not in [29, 30, 31]:
-                cells_for_class.append(f"G{i}")
-
-        class_options = (
-            '"Pathogenic, Likely pathogenic, Uncertain, Likely benign, Benign"'
-        )
-        self.get_drop_down(
-            dropdown_options=class_options,
-            prompt="Select from the list",
-            title="Variant class",
-            sheet=self.summary,
-            cells=cells_for_class,
-        )
-
-        cells_for_action = []
-        for i in range(21, 40):
-            if i not in [29, 30, 31]:
-                cells_for_action.append(f"H{i}")
-
-        action_options = (
-            '"1. Predicts therapeutic response,'
-            ' 2. Prognostic, 3. Defines diagnosis group'
-            ', 4. Eligibility for trial, 5. Other"'
-        )
-        self.get_drop_down(
-            dropdown_options=action_options,
-            prompt="Select from the list",
-            title="Actionability",
-            sheet=self.summary,
-            cells=cells_for_action,
-        )
-
         # insert img from html file
-        self.insert_img(self.summary, "cropped_figure_2.jpg", "C1", 350, 350)
-        self.insert_img(self.summary, "figure_3.jpg", "E1", 300, 700)
+        self.insert_img(self.summary, "figure_3.jpg", "A4", 300, 700)
+        self.insert_img(self.summary, "cropped_figure_2.jpg", "F4", 350, 350)        
 
     def write_refgene(self) -> None:
         """
@@ -1072,28 +1014,8 @@ class excel:
             ("ovarian", "Ovarian"),
             ("haem", "Haem-onc")
         )
-        self.df_cosmic = pd.read_excel(
-            self.args.refgenegp, sheet_name="cosmic"
-        )
-        self.df_paed = pd.read_excel(self.args.refgenegp, sheet_name="paed")
-        self.df_sarc = pd.read_excel(self.args.refgenegp, sheet_name="sarc")
-        self.df_neuro = pd.read_excel(self.args.refgenegp, sheet_name="neuro")
-        self.df_ovarian = pd.read_excel(
-            self.args.refgenegp, sheet_name="ovarian"
-        )
-        self.df_haem = pd.read_excel(self.args.refgenegp, sheet_name="haem")
-        for df in [
-            self.df_cosmic,
-            self.df_paed,
-            self.df_sarc,
-            self.df_neuro,
-            self.df_ovarian,
-            self.df_haem,
-        ]:
-            df.drop_duplicates(
-                subset="Gene", keep="last", inplace=True
-            )  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
-            df.reset_index(drop=True, inplace=True)
+
+
         # write sheets
         for ref, tab in ref_sheets:
             self.df = pd.read_excel(self.args.refgenegp, sheet_name=ref)
@@ -1151,6 +1073,31 @@ class excel:
         """
         write SNV sheet
         """
+        self.df_cosmic = pd.read_excel(self.args.refgenegp,
+                                       sheet_name="cosmic")
+        self.df_paed = pd.read_excel(self.args.refgenegp, sheet_name="paed")
+        self.df_sarc = pd.read_excel(self.args.refgenegp, sheet_name="sarc")
+        self.df_neuro = pd.read_excel(self.args.refgenegp, sheet_name="neuro")
+        self.df_ovarian = pd.read_excel(self.args.refgenegp,
+                                        sheet_name="ovarian")
+        self.df_haem = pd.read_excel(self.args.refgenegp, sheet_name="haem")
+        for df in [
+            self.df_cosmic,
+            self.df_paed,
+            self.df_sarc,
+            self.df_neuro,
+            self.df_ovarian,
+            self.df_haem,
+        ]:
+            df.drop_duplicates(
+                subset="Gene", keep="last", inplace=True
+            )  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
+            df.reset_index(drop=True, inplace=True)            
+            if "Entities" in list(df.columns):     
+                df['Entities'] = df['Entities'].fillna("NULL")
+            elif "Driver" in list(df.columns):    
+                df['Driver'] = df['Driver'].fillna("NULL")
+
         self.df_hotspots = pd.read_csv(self.args.hotspots)
         df = pd.read_csv(self.args.variant, sep=",")
         # select only somatic rows
@@ -1168,11 +1115,12 @@ class excel:
             ("Paed", self.df_paed, "Driver"),
             ("Sarc", self.df_sarc, "Driver"),
             ("Neuro", self.df_neuro, "Driver"),
-            ("Ovary", self.df_ovarian, "Driver_SNV"),
+            ("Ovary", self.df_ovarian, "Driver"),
             ("Haem", self.df_haem, "Driver")
         )
         for j, k, v in lookup_refgene:
             df[j] = self.lookup(df, k, "Gene", "Gene", v)
+            df[j] = df[j].fillna("gene_not_found")
 
         df = df.replace([None], [""], regex=True)
         df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
@@ -1194,7 +1142,7 @@ class excel:
         df[["Predicted consequences", "Error flag"]] = df[
             "Predicted consequences"
         ].str.split(";", expand=True)
-        df[["VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
+        df[["split_VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
         df.loc[:, "Variant_to_report"] = ""
         df.loc[:, "Variant class"] = ""
         df.loc[:, "Actionability"] = ""
@@ -1206,8 +1154,9 @@ class excel:
                 "GRCh38 coordinates;ref/alt allele",
                 "CDS change and protein change",
                 "Predicted consequences",
-                "Error flag",
                 "VAF",
+                "Error flag",
+                "split_VAF",
                 "LOH",
                 "Alt allele/total read depth",
                 "Gene mode of action",
@@ -1317,15 +1266,16 @@ class excel:
         )
 
         col_color = (
-            ("K", "N", PatternFill(patternType="solid", start_color="FFDBBB")),
-            ("N", "S", PatternFill(patternType="solid", start_color="c4d9ef")),
-            ("T", "U", PatternFill(patternType="solid", start_color="A7C7E7")),
-            ("V", "W", PatternFill(patternType="solid", start_color="dabcff")),
+            ("L", "N", PatternFill(patternType="solid", start_color="FFDBBB")),
+            ("O", "T", PatternFill(patternType="solid", start_color="c4d9ef")),
+            ("U", "V", PatternFill(patternType="solid", start_color="A7C7E7")),
+            ("W", "X", PatternFill(patternType="solid", start_color="dabcff")),
         )
         for start_col, end_col, fill_color in col_color:
             self.color_col(
                 self.SNV, start_col, end_col, num_variant + 2, fill_color
             )
+        self.SNV.freeze_panes = self.SNV["E1"]
 
     def color_col(
         self, sheet, start_col, end_col, max_row, color_to_fill
@@ -1366,7 +1316,7 @@ class excel:
         return np.where(
             df_to_check[col_to_map].isin(list(ref_df[ref_col])),
             df_to_check[col_to_map],
-            "",
+            ""
         )
 
     def write_SV(self) -> None:
@@ -1422,11 +1372,12 @@ class excel:
                 ("Paed", self.df_paed, "Driver"),
                 ("Sarc", self.df_sarc, "Driver"),
                 ("Neuro", self.df_neuro, "Driver"),
-                ("Ovary", self.df_ovarian, "Driver_SNV"),
+                ("Ovary", self.df_ovarian, "Driver"),
                 ("Haem", self.df_haem, "Driver")
             )
             for j, k, v in lookup_refgene:
                 df_SV[j] = self.lookup(df_SV, k, "Gene", "Gene", v)
+                df_SV[j] = df_SV[j].fillna("gene_not_found")
         elif max_num_gene == 2:
             df_SV[["Gene1", "Gene2"]] = df_SV["Gene"].str.split(
                 ";", expand=True
@@ -1436,13 +1387,15 @@ class excel:
                 ("Paed", self.df_paed, "Driver"),
                 ("Sarc", self.df_sarc, "Driver"),
                 ("Neuro", self.df_neuro, "Driver"),
-                ("Ovary", self.df_ovarian, "Driver_SNV"),
+                ("Ovary", self.df_ovarian, "Driver"),
                 ("Haem", self.df_haem, "Driver"),
             )
             for j, k, v in lookup_refgene:
                 df_SV[j + "_1"] = self.lookup(df_SV, k, "Gene1", "Gene", v)
+                df_SV[j + "_1"] = df_SV[j + "_1"].fillna("gene_not_found")
                 if (list(df_SV["Gene2"].unique())) != ["N/A"]:
                     df_SV[j + "_2"] = self.lookup(df_SV, k, "Gene2", "Gene", v)
+                    df_SV[j + "_2"] = df_SV[j + "_2"].fillna("gene_not_found")
         elif max_num_gene == 3:
             df_SV[["Gene1", "Gene2", "Gene3"]] = df_SV["Gene"].str.split(
                 ";", expand=True
@@ -1452,16 +1405,19 @@ class excel:
                 ("Paed", self.df_paed, "Driver"),
                 ("Sarc", self.df_sarc, "Driver"),
                 ("Neuro", self.df_neuro, "Driver"),
-                ("Ovary", self.df_ovarian, "Driver_SNV"),
+                ("Ovary", self.df_ovarian, "Driver"),
                 ("Haem", self.df_haem, "Driver")
             )
 
             for j, k, v in lookup_refgene:
                 df_SV[j + "_1"] = self.lookup(df_SV, k, "Gene1", "Gene", v)
+                df_SV[j + "_1"] = df_SV[j + "_1"].fillna("gene_not_found")
                 if (list(df_SV["Gene2"].unique())) != ["N/A"]:
                     df_SV[j + "_2"] = self.lookup(df_SV, k, "Gene2", "Gene", v)
+                    df_SV[j + "_2"] = df_SV[j + "_2"].fillna("gene_not_found")
                 if (list(df_SV["Gene3"].unique())) != ["N/A"]:
                     df_SV[j + "_3"] = self.lookup(df_SV, k, "Gene3", "Gene", v)
+                    df_SV[j + "_3"] = df_SV[j + "_3"].fillna("gene_not_found")
         else:
             print("SV got more than 3 genes")
             sys.exit(1)
@@ -1482,9 +1438,10 @@ class excel:
         if df_SV["fusion_count"].max() == 1:
             selected_col = [
                 "Event domain",
-                "Gene",
                 "Impacted transcript region",
+                "Gene",
                 "GRCh38 coordinates",
+                "Chromosomal bands",
                 "Type",
                 "Fusion",
                 "Fusion Consequence",
@@ -1492,7 +1449,6 @@ class excel:
                 "Population germline allele frequency (GESG | GECG for somatic SVs or AF | AUC for germline CNVs)",
                 "Paired reads",
                 "Split reads",
-                "Chromosomal bands",
                 "Gene mode of action",
                 "Variant class",
                 "Actionability",
@@ -1502,17 +1458,17 @@ class excel:
         elif df_SV["fusion_count"].max() == 2:
             selected_col = [
                 "Event domain",
-                "Gene",
                 "Impacted transcript region",
+                "Gene",
                 "GRCh38 coordinates",
+                "Chromosomal bands",
                 "Type",
                 "Fusion_1",
                 "Fusion_1 Consequence" "Fusion_2",
                 "Fusion_2 Consequence" "Size",
                 "Population germline allele frequency (GESG | GECG for somatic SVs or AF | AUC for germline CNVs)",
                 "Paired reads",
-                "Split reads",
-                "Chromosomal bands",
+                "Split reads",                
                 "Gene mode of action",
                 "Variant class",
                 "Actionability",
@@ -1606,6 +1562,7 @@ class excel:
             self.color_col(
                 self.SV, start_col, end_col, num_variant + 2, fill_color
             )
+        self.SV.freeze_panes = self.SV["E1"]
 
     def write_gain_loss(self) -> None:
         """
@@ -1630,17 +1587,18 @@ class excel:
             ("Paed", self.df_paed, "Driver"),
             ("Sarc", self.df_sarc, "Driver"),
             ("Neuro", self.df_neuro, "Driver"),
-            ("Ovary", self.df_ovarian, "Driver_SNV"),
+            ("Ovary", self.df_ovarian, "Driver"),
             ("Haem", self.df_haem, "Driver")
         )
         for df in [df_loss, df_gain]:
             for j, k, v in lookup_refgene:
                 df[j] = self.lookup(df, k, "Gene", "Gene", v)
+                df[j] = df[j].fillna("gene_not_found")
             df.loc[:, "Variant_to_report"] = ""
             df.loc[:, "Variant class"] = ""
             df.loc[:, "Actionability"] = ""
             df.loc[:, "Comments"] = ""
-            df[["Type", "Copy Number"]] = df.Type.str.split(
+            df[["split_Type", "Copy Number"]] = df.Type.str.split(
                 r"\(|\)", expand=True
             ).iloc[:, [0, 1]]
             df["Copy Number"] = df["Copy Number"].astype(int)
@@ -1651,13 +1609,14 @@ class excel:
         # subset df
         selected_col = [
             "Event domain",
-            "Gene",
             "Impacted transcript region",
+            "Gene",
             "GRCh38 coordinates",
+            "Chromosomal bands",
             "Type",
+            "split_Type",
             "Copy Number",
             "Size",
-            "Chromosomal bands",
             "Gene mode of action",
             "Variant class",
             "Actionability",
@@ -1747,13 +1706,13 @@ class excel:
 
             col_color = (
                 (
-                    "J",
-                    "M",
+                    "K",
+                    "N",
                     PatternFill(patternType="solid", start_color="FFDBBB"),
                 ),
                 (
-                    "N",
-                    "R",
+                    "O",
+                    "S",
                     PatternFill(patternType="solid", start_color="c4d9ef"),
                 ),
             )
@@ -1761,6 +1720,7 @@ class excel:
                 self.color_col(
                     sheet, start_col, end_col, num_variant + 2, fill_color
                 )
+            sheet.freeze_panes = sheet["E1"]
 
     def get_drop_down(
         self, dropdown_options, prompt, title, sheet, cells
