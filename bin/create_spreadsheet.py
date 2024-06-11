@@ -1,10 +1,11 @@
 import argparse
 import os
 import re
+import sys
 import subprocess
 import urllib.request
 import numpy as np
-from openpyxl import drawing
+from openpyxl import drawing, workbook
 from openpyxl.styles import Alignment, Border, DEFAULT_FONT, Font, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -212,6 +213,7 @@ class excel:
         self.summary = self.workbook.create_sheet("Summary")
         self.write_summary()
         self.write_SNV()
+        self.write_gain_loss()
         #self.write_SV()
 
     def set_col_width(self, cell_width, sheet) -> None:
@@ -1068,6 +1070,7 @@ class excel:
             self.df = pd.read_excel(self.args.refgenegp, sheet_name=ref)
             self.df.to_excel(self.writer, sheet_name=tab, index=False)
             ref = self.writer.sheets[tab]
+            ref.sheet_properties.tabColor = 'FF0000'
             filters = ref.auto_filter
             filters.ref = "A:G"
 
@@ -1137,8 +1140,8 @@ class excel:
                           ("Neuro", self.df_neuro, "Driver"),
                           ("Ovary", self.df_ovarian, "Driver_SNV"),
                           ("Haem", self.df_haem, "Driver"))
-        for l, m, n in lookup_refgene:
-            df[l] = self.lookup(df, m, "Gene", "Gene", n)
+        for j, k, v in lookup_refgene:
+            df[j] = self.lookup(df, k, "Gene", "Gene", v)
 
         df = df.replace([None], [""], regex=True)
         df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
@@ -1165,32 +1168,29 @@ class excel:
         df.loc[:, "Variant class"] = ""
         df.loc[:, "Actionability"] = ""
         df["Comments"] = ""
-        df = df[
-            [   "Domain",
-                "Gene",
-                "GRCh38 coordinates;ref/alt allele",
-                "CDS change and protein change",
-                "Predicted consequences",
-                "Error flag",
-                "VAF",
-                "LOH",
-                "Alt allele/total read depth",
-                "Gene mode of action",
-                "Variant class",
-                "Actionability",
-                "Comments",
-                "Variant_to_report",
-                'COSMIC',
-                'Paed',
-                'Sarc',
-                'Neuro',
-                'Haem',
-                "HS_Sample",
-                "HS_Tumour",
-                "MTBP c.",
-                "MTBP p."   
-            ]
-        ]
+        df = df[["Domain",
+                 "Gene",
+                 "GRCh38 coordinates;ref/alt allele",
+                 "CDS change and protein change",
+                 "Predicted consequences",
+                 "Error flag",
+                 "VAF",
+                 "LOH",
+                 "Alt allele/total read depth",
+                 "Gene mode of action",
+                 "Variant class",
+                 "Actionability",
+                 "Comments",
+                 "Variant_to_report",
+                 'COSMIC',
+                 'Paed',
+                 'Sarc',
+                 'Neuro',
+                 'Haem',
+                 "HS_Sample",
+                 "HS_Tumour",
+                 "MTBP c.",
+                 "MTBP p."]]
         df.rename(
             columns={
                 "GRCh38 coordinates;ref/alt allele": "GRCh38 coordinates",
@@ -1290,7 +1290,9 @@ class excel:
             self.color_col(self.SNV, start_col, end_col, num_variant + 2,
                            fill_color)
 
-    def color_col(self, sheet, start_col, end_col, max_row, color_to_fill) -> None:
+    def color_col(
+        self, sheet, start_col, end_col, max_row, color_to_fill
+    ) -> None:
         """
         color the cols in given sheet
         Parameters
@@ -1505,6 +1507,144 @@ class excel:
                 sheet=sheet,
                 cells=cells_for_report,
             )
+
+    def write_gain_loss(self) -> None:
+        """
+        write GAIN and LOSS sheets
+        """
+        df = pd.read_csv(self.args.SV, sep=",")
+        df_loss = df[df["Type"].str.lower().str.contains("loss|loh")]
+        df_loss.reset_index(drop=True, inplace=True)
+        df_gain = df[df["Type"].str.lower().str.contains("gain")]
+        df_gain.reset_index(drop=True, inplace=True)
+        df_loss["gene_count"] = df_loss["Gene"].str.count(r"\;")
+        max_num_gene_loss = df_loss["gene_count"].max() + 1
+        df_gain["gene_count"] = df_gain["Gene"].str.count(r"\;")
+        max_num_gene_gain = df_gain["gene_count"].max() + 1
+        if max_num_gene_gain >1 or max_num_gene_loss > 1:
+            print("ERROR IN LOSS AND GAIN")
+            sys.exit(1)
+
+        # look up genes from df_refgene
+        lookup_refgene = (("COSMIC", self.df_cosmic, "Entities"),
+                          ("Paed", self.df_paed, "Driver"),
+                          ("Sarc", self.df_sarc, "Driver"),
+                          ("Neuro", self.df_neuro, "Driver"),
+                          ("Ovary", self.df_ovarian, "Driver_SNV"),
+                          ("Haem", self.df_haem, "Driver"))
+        for df in [df_loss, df_gain]:
+            for j, k, v in lookup_refgene:
+                df[j] = self.lookup(df, k, "Gene", "Gene", v)
+            df.loc[:, "Variant_to_report"] = ""
+            df.loc[:, "Variant class"] = ""
+            df.loc[:, "Actionability"] = ""
+            df.loc[:, "Comments"] = ""
+            df[["Type", "Copy Number"]] = df.Type.str.split(
+                                          r"\(|\)",
+                                          expand=True).iloc[:, [0, 1]]
+            df['Copy Number'] = df['Copy Number'].astype(int)
+            df['Size'] = df.apply(lambda x: "{:,.0f}".format(x['Size']), axis=1)
+
+        # subset df
+        selected_col = [
+            "Event domain",
+            "Gene",
+            "Impacted transcript region",
+            "GRCh38 coordinates",
+            "Type",
+            "Copy Number",
+            "Size",
+            "Chromosomal bands",
+            "Gene mode of action",
+            "Variant class",
+            "Actionability",
+            "Comments",
+            "Variant_to_report",
+            'COSMIC',
+            'Paed',
+            'Sarc',
+            'Neuro',
+            'Haem']
+        df_loss = df_loss[selected_col]
+        df_loss = df_loss.sort_values(by=['Copy Number'], ascending=True)
+        df_gain = df_gain[selected_col]
+        df_gain = df_gain.sort_values(by=['Copy Number'], ascending=False)
+        df_to_write = (
+            (df_loss, "LOSS"),
+            (df_gain, "GAIN"),
+        )
+        # write each df into sheet
+        for df, sheet_name in df_to_write:
+            num_variant = df.shape[0]
+            df.to_excel(self.writer, sheet_name=sheet_name, index=False)
+            sheet = self.writer.sheets[sheet_name]
+            cell_col_width = (
+                ("A", 12),
+                ("B", 12),
+                ("C", 22),
+                ("F", 20),
+                ("G", 20),
+                ("H", 24),
+                ("I", 24),
+                ("J", 24),
+                ("K", 20),
+                ("L", 20)
+            )
+            self.set_col_width(cell_col_width, sheet)
+
+            # add dropdowns
+            report_options = '"yes, no"'
+            variant_class_options = ('"Pathogenic", "Likely pathogenic",'
+                                     '"Uncertain", "Likely passenger",'
+                                     '"Likely artefact"')
+            action_options = ('"1. Predicts therapeutic response,'
+                              ' 2. Prognostic, 3. Defines diagnosis group'
+                              ', 4. Eligibility for trial, 5. Other"'
+                              )
+            col_letter_report = self.get_col_letter(sheet, 'Variant_to_report')
+            col_letter_class = self.get_col_letter(sheet, 'Variant class')
+            col_letter_action = self.get_col_letter(sheet, 'Actionability')
+            cells_for_report = []
+            for i in range(2, num_variant + 2):
+                cells_for_report.append(f"{col_letter_report}{i}")
+
+            self.get_drop_down(
+                dropdown_options=report_options,
+                prompt="Select from the list",
+                title="yes or no",
+                sheet=sheet,
+                cells=cells_for_report,
+            )
+
+            cells_for_class = []
+            for i in range(2, num_variant + 2):
+                cells_for_class.append(f"{col_letter_class}{i}")
+            self.get_drop_down(
+                dropdown_options=variant_class_options,
+                prompt="Select from the list",
+                title="Variant class",
+                sheet=sheet,
+                cells=cells_for_class,
+            )
+            cells_for_action = []
+            for i in range(2, num_variant + 2):
+                cells_for_action.append(f"{col_letter_action}{i}")
+
+            self.get_drop_down(
+                dropdown_options=action_options,
+                prompt="Select from the list",
+                title="Actionability",
+                sheet=sheet,
+                cells=cells_for_action,
+            )
+
+            col_color = (("J", "M", PatternFill(patternType="solid",
+                          start_color="FFDBBB")),
+                         ("N", "R", PatternFill(patternType="solid",
+                          start_color="c4d9ef")))
+            for start_col, end_col, fill_color in col_color:
+                self.color_col(sheet, start_col, end_col, num_variant + 2,
+                               fill_color)
 
     def get_drop_down(
         self, dropdown_options, prompt, title, sheet, cells
