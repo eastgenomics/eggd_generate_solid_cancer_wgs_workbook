@@ -9,7 +9,6 @@ process wgs_solidCA_workbook {
     
    input:
       path(reads)
-      val cancer_gp
       path hotspots
       path refgenegp
       path clinvar
@@ -21,7 +20,7 @@ process wgs_solidCA_workbook {
    script:
       """
       echo "Running ${reads[0]} ${reads[1]} ${reads[2]}"
-      python nextflow-bin/create_spreadsheet.py -v ${reads[0]} -sv ${reads[1]} -html ${reads[2]} -cg $cancer_gp -hs $hotspots -rgg $refgenegp -c $clinvar 
+      python nextflow-bin/create_spreadsheet.py -v ${reads[0]} -sv ${reads[1]} -html ${reads[2]} -hs $hotspots -rgg $refgenegp -c $clinvar 
       """
 }
 
@@ -51,6 +50,6 @@ workflow {
 wgs_solidCA_workbook(v1_ch
   .combine(sv1_ch, by: 0)
   .combine(html1_ch, by: 0)    
-  .map { id, v, sv,html -> [v, sv,html] }, params.cancer_gp, params.hotspots, params.refgenegp, params.clinvar, params.clinvar_index)    
+  .map { id, v, sv,html -> [v, sv,html] }, params.hotspots, params.refgenegp, params.clinvar, params.clinvar_index)    
 }
 

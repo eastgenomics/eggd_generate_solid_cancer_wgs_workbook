@@ -8,7 +8,6 @@ This is nexflow applet to generate the workbook for WGS solid cancer variants pr
 - b38 clinvar and index files
 - RefGene_Groups csv file
 - Hotspots csv file
-- cancer group
 
 ### Outputs
 - excel spreadsheet for variants
@@ -23,10 +22,9 @@ Example command
 ```
 dx run applet-xxxx \
 -ihotspots="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6j4Yj36y2VXZzqB09J5" \
--irefgenegp="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q784Yj3J3pjKpq3110gJ" \
+-irefgenegp="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkZk7vQ4Yj31Z7v5Bz79PV5X" \
 -iclinvar="project-Fkb6Gkj433GVVvj73J7x8KbV:file-GjP2v0j42VYfY5qfYGVKxy79" \
 -iclinvar_index="project-Fkb6Gkj433GVVvj73J7x8KbV:file-GjP2vG842VYjBz0VfGQBZ7F8" \
--icancer_gp="xxxx" \
 -inextflow_pipeline_params="--file_path=dx://project-xxx:/xx/xxx" # file path where csv and html are located
 ```
 

@@ -26,10 +26,6 @@
             "type": "string",
             "format": "file-path",
             "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6Q4Yj354zfXJBXg408z"
-          },
-          "cancer_gp": {
-            "type": "string",
-            "default": ""
           }
       }
     }
