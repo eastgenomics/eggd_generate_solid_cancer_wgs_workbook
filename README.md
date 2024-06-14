@@ -20,9 +20,9 @@ This is nexflow applet to generate the workbook for WGS solid cancer variants pr
 ### How to run the applet
 Example command
 ```
-dx run applet-xxxx \
+dx run applet-xxx \
 -ihotspots="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6j4Yj36y2VXZzqB09J5" \
--irefgenegp="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkZk7vQ4Yj31Z7v5Bz79PV5X" \
+-irefgene_group="project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkZk7vQ4Yj31Z7v5Bz79PV5X" \
 -iclinvar="project-Fkb6Gkj433GVVvj73J7x8KbV:file-GjP2v0j42VYfY5qfYGVKxy79" \
 -iclinvar_index="project-Fkb6Gkj433GVVvj73J7x8KbV:file-GjP2vG842VYjBz0VfGQBZ7F8" \
 -inextflow_pipeline_params="--file_path=dx://project-xxx:/xx/xxx" # file path where csv and html are located

@@ -1,5 +1,5 @@
 {
-  "description": "app/applet parameters",
+  "description": "eggd_generate_wgs_solid_cancer_workbook",
   "type": "object",
   "definitions": {
     "inputs": {
@@ -9,23 +9,19 @@
       "properties": {
           "hotspots": {
             "type": "string",
-            "format": "file-path",
-            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6j4Yj36y2VXZzqB09J5"
+            "format": "file-path"
           },
-          "refgenegp": {
+          "refgene_group": {
             "type": "string",
-            "format": "file-path",
-            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q784Yj3J3pjKpq3110gJ"
+            "format": "file-path"
           },
           "clinvar": {
             "type": "string",
-            "format": "file-path",
-            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q484Yj300qjXX1vg8f6J"
+            "format": "file-path"
           },
           "clinvar_index": {
             "type": "string",
-            "format": "file-path",
-            "default": "project-GkG4Zf84Yj359Q9JYbbqbFpy:file-GkG4q6Q4Yj354zfXJBXg408z"
+            "format": "file-path"
           }
       }
     }
