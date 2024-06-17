@@ -204,7 +204,6 @@ class excel:
         Write sheets to xlsx file
         """
         print("Writing sheets")
-        self.write_refgene()
         self.soc = self.workbook.create_sheet("SOC")
         self.write_soc()
         self.QC = self.workbook.create_sheet("QC")
@@ -220,6 +219,7 @@ class excel:
         self.write_SV()
         self.summary = self.workbook.create_sheet("Summary")
         self.write_summary()
+        self.write_refgene()
 
     def set_col_width(self, cell_width, sheet) -> None:
         """
@@ -249,7 +249,7 @@ class excel:
         Parameters
         ----------
         list for cells to color
-        sheet name 
+        sheet name
         color to fill
         """
         for cell in cells_to_colour:
@@ -821,7 +821,8 @@ class excel:
             ("F", 22),
             ("G", 18),
             ("H", 8),
-            ("I", 22)
+            ("I", 22),
+            ("K", 18)
         )
         self.set_col_width(cell_col_width, self.germline)
         # dropdowns
@@ -950,18 +951,18 @@ class excel:
             "H31",
             "H44",
             "H58",
-            
         ]
         self.bold_cell(to_bold, self.summary)
 
         # set column widths for readability
         cell_col_width = (
-            ("A", 32),
+            ("A", 26),
+            ("B", 20),
             ("C", 22),
-            ("D", 26),
-            ("F", 26),
-            ("G", 26),
-            ("H", 26),
+            ("D", 24),
+            ("F", 24),
+            ("G", 24),
+            ("H", 24),
         )
         self.set_col_width(cell_col_width, self.summary)
 
@@ -970,7 +971,7 @@ class excel:
         colour_cells = []
         for cell in [24, 31, 44, 58]:
             for col in ["A", "B", "C", "D", "E", "F", "G", "H"]:
-                colour_cells.append(f"{col}{cell}")        
+                colour_cells.append(f"{col}{cell}")
         self.colour_cell(colour_cells, self.summary, blueFill)
 
         # set borders around table areas
@@ -986,7 +987,7 @@ class excel:
         self.all_border(row_ranges, self.summary)
         # insert img from html file
         self.insert_img(self.summary, "figure_3.jpg", "A4", 300, 700)
-        self.insert_img(self.summary, "cropped_figure_2.jpg", "F4", 350, 350)        
+        self.insert_img(self.summary, "cropped_figure_2.jpg", "F4", 350, 350)
 
     def write_refgene(self) -> None:
         """
@@ -1002,12 +1003,196 @@ class excel:
         )
         # write sheets
         for ref, tab in ref_sheets:
-            self.df = pd.read_excel(self.args.refgenegp, sheet_name=ref)
-            self.df.to_excel(self.writer, sheet_name=tab, index=False)
-            ref = self.writer.sheets[tab]
-            ref.sheet_properties.tabColor = "FF0000"
-            filters = ref.auto_filter
-            filters.ref = "A:G"
+            df = pd.read_excel(self.args.refgenegp, sheet_name=ref)
+            self.SNV_copy["VAF"] = self.SNV_copy["VAF"].astype("str")
+            joined_SNV = self.group_and_rename(
+                self.SNV_copy,
+                "Gene",
+                {
+                    "GRCh38 coordinates": lambda x: ",".join(x),
+                    "Variant": lambda x: ",".join(x),
+                    "Predicted consequences": lambda x: ",".join(x),
+                    "VAF": lambda x: ",".join(x),
+                },
+                {
+                    "GRCh38 coordinates": "GRCh38 coordinates_SNV",
+                    "Variant": "Variant_SNV",
+                    "Predicted consequences": "Consequences_SNV",
+                    "VAF": "VAF_SNV",
+                },
+            )
+            merged_df1 = pd.merge(df, joined_SNV, on="Gene", how="left")
+
+            self.gain_copy["Copy Number"] = self.gain_copy[
+                "Copy Number"
+            ].astype("str")
+            joined_gain = self.group_and_rename(
+                self.gain_copy,
+                "Gene",
+                {
+                    "GRCh38 coordinates": lambda x: ",".join(x),
+                    "split_Type": lambda x: ",".join(x),
+                    "Copy Number": lambda x: ",".join(x),
+                },
+                {
+                    "GRCh38 coordinates": "GRCh38 coordinates_gain",
+                    "split_Type": "Type_gain",
+                    "Copy Number": "Copy Number_gain",
+                },
+            )
+            merged_df2 = pd.merge(
+                merged_df1, joined_gain, on="Gene", how="left"
+            )
+
+            self.loss_copy["Copy Number"] = self.loss_copy[
+                "Copy Number"
+            ].astype("str")
+            joined_loss = self.group_and_rename(
+                self.loss_copy,
+                "Gene",
+                {
+                    "GRCh38 coordinates": lambda x: ",".join(x),
+                    "split_Type": lambda x: ",".join(x),
+                    "Copy Number": lambda x: ",".join(x),
+                },
+                {
+                    "GRCh38 coordinates": "GRCh38 coordinates_loss",
+                    "split_Type": "Type_loss",
+                    "Copy Number": "Copy Number_loss",
+                },
+            )
+            merged_df3 = pd.merge(
+                merged_df2, joined_loss, on="Gene", how="left"
+            )
+
+            if self.fusion_count == 1:
+                self.SV_copy["Fusion"] = self.SV_copy["Fusion"].fillna("NULL")
+                joined_SV = self.group_and_rename(
+                    self.SV_copy,
+                    "Gene",
+                    {
+                        "GRCh38 coordinates": lambda x: ",".join(x),
+                        "Type": lambda x: ",".join(x),
+                        "Fusion": lambda x: ",".join(x),
+                    },
+                    {
+                        "GRCh38 coordinates": "GRCh38 coordinates_SV",
+                        "Type": "Type_SV",
+                    },
+                )
+
+            elif self.fusion_count == 2:
+                self.SV_copy["Fusion_1"] = self.SV_copy["Fusion_1"].fillna(
+                    "NULL"
+                )
+                self.SV_copy["Fusion_2"] = self.SV_copy["Fusion_2"].fillna(
+                    "NULL"
+                )
+                joined_SV = self.group_and_rename(
+                    self.SV_copy,
+                    "Gene",
+                    {
+                        "GRCh38 coordinates": lambda x: ",".join(x),
+                        "Type": lambda x: ",".join(x),
+                        "Fusion_1": lambda x: ",".join(x),
+                        "Fusion_2": lambda x: ",".join(x),
+                    },
+                    {
+                        "GRCh38 coordinates": "GRCh38 coordinates_SV",
+                        "Type": "Type_SV",
+                    },
+                )
+            merged_df4 = pd.merge(merged_df3, joined_SV, on="Gene", how="left")
+            merged_df4.to_excel(self.writer, sheet_name=tab, index=False)
+            ref_sheet = self.writer.sheets[tab]
+            ref_sheet.sheet_properties.tabColor = "FF0000"
+            max_col = merged_df4.shape[1]
+            max_col_letter = get_column_letter(max_col)
+            filters = ref_sheet.auto_filter
+            filters.ref = f"A:{max_col_letter}"
+            if ref == "paed":
+                col_color = (
+                    (
+                        "H",
+                        "K",
+                        PatternFill(patternType="solid", start_color="FFDBBB"),
+                    ),
+                    (
+                        "L",
+                        "N",
+                        PatternFill(patternType="solid", start_color="c4d9ef"),
+                    ),
+                    (
+                        "O",
+                        "Q",
+                        PatternFill(patternType="solid", start_color="DE3163"),
+                    ),
+                    (
+                        "R",
+                        max_col_letter,
+                        PatternFill(patternType="solid", start_color="9FE2BF"),
+                    ),
+                )
+                for start_col, end_col, fill_color in col_color:
+                    self.color_col(
+                        ref_sheet,
+                        start_col,
+                        end_col,
+                        merged_df4.shape[0]+1,
+                        fill_color,
+                    )
+            else:
+                col_color = (
+                    (
+                        "J",
+                        "M",
+                        PatternFill(patternType="solid", start_color="FFDBBB"),
+                    ),
+                    (
+                        "N",
+                        "P",
+                        PatternFill(patternType="solid", start_color="c4d9ef"),
+                    ),
+                    (
+                        "Q",
+                        "S",
+                        PatternFill(patternType="solid", start_color="DE3163"),
+                    ),
+                    (
+                        "T",
+                        max_col_letter,
+                        PatternFill(patternType="solid", start_color="9FE2BF"),
+                    ),
+                )
+                for start_col, end_col, fill_color in col_color:
+                    self.color_col(
+                        ref_sheet,
+                        start_col,
+                        end_col,
+                        merged_df4.shape[0]+1,
+                        fill_color,
+                    )
+
+    def group_and_rename(
+        self, df, col, to_join, cols_to_rename
+    ) -> pd.DataFrame:
+        """
+        function to concat the df rows if the value of
+        give 'col' is the same and rename some df col
+        Parameters
+        ----------
+        pd.DataFrame to group and rename
+        str for col name to check if the value are the same
+        dict for col name to concat
+        dict for col name to rename
+
+        Returns
+        -------
+        concat and renamed df
+        """
+        joined_df = df.groupby([col], as_index=False).agg(to_join)
+        joined_df.rename(columns=cols_to_rename, inplace=True)
+        return joined_df
 
     def lookup(
         self, df_to_check, ref_df, col_to_map, ref_col, lookup_col
@@ -1057,13 +1242,15 @@ class excel:
         """
         write SNV sheet
         """
-        self.df_cosmic = pd.read_excel(self.args.refgenegp,
-                                       sheet_name="cosmic")
+        self.df_cosmic = pd.read_excel(
+            self.args.refgenegp, sheet_name="cosmic"
+        )
         self.df_paed = pd.read_excel(self.args.refgenegp, sheet_name="paed")
         self.df_sarc = pd.read_excel(self.args.refgenegp, sheet_name="sarc")
         self.df_neuro = pd.read_excel(self.args.refgenegp, sheet_name="neuro")
-        self.df_ovarian = pd.read_excel(self.args.refgenegp,
-                                        sheet_name="ovarian")
+        self.df_ovarian = pd.read_excel(
+            self.args.refgenegp, sheet_name="ovarian"
+        )
         self.df_haem = pd.read_excel(self.args.refgenegp, sheet_name="haem")
         for df in [
             self.df_cosmic,
@@ -1078,9 +1265,9 @@ class excel:
             )  # TO DO: TO REMOVE##should be corrected for ovarian and medullo
             df.reset_index(drop=True, inplace=True)
             if "Entities" in list(df.columns):
-                df['Entities'] = df['Entities'].fillna("NULL")
+                df["Entities"] = df["Entities"].fillna("NULL")
             elif "Driver" in list(df.columns):
-                df['Driver'] = df['Driver'].fillna("NULL")
+                df["Driver"] = df["Driver"].fillna("NULL")
 
         self.df_hotspots = pd.read_csv(self.args.hotspots)
         df = pd.read_csv(self.args.variant, sep=",")
@@ -1166,22 +1353,23 @@ class excel:
             },
             inplace=True,
         )
+        self.SNV_copy = df
         df.to_excel(self.writer, sheet_name="SNV", index=False)
         self.SNV = self.writer.sheets["SNV"]
         cell_col_width = (
-            ("A", 12),
+            ("A", 8),
             ("B", 12),
             ("C", 28),
             ("D", 28),
-            ("E", 14),
+            ("E", 18),
             ("F", 14),
             ("G", 8),
             ("H", 12),
-            ("I", 14),
+            ("I", 10),
             ("J", 20),
             ("K", 20),
-            ("L", 26),
-            ("M", 26),
+            ("L", 20),
+            ("M", 20),
             ("N", 20),
             ("O", 14),
             ("P", 22),
@@ -1189,7 +1377,9 @@ class excel:
             ("R", 18),
             ("S", 18),
             ("T", 16),
-            ("U", 16)
+            ("U", 16),
+            ("W", 18),
+            ("X", 18)
         )
         self.set_col_width(cell_col_width, self.SNV)
 
@@ -1204,14 +1394,14 @@ class excel:
         self.add_dropdonws_sheet(self.SNV, num_variant)
 
         col_color = (
-            ("L", "N", PatternFill(patternType="solid", start_color="FFDBBB")),
-            ("O", "T", PatternFill(patternType="solid", start_color="c4d9ef")),
-            ("U", "V", PatternFill(patternType="solid", start_color="A7C7E7")),
+            ("L", "O", PatternFill(patternType="solid", start_color="FFDBBB")),
+            ("P", "T", PatternFill(patternType="solid", start_color="c4d9ef")),
+            ("U", "V", PatternFill(patternType="solid", start_color="00FFFF")),
             ("W", "X", PatternFill(patternType="solid", start_color="dabcff")),
         )
         for start_col, end_col, fill_color in col_color:
             self.color_col(
-                self.SNV, start_col, end_col, num_variant + 2, fill_color
+                self.SNV, start_col, end_col, num_variant + 1, fill_color
             )
         self.SNV.freeze_panes = self.SNV["E1"]
 
@@ -1244,20 +1434,13 @@ class excel:
         # split fusion columns
         df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
         if df_SV["fusion_count"].max() == 1:
+            self.fusion_count = 1
             df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(";", expand=True)
-           # df_SV[["Fusion", "Fusion Consequence"]] = df_SV[
-           #     "Fusion"
-           # ].str.split(" - ", expand=True)
         elif df_SV["fusion_count"].max() == 2:
+            self.fusion_count = 2
             df_SV[["Type", "Fusion_1", "Fusion_2"]] = df_SV.Type.str.split(
                 ";", expand=True
             )
-            #[["Fusion_1", "Fusion_1 Consequence"]] = df_SV[
-            #    "Fusion_1"
-            #].str.split("-", expand=True)
-            #df_SV[["Fusion_2", "Fusion_2 Consequence"]] = df_SV[
-            #    "Fusion_2"
-            #].str.split("-", expand=True)
         elif df_SV["fusion_count"].max() > 2:
             print("More than 2 fusion")
             sys.exit(1)
@@ -1277,14 +1460,14 @@ class excel:
         )
         # get gene counts and look up for each gene
         df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
-        max_num_gene = df_SV["gene_count"].max() + 1
+        self.max_num_gene = df_SV["gene_count"].max() + 1
         # split gene col and create look up col for them
-        if max_num_gene == 1:
+        if self.max_num_gene == 1:
             # look up genes from df_refgene
             for j, k, v in self.lookup_refgene:
                 df_SV[j] = self.lookup(df_SV, k, "Gene", "Gene", v)
                 df_SV[j] = df_SV[j].fillna("gene_not_found")
-        elif max_num_gene == 2:
+        elif self.max_num_gene == 2:
             df_SV[["Gene1", "Gene2"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
@@ -1294,7 +1477,7 @@ class excel:
                 if (list(df_SV["Gene2"].unique())) != ["N/A"]:
                     df_SV[j + "_2"] = self.lookup(df_SV, k, "Gene2", "Gene", v)
                     df_SV[j + "_2"] = df_SV[j + "_2"].fillna("gene_not_found")
-        elif max_num_gene == 3:
+        elif self.max_num_gene == 3:
             df_SV[["Gene1", "Gene2", "Gene3"]] = df_SV["Gene"].str.split(
                 ";", expand=True
             )
@@ -1324,7 +1507,8 @@ class excel:
             or col.startswith("Ovary")
             or col.startswith("Haem")
         ]
-        if df_SV["fusion_count"].max() == 1:
+        self.SV_copy = df_SV
+        if self.fusion_count == 1:
             selected_col = [
                 "Event domain",
                 "Impacted transcript region",
@@ -1343,7 +1527,7 @@ class excel:
                 "Comments",
                 "Variant_to_report"
             ] + lookup_col
-        elif df_SV["fusion_count"].max() == 2:
+        elif self.fusion_count == 2:
             selected_col = [
                 "Event domain",
                 "Impacted transcript region",
@@ -1356,7 +1540,7 @@ class excel:
                 "Size",
                 "Population germline allele frequency (GESG | GECG for somatic SVs or AF | AUC for germline CNVs)",
                 "Paired reads",
-                "Split reads",                
+                "Split reads",
                 "Gene mode of action",
                 "Variant class",
                 "Actionability",
@@ -1373,9 +1557,11 @@ class excel:
             ("A", 12),
             ("B", 12),
             ("C", 22),
-            ("F", 20),
-            ("G", 20),
-            ("H", 24),
+            ("D", 22),
+            ("E", 20),
+            ("F", 12),
+            ("G", 16),
+            ("H", 16),
             ("I", 24),
             ("J", 24),
             ("K", 20),
@@ -1406,7 +1592,7 @@ class excel:
         )
         for start_col, end_col, fill_color in col_color:
             self.color_col(
-                self.SV, start_col, end_col, num_variant + 2, fill_color
+                self.SV, start_col, end_col, num_variant + 1, fill_color
             )
         self.SV.freeze_panes = self.SV["E1"]
 
@@ -1474,6 +1660,8 @@ class excel:
             (df_loss, "LOSS"),
             (df_gain, "GAIN"),
         )
+        self.gain_copy = df_gain
+        self.loss_copy = df_loss
         # write each df into sheet
         for df, sheet_name in df_to_write:
             num_variant = df.shape[0]
@@ -1483,19 +1671,27 @@ class excel:
                 ("A", 12),
                 ("B", 12),
                 ("C", 22),
-                ("F", 20),
-                ("G", 20),
-                ("H", 24),
-                ("I", 24),
-                ("J", 24),
+                ("D", 22),
+                ("E", 20),
+                ("F", 16),
+                ("G", 16),
+                ("H", 14),
+                ("I", 22),
+                ("J", 20),
                 ("K", 20),
-                ("L", 20)
+                ("L", 20),
+                ("M", 22),
+                ("N", 20),
+                ("O", 16),
+                ("P", 16),
+                ("Q", 16),
+                ("R", 16),
+                ("S", 16)
             )
             self.set_col_width(cell_col_width, sheet)
 
             # add dropdowns
             self.add_dropdonws_sheet(sheet, num_variant)
-            
             col_color = (
                 (
                     "K",
@@ -1510,9 +1706,13 @@ class excel:
             )
             for start_col, end_col, fill_color in col_color:
                 self.color_col(
-                    sheet, start_col, end_col, num_variant + 2, fill_color
+                    sheet, start_col, end_col, num_variant + 1, fill_color
                 )
             sheet.freeze_panes = sheet["E1"]
+            max_col = df.shape[1]
+            max_col_letter = get_column_letter(max_col)
+            filters = sheet.auto_filter
+            filters.ref = f"A:{max_col_letter}"
 
     def get_drop_down(
         self, dropdown_options, prompt, title, sheet, cells
@@ -1569,13 +1769,15 @@ class excel:
             '"Pathogenic", "Likely pathogenic",'
             '"Uncertain", "Likely passenger",'
             '"Likely artefact"'
-            )
+        )
         action_options = (
             '"1. Predicts therapeutic response,'
-            ' 2. Prognostic, 3. Defines diagnosis group'
+            " 2. Prognostic, 3. Defines diagnosis group"
             ', 4. Eligibility for trial, 5. Other"'
-            )
-        col_letter_report = self.get_col_letter(sheet_name, "Variant_to_report")
+        )
+        col_letter_report = self.get_col_letter(
+            sheet_name, "Variant_to_report"
+        )
         col_letter_class = self.get_col_letter(sheet_name, "Variant class")
         col_letter_action = self.get_col_letter(sheet_name, "Actionability")
         cells_for_report = []
@@ -1588,7 +1790,7 @@ class excel:
             title="yes or no",
             sheet=sheet_name,
             cells=cells_for_report,
-            )
+        )
 
         cells_for_class = []
         for i in range(2, num_variant + 2):
@@ -1599,7 +1801,7 @@ class excel:
             title="Variant class",
             sheet=sheet_name,
             cells=cells_for_class,
-            )
+        )
         cells_for_action = []
         for i in range(2, num_variant + 2):
             cells_for_action.append(f"{col_letter_action}{i}")
@@ -1610,7 +1812,7 @@ class excel:
             title="Actionability",
             sheet=sheet_name,
             cells=cells_for_action,
-            )
+        )
 
 
 def main():
