@@ -994,7 +994,7 @@ class excel:
             self.summary.cell(59, cell).value = key
 
         sv_titles = (
-            (68, list(self.SNV_copy.columns)),
+            (68, list(self.df_SNV_copy.columns)),
             (79, list(self.df_gain_copy.columns)),
             (90, list(self.df_SV_summary.columns)),
         )
@@ -1120,7 +1120,7 @@ class excel:
             df = pd.read_excel(self.args.refgene_group, sheet_name=ref)
             if "RefGene Group" in df.columns:
                 df = df.drop("RefGene Group", axis=1)
-            joined_SNV = self.SNV_copy[
+            joined_SNV = self.df_SNV_copy[
                 [
                     "Gene",
                     "GRCh38 coordinates",
@@ -1450,7 +1450,7 @@ class excel:
             ["Domain", "VAF"], ascending=[True, False], inplace=True
         )
         df["VAF"] = df["VAF"].astype(float)
-        self.SNV_copy = df
+        self.df_SNV_copy = df
         df.to_excel(self.writer, sheet_name="SNV", index=False)
         self.SNV = self.writer.sheets["SNV"]
         cell_col_width = (
