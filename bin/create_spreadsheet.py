@@ -1199,6 +1199,11 @@ class excel:
                 },
                 inplace=True,
             )
+            list_col = list(merged_df3.columns)
+            idx_coor = list_col.index("GRCh38 coordinates_SNV")
+            selected_col = list_col[idx_coor:]
+            for col in selected_col:
+                merged_df3[col] = merged_df3[col].fillna("-")
             merged_df3.to_excel(self.writer, sheet_name=tab, index=False)
             # format sheet
             ref_sheet = self.writer.sheets[tab]
