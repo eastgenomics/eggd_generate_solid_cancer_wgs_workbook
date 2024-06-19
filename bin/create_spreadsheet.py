@@ -959,7 +959,7 @@ class excel:
         row_ranges = []
         for cell in range(24, 30):
             row_ranges.append(f"A{cell}:H{cell}")
-        for cell in range(31, 43):
+        for cell in range(32, 43):
             row_ranges.append(f"A{cell}:H{cell}")
         for cell in range(45, 57):
             row_ranges.append(f"A{cell}:H{cell}")
@@ -1004,7 +1004,7 @@ class excel:
                 self.summary.cell(cell, idx + 1).value = key
 
         # add formula
-        for i in range(25, 31):
+        for i in range(25, 30):
             for idx, col in enumerate(["A", "B", "C", "D", "E", "F", "G"]):
                 self.summary.cell(i, idx + 1).value = f"={col}{i+35}"
         snv_pair = (
@@ -1013,11 +1013,11 @@ class excel:
             (3, "D"),
             (4, "E"),
             (5, "F"),
-            (6, "K"),
-            (7, "L"),
-            (8, "M"),
+            (6, self.class_col),
+            (7, self.action_col),
+            (8, self.comment_col),
         )
-        for i in range(33, 42):
+        for i in range(33, 43):
             for pair1, pair2 in snv_pair:
                 self.summary.cell(i, pair1).value = f"={pair2}{i+36}"
 
@@ -1030,9 +1030,13 @@ class excel:
             (7, "K"),
             (8, "L"),
         )
-        for i in range(46, 51):
+        fill1 = PatternFill(patternType="solid", start_color="E7B8C8")
+        for i in range(46, 52):
             for pair1, pair2 in cnv_pair:
                 self.summary.cell(i, pair1).value = f"={pair2}{i+34}"
+                self.summary.cell(i, pair1).fill = fill1
+        cell_to_colour = ["E46", "E47", "E48", "E49", "E50", "E51"]
+        self.colour_cell(cell_to_colour, self.summary, fill1)
         if self.fusion_count == 0:
             sv_pair = (
                 (1, "C"),
@@ -1054,9 +1058,11 @@ class excel:
                 (7, self.col_letter_action),
                 (8, self.col_letter_comment),
             )
-        for i in range(51, 57):
+        fill2 = PatternFill(patternType="solid", start_color="C8F7E3")
+        for i in range(52, 57):
             for pair1, pair2 in sv_pair:
-                self.summary.cell(i, pair1).value = f"={pair2}{i+40}"
+                self.summary.cell(i, pair1).value = f"={pair2}{i+39}"
+                self.summary.cell(i, pair1).fill = fill2
 
     def aggregate_variants(self, col, df) -> pd.DataFrame:
         """
@@ -1148,7 +1154,6 @@ class excel:
             merged_df2 = pd.merge(merged_df1, final_CNV, on="Gene", how="left")
             if self.max_num_gene == 1:
                 if self.fusion_count == 1:
-                    print("entering 1")
                     joined_SV = self.df_SV_copy[
                         ["Gene", "GRCh38 coordinates", "Type", "Fusion"]
                     ]
@@ -1158,7 +1163,6 @@ class excel:
                         constant_col3, joined_SV
                     )
                 else:
-                    print("entering 2")
                     joined_SV = self.df_SV_copy[
                         ["Gene", "GRCh38 coordinates"] + self.fusion_col
                     ]
@@ -1171,7 +1175,6 @@ class excel:
 
             else:
                 if self.fusion_count == 1:
-                    print("entering 3")
                     constant_col3 = ["GRCh38 coordinates", "Type", "Fusion"]
                     joined_SV = self.concat_dataframe(constant_col3)
                     joined_SV["Fusion"] = joined_SV["Fusion"].fillna("null")
@@ -1179,8 +1182,6 @@ class excel:
                         constant_col3, joined_SV
                     )
                 else:
-                    print("entering 4")
-
                     constant_col3 = ["GRCh38 coordinates"] + self.fusion_col
                     joined_SV = self.concat_dataframe(constant_col3)
                     for f in self.fusion_col:
@@ -1199,7 +1200,7 @@ class excel:
                 inplace=True,
             )
             merged_df3.to_excel(self.writer, sheet_name=tab, index=False)
-
+            # format sheet
             ref_sheet = self.writer.sheets[tab]
             ref_sheet.sheet_properties.tabColor = "FF0000"
             max_col = merged_df3.shape[1]
@@ -1333,37 +1334,27 @@ class excel:
         """
         write SNV sheet
         """
-        self.df_cosmic = pd.read_excel(
-            self.args.refgene_group, sheet_name="cosmic"
-        )
-        self.df_paed = pd.read_excel(
-            self.args.refgene_group, sheet_name="paed"
-        )
-        self.df_sarc = pd.read_excel(
-            self.args.refgene_group, sheet_name="sarc"
-        )
-        self.df_neuro = pd.read_excel(
-            self.args.refgene_group, sheet_name="neuro"
-        )
-        self.df_ovarian = pd.read_excel(
+        df_cosmic = pd.read_excel(self.args.refgene_group, sheet_name="cosmic")
+        df_paed = pd.read_excel(self.args.refgene_group, sheet_name="paed")
+        df_sarc = pd.read_excel(self.args.refgene_group, sheet_name="sarc")
+        df_neuro = pd.read_excel(self.args.refgene_group, sheet_name="neuro")
+        df_ovarian = pd.read_excel(
             self.args.refgene_group, sheet_name="ovarian"
         )
-        self.df_haem = pd.read_excel(
-            self.args.refgene_group, sheet_name="haem"
-        )
+        df_haem = pd.read_excel(self.args.refgene_group, sheet_name="haem")
         for df in [
-            self.df_cosmic,
-            self.df_paed,
-            self.df_sarc,
-            self.df_neuro,
-            self.df_ovarian,
-            self.df_haem,
+            df_cosmic,
+            df_paed,
+            df_sarc,
+            df_neuro,
+            df_ovarian,
+            df_haem,
         ]:
             if "Entities" in list(df.columns):
                 df["Entities"] = df["Entities"].fillna("*")
             if "Driver" in list(df.columns):
                 df["Driver"] = df["Driver"].fillna("*")
-        self.df_hotspots = pd.read_csv(self.args.hotspots)
+        df_hotspots = pd.read_csv(self.args.hotspots)
         df = pd.read_csv(self.args.variant, sep=",")
         # select only somatic rows
         df = df[df["Origin"] == "somatic"]
@@ -1376,12 +1367,12 @@ class excel:
 
         # look up genes from df_refgene
         self.lookup_refgene = (
-            ("COSMIC", self.df_cosmic, "Entities"),
-            ("Paed", self.df_paed, "Driver"),
-            ("Sarc", self.df_sarc, "Driver"),
-            ("Neuro", self.df_neuro, "Driver"),
-            ("Ovary", self.df_ovarian, "Driver"),
-            ("Haem", self.df_haem, "Driver"),
+            ("COSMIC", df_cosmic, "Entities"),
+            ("Paed", df_paed, "Driver"),
+            ("Sarc", df_sarc, "Driver"),
+            ("Neuro", df_neuro, "Driver"),
+            ("Ovary", df_ovarian, "Driver"),
+            ("Haem", df_haem, "Driver"),
         )
         for j, k, v in self.lookup_refgene:
             df[j] = self.lookup(df, k, "Gene", "Gene", v)
@@ -1393,22 +1384,27 @@ class excel:
         df[["HS p.", "col1", "col2"]] = df["MTBP p."].str.split(
             r"([^\d]+)$", expand=True
         )
-        df.drop(["col1", "col2"], axis=1, inplace=True)
-
         # look up from hotspots
         lookup_dict_hotspots = {
             "HS_Sample": "HS_Samples",
             "HS_Tumour": "HS_Tumor Type Composition",
         }
         for k, v in lookup_dict_hotspots.items():
-            df[k] = self.lookup(
-                df, self.df_hotspots, "HS p.", "HS_PROTEIN_ID", v
-            )
+            df[k] = self.lookup(df, df_hotspots, "HS p.", "HS_PROTEIN_ID", v)
             df[k] = df[k].fillna("-")
-        df[["Predicted consequences", "Error flag"]] = df[
-            "Predicted consequences"
-        ].str.split(";", expand=True)
-        df[["VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
+        error = []
+        df["con_count"] = df["Predicted consequences"].str.count(r"\;")
+        if df["con_count"].max() > 0:
+            df[["Predicted consequences", "Error flag"]] = df[
+                "Predicted consequences"
+            ].str.split(";", expand=True)
+            error = ["Error flag"]
+        loh = []
+        df["VAF"] = df["VAF"].astype("str")
+        df["VAF_count"] = df["VAF"].str.count(r"\;")
+        if df["VAF_count"].max() > 0:
+            df[["VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
+            loh = ["LOH"]
         df.loc[:, "Variant class"] = ""
         df.loc[:, "Actionability"] = ""
         df.loc[:, "Comments"] = ""
@@ -1420,8 +1416,10 @@ class excel:
                 "CDS change and protein change",
                 "Predicted consequences",
                 "VAF",
-                "LOH",
-                "Error flag",
+            ]
+            + loh
+            + error
+            + [
                 "Alt allele/total read depth",
                 "Gene mode of action",
                 "Variant class",
@@ -1485,12 +1483,37 @@ class excel:
 
         # add dropdowns
         self.add_dropdonws_sheet(self.SNV, num_variant)
+        self.class_col = self.get_col_letter(self.SNV, "Variant class")
+        self.action_col = self.get_col_letter(self.SNV, "Actionability")
+        self.comment_col = self.get_col_letter(self.SNV, "Comments")
+        cosmic_col = self.get_col_letter(self.SNV, "COSMIC")
+        haem_col = self.get_col_letter(self.SNV, "Haem")
+        sample_col = self.get_col_letter(self.SNV, "HS_Sample")
+        tumor_col = self.get_col_letter(self.SNV, "HS_Tumour")
+        cdot_col = self.get_col_letter(self.SNV, "MTBP c.")
+        pdot_col = self.get_col_letter(self.SNV, "MTBP p.")
 
         col_color = (
-            ("K", "M", PatternFill(patternType="solid", start_color="FFDBBB")),
-            ("N", "S", PatternFill(patternType="solid", start_color="c4d9ef")),
-            ("T", "U", PatternFill(patternType="solid", start_color="00FFFF")),
-            ("V", "W", PatternFill(patternType="solid", start_color="dabcff")),
+            (
+                self.class_col,
+                self.comment_col,
+                PatternFill(patternType="solid", start_color="FFDBBB"),
+            ),
+            (
+                cosmic_col,
+                haem_col,
+                PatternFill(patternType="solid", start_color="c4d9ef"),
+            ),
+            (
+                sample_col,
+                tumor_col,
+                PatternFill(patternType="solid", start_color="00FFFF"),
+            ),
+            (
+                cdot_col,
+                pdot_col,
+                PatternFill(patternType="solid", start_color="dabcff"),
+            ),
         )
         for start_col, end_col, fill_color in col_color:
             self.color_col(
@@ -1667,7 +1690,7 @@ class excel:
             self.color_col(
                 self.SV, start_col, end_col, num_variant + 1, fill_color
             )
-        self.SV.freeze_panes = self.SV["E1"]
+        self.SV.freeze_panes = self.SV["F1"]
 
     def write_gain_loss(self) -> None:
         """
@@ -1778,7 +1801,7 @@ class excel:
                 self.color_col(
                     sheet, start_col, end_col, num_variant + 1, fill_color
                 )
-            sheet.freeze_panes = sheet["E1"]
+            sheet.freeze_panes = sheet["F1"]
             max_col = df.shape[1]
             max_col_letter = get_column_letter(max_col)
             filters = sheet.auto_filter
@@ -1867,7 +1890,12 @@ class excel:
 
     def data_bar(self, start_cell, end_cell, sheet_name) -> None:
         """
-        add databar to col in give sheet
+        add databar in the sheet
+        Parameters
+        ----------
+        str for start cell
+        str for end cell
+        str for sheet name
         """
         rule = DataBarRule(
             start_type="num",
