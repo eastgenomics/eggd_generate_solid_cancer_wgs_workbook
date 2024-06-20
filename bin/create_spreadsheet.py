@@ -1675,29 +1675,31 @@ class excel:
         filters.ref = f"A:{max_col_letter}"
         # add dropdowns
         self.add_dropdown_sheet(self.SV, num_variant)
-        col_letter_lookup1 = self.get_col_letter(self.SV, lookup_col[0])
-        col_letter_lookup2 = self.get_col_letter(self.SV, lookup_col[-1])
         self.col_letter_comment = self.get_col_letter(self.SV, "Comments")
         self.col_letter_class = self.get_col_letter(self.SV, "Variant class")
         self.col_letter_action = self.get_col_letter(self.SV, "Actionability")
-
-        col_color = (
-            (
-                self.col_letter_class,
-                self.col_letter_comment,
-                PatternFill(patternType="solid", start_color="FFDBBB"),
-            ),
-            (
-                col_letter_lookup1,
-                col_letter_lookup2,
-                PatternFill(patternType="solid", start_color="c4d9ef"),
-            ),
-        )
-        for start_col, end_col, fill_color in col_color:
-            self.color_col(
-                self.SV, start_col, end_col, num_variant + 1, fill_color
+        self.color_col(
+                self.SV, self.col_letter_class, self.col_letter_comment,
+                num_variant + 1, PatternFill(patternType="solid",
+                                             start_color="FFDBBB")
             )
         self.SV.freeze_panes = self.SV["F1"]
+        count = 0
+        col2 = self.get_col_letter(self.SV, lookup_col[-1])
+        even_color = PatternFill(patternType="solid", start_color="c4d9ef")
+        odd_color = PatternFill(patternType="solid", start_color="B8E7E0")
+        for idx, col in enumerate(lookup_col):
+            if idx % 6 == 0:
+                col1 = self.get_col_letter(self.SV, col)
+                if count % 2 == 0:
+                    self.color_col(
+                        self.SV, col1, col2, num_variant + 1, even_color
+                     )
+                else:
+                    self.color_col(
+                        self.SV, col1, col2, num_variant + 1, odd_color
+                     )
+                count = count + 1
 
     def write_gain_loss(self) -> None:
         """
