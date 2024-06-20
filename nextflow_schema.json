@@ -1,0 +1,29 @@
+{
+  "description": "eggd_generate_wgs_solid_cancer_workbook",
+  "type": "object",
+  "definitions": {
+    "inputs": {
+      "title": "Inputs",
+      "type": "object",
+      "description": "",
+      "properties": {
+          "hotspots": {
+            "type": "string",
+            "format": "file-path"
+          },
+          "refgene_group": {
+            "type": "string",
+            "format": "file-path"
+          },
+          "clinvar": {
+            "type": "string",
+            "format": "file-path"
+          },
+          "clinvar_index": {
+            "type": "string",
+            "format": "file-path"
+          }
+      }
+    }
+  }
+}
