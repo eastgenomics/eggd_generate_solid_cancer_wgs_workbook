@@ -1388,9 +1388,16 @@ class excel:
         df = df.replace([None], [""], regex=True)
         df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
         df["MTBP p."] = df["Gene"] + ":" + df["p_dot"]
-        df[["HS p.", "col1", "col2"]] = df["MTBP p."].str.split(
-            r"([^\d]+)$", expand=True
-        )
+        hs = []
+        for each in list(df['MTBP p.']):
+            if ":p." in each:
+                split_str = each.split(":p")[1]
+                num_to_split = re.findall(r'\d+', split_str)[0]
+                final_str = each.split(num_to_split)[0] + num_to_split
+                hs.append(final_str)
+            else:
+                hs.append(each)
+        df['HS p.'] = hs
         # look up from hotspots
         lookup_dict_hotspots = {
             "HS_Sample": "HS_Samples",
