@@ -704,149 +704,149 @@ class excel:
         )
         for cell, key in snv_table_keys:
             self.germline.cell(4, cell).value = key
+        self.variant_class_options = (
+                '"Pathogenic", "Likely pathogenic",'
+                '"Uncertain", "Likely passenger",'
+                '"Likely artefact"'
+            )
+        self.action_options = (
+                '"1. Predicts therapeutic response,'
+                " 2. Prognostic, 3. Defines diagnosis group"
+                ', 4. Eligibility for trial, 5. Other"'
+            )
 
         # populate germline table
         germline_table = pd.read_csv(self.args.variant, sep=",")
         germline_table = germline_table[germline_table["Origin"] == "germline"]
-        germline_table.reset_index(drop=True, inplace=True)
+        if not germline_table.empty:
+            germline_table.reset_index(drop=True, inplace=True)
 
-        # get the clnsigconf from clinvar file based on clinvar ID
-        clinvarID = list(germline_table["ClinVar ID"])
-        d = []
-        for cid in clinvarID:
-            d.append(
-                {
-                    "ClinVar ID": cid,
-                    "clnsigconf": self.get_clnsigconf(cid),
-                }
+            # get the clnsigconf from clinvar file based on clinvar ID
+            clinvarID = list(germline_table["ClinVar ID"])
+            d = []
+            for cid in clinvarID:
+                d.append(
+                    {
+                        "ClinVar ID": cid,
+                        "clnsigconf": self.get_clnsigconf(cid),
+                    }
+                )
+            clinvar_df = pd.DataFrame(d)
+            germline_table = germline_table.merge(
+               clinvar_df, on="ClinVar ID", how="left"
             )
-        clinvar_df = pd.DataFrame(d)
-        germline_table = germline_table.merge(
-            clinvar_df, on="ClinVar ID", how="left"
-        )
 
-        # split the col to get gnomAD
-        germline_table[["GE", "gnomAD"]] = germline_table[
-            "Population germline allele frequency (GE | gnomAD)"
-        ].str.split("|", expand=True)
-        germline_table.drop(
-            ["GE", "Population germline allele frequency (GE | gnomAD)"],
-            axis=1,
-            inplace=True,
-        )
-        germline_table.loc[:, "Variant Class"] = ""
-        germline_table.loc[:, "Actionability"] = ""
-        germline_table = germline_table[
-            [
-                "Gene",
-                "GRCh38 coordinates;ref/alt allele",
-                "CDS change and protein change",
-                "Predicted consequences",
-                "Genotype",
-                "Variant Class",
-                "Actionability",
-                "Gene mode of action",
-                "clnsigconf",
-                "gnomAD",
+            # split the col to get gnomAD
+            germline_table[["GE", "gnomAD"]] = germline_table[
+                "Population germline allele frequency (GE | gnomAD)"
+            ].str.split("|", expand=True)
+            germline_table.drop(
+                ["GE", "Population germline allele frequency (GE | gnomAD)"],
+                axis=1,
+                inplace=True,
+            )
+            germline_table.loc[:, "Variant Class"] = ""
+            germline_table.loc[:, "Actionability"] = ""
+            germline_table = germline_table[
+                [
+                    "Gene",
+                    "GRCh38 coordinates;ref/alt allele",
+                    "CDS change and protein change",
+                    "Predicted consequences",
+                    "Genotype",
+                    "Variant Class",
+                    "Actionability",
+                    "Gene mode of action",
+                    "clnsigconf",
+                    "gnomAD",
+                ]
             ]
-        ]
 
-        # write df into excel sheet
-        num_gene = germline_table.shape[0]
-        rows = dataframe_to_rows(germline_table)
-        for r_idx, row in enumerate(rows, 1):
-            for c_idx, value in enumerate(row, 1):
-                if c_idx != 1 and r_idx != 1:
-                    self.germline.cell(
-                        row=r_idx + 2, column=c_idx - 1, value=value
-                    )
+            # write df into excel sheet
+            num_gene = germline_table.shape[0]
+            rows = dataframe_to_rows(germline_table)
+            for r_idx, row in enumerate(rows, 1):
+                for c_idx, value in enumerate(row, 1):
+                    if c_idx != 1 and r_idx != 1:
+                        self.germline.cell(
+                            row=r_idx + 2, column=c_idx - 1, value=value
+                        )
+            self.germline.cell(
+                num_gene + 6, 1
+            ).value = "Pertinent variants/feedback"
+            self.germline.cell(num_gene + 7, 1).value = "None"
+            # dropdowns
+            cells_for_variant_class = []
+            for i in range(5, num_gene + 5):
+                cells_for_variant_class.append(f"F{i}")
+            self.get_dropdown(
+                dropdown_options=self.variant_class_options,
+                prompt="Select from the list",
+                title="Variant class",
+                sheet=self.germline,
+                cells=cells_for_variant_class,
+            )
+            cells_for_action = []
+            for i in range(5, num_gene + 5):
+                cells_for_action.append(f"G{i}")
+            self.get_dropdown(
+                dropdown_options=self.action_options,
+                prompt="Select from the list",
+                title="Actionability",
+                sheet=self.germline,
+                cells=cells_for_action,
+            )
 
-        self.germline.cell(
-            num_gene + 6, 1
-        ).value = "Pertinent variants/feedback"
-        self.germline.cell(num_gene + 7, 1).value = "None"
+            # titles to set to bold
+            to_bold = [
+                "A1",
+                "A4",
+                "B4",
+                "A10",
+                "C4",
+                "D4",
+                "E4",
+                "F4",
+                "G4",
+                "H4",
+                "I4",
+                "J4",
+                "K4",
+                f"C{num_gene+6}",
+            ]
+            self.bold_cell(to_bold, self.germline)
+            # set border
+            cells_lower_border = [
+                f"A{num_gene+6}",
+            ]
+            self.lower_border(cells_lower_border, self.germline)
 
-        # titles to set to bold
-        to_bold = [
-            "A1",
-            "A4",
-            "B4",
-            "A10",
-            "C4",
-            "D4",
-            "E4",
-            "F4",
-            "G4",
-            "H4",
-            "I4",
-            "J4",
-            "K4",
-            f"C{num_gene+6}",
-        ]
-        self.bold_cell(to_bold, self.germline)
-        # set border
-        cells_lower_border = [
-            f"A{num_gene+6}",
-        ]
-        self.lower_border(cells_lower_border, self.germline)
+            # set borders around table areas
+            row_ranges = []
+            for i in range(4, num_gene + 5):
+                row_ranges.append(f"A{i}:K{i}")
+            self.all_border(row_ranges, self.germline)
 
-        # set borders around table areas
-        row_ranges = []
-        for i in range(4, num_gene + 5):
-            row_ranges.append(f"A{i}:K{i}")
-        self.all_border(row_ranges, self.germline)
+            # colour title cells
+            blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
+            blue_colour_cells = []
+            for i in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"]:
+                blue_colour_cells.append(f"{i}4")
+            self.colour_cell(blue_colour_cells, self.germline, blueFill)
 
-        # colour title cells
-        blueFill = PatternFill(patternType="solid", start_color="ADD8E6")
-        blue_colour_cells = []
-        for i in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"]:
-            blue_colour_cells.append(f"{i}4")
-        self.colour_cell(blue_colour_cells, self.germline, blueFill)
-
-        # set column widths for readability
-        cell_col_width = (
-            ("A", 20),
-            ("B", 18),
-            ("C", 22),
-            ("D", 14),
-            ("F", 22),
-            ("G", 18),
-            ("H", 12),
-            ("I", 22),
-            ("K", 12),
-        )
-        self.set_col_width(cell_col_width, self.germline)
-        # dropdowns
-        cells_for_variant_class = []
-        for i in range(5, num_gene + 5):
-            cells_for_variant_class.append(f"F{i}")
-        self.variant_class_options = (
-            '"Pathogenic", "Likely pathogenic",'
-            '"Uncertain", "Likely passenger",'
-            '"Likely artefact"'
-        )
-        self.get_dropdown(
-            dropdown_options=self.variant_class_options,
-            prompt="Select from the list",
-            title="Variant class",
-            sheet=self.germline,
-            cells=cells_for_variant_class,
-        )
-        cells_for_action = []
-        for i in range(5, num_gene + 5):
-            cells_for_action.append(f"G{i}")
-        self.action_options = (
-            '"1. Predicts therapeutic response,'
-            " 2. Prognostic, 3. Defines diagnosis group"
-            ', 4. Eligibility for trial, 5. Other"'
-        )
-        self.get_dropdown(
-            dropdown_options=self.action_options,
-            prompt="Select from the list",
-            title="Actionability",
-            sheet=self.germline,
-            cells=cells_for_action,
-        )
+            # set column widths for readability
+            cell_col_width = (
+                ("A", 20),
+                ("B", 18),
+                ("C", 22),
+                ("D", 14),
+                ("F", 22),
+                ("G", 18),
+                ("H", 12),
+                ("I", 22),
+                ("K", 12),
+            )
+            self.set_col_width(cell_col_width, self.germline)
 
     def write_summary(self) -> None:
         """
