@@ -153,7 +153,7 @@ class excel:
         strip html table and return as list
         Parameters
         ----------
-        bs4.element.Tag for html table table
+        bs4.element.Tag for html table
 
         Returns
         -------
@@ -1368,9 +1368,9 @@ class excel:
         df.reset_index(drop=True, inplace=True)
         num_variant = df.shape[0]
         df[["c_dot", "p_dot"]] = df["CDS change and protein change"].str.split(
-            r"(?=p)", n=1, expand=True
+            r"(?=;p)", n=1, expand=True
         )
-        df["c_dot"] = df["c_dot"].str.replace("(;$)", "", regex=True)
+        df['p_dot'] = df['p_dot'].str.slice(1)
 
         # look up genes from df_refgene
         self.lookup_refgene = (
@@ -1489,7 +1489,7 @@ class excel:
         filters.ref = f"A:{max_col_letter}"
 
         # add dropdowns
-        self.add_dropdonws_sheet(self.SNV, num_variant)
+        self.add_dropdown_sheet(self.SNV, num_variant)
         self.class_col = self.get_col_letter(self.SNV, "Variant class")
         self.action_col = self.get_col_letter(self.SNV, "Actionability")
         self.comment_col = self.get_col_letter(self.SNV, "Comments")
@@ -1674,7 +1674,7 @@ class excel:
         filters = self.SV.auto_filter
         filters.ref = f"A:{max_col_letter}"
         # add dropdowns
-        self.add_dropdonws_sheet(self.SV, num_variant)
+        self.add_dropdown_sheet(self.SV, num_variant)
         col_letter_lookup1 = self.get_col_letter(self.SV, lookup_col[0])
         col_letter_lookup2 = self.get_col_letter(self.SV, lookup_col[-1])
         self.col_letter_comment = self.get_col_letter(self.SV, "Comments")
@@ -1791,7 +1791,7 @@ class excel:
             self.set_col_width(cell_col_width, sheet)
 
             # add dropdowns
-            self.add_dropdonws_sheet(sheet, num_variant)
+            self.add_dropdown_sheet(sheet, num_variant)
             col_color = (
                 (
                     "J",
@@ -1862,10 +1862,10 @@ class excel:
         img.anchor = cell_to_insert
         ws.add_image(img)
 
-    def add_dropdonws_sheet(self, sheet_name, num_variant) -> None:
+    def add_dropdown_sheet(self, sheet_name, num_variant) -> None:
         """
         adding variant_class and
-        actionability dropdonws to selected sheets
+        actionability dropdowns to selected sheets
         Parameters
         ----------
         sheet name to add dropdowns
