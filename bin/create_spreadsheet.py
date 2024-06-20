@@ -705,19 +705,21 @@ class excel:
         for cell, key in snv_table_keys:
             self.germline.cell(4, cell).value = key
         self.variant_class_options = (
-                '"Pathogenic", "Likely pathogenic",'
-                '"Uncertain", "Likely passenger",'
-                '"Likely artefact"'
-            )
+            '"Pathogenic", "Likely pathogenic",'
+            '"Uncertain", "Likely passenger",'
+            '"Likely artefact"'
+        )
         self.action_options = (
-                '"1. Predicts therapeutic response,'
-                " 2. Prognostic, 3. Defines diagnosis group"
-                ', 4. Eligibility for trial, 5. Other"'
-            )
+            '"1. Predicts therapeutic response,'
+            " 2. Prognostic, 3. Defines diagnosis group"
+            ', 4. Eligibility for trial, 5. Other"'
+        )
 
         # populate germline table
         germline_table = pd.read_csv(self.args.variant, sep=",")
-        germline_table = germline_table[germline_table["Origin"] == "germline"]
+        germline_table = germline_table[
+            germline_table["Origin"].str.lower().str.contains("germline")
+        ]
         if not germline_table.empty:
             germline_table.reset_index(drop=True, inplace=True)
 
@@ -733,7 +735,7 @@ class excel:
                 )
             clinvar_df = pd.DataFrame(d)
             germline_table = germline_table.merge(
-               clinvar_df, on="ClinVar ID", how="left"
+                clinvar_df, on="ClinVar ID", how="left"
             )
 
             # split the col to get gnomAD
@@ -1362,7 +1364,7 @@ class excel:
         df_hotspots = pd.read_csv(self.args.hotspots)
         df = pd.read_csv(self.args.variant, sep=",")
         # select only somatic rows
-        df = df[df["Origin"] == "somatic"]
+        df = df[df["Origin"].str.lower().str.contains("somatic")]
         df.reset_index(drop=True, inplace=True)
         num_variant = df.shape[0]
         df[["c_dot", "p_dot"]] = df["CDS change and protein change"].str.split(
