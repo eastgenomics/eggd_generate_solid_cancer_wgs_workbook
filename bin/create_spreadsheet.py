@@ -705,14 +705,14 @@ class excel:
         for cell, key in snv_table_keys:
             self.germline.cell(4, cell).value = key
         self.variant_class_options = (
-            '"Pathogenic", "Likely pathogenic",'
-            '"Uncertain", "Likely passenger",'
-            '"Likely artefact"'
+            '"Pathogenic, Likely pathogenic,'
+            "Uncertain, Likely passenger,"
+            'Likely artefact"'
         )
         self.action_options = (
             '"1. Predicts therapeutic response,'
-            " 2. Prognostic, 3. Defines diagnosis group"
-            ', 4. Eligibility for trial, 5. Other"'
+            "2. Prognostic, 3. Defines diagnosis group,"
+            '4. Eligibility for trial, 5. Other"'
         )
 
         # populate germline table

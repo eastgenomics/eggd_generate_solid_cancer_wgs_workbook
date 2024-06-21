@@ -32,4 +32,5 @@ dx run app-xxxx \
 -inextflow_pipeline_params="--file_path=dx://project-xxx:/xxx/xxx" # file path where csv and html are located
 ```
 :point_right: make sure the ref files specified in the command line are most recent deployed version in production.
+
 :triangular_flag_on_post: DNAnexus told me that the next released dxpy version will allow to specify the input URI with file ID in the config file. So, recommended to update the nextflow.config file with fileID URL once the new dxpy version is released so that it is not required to to specify them in the command line :triangular_flag_on_post:
