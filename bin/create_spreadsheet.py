@@ -585,7 +585,7 @@ class excel:
         )
         # insert img from html
         self.insert_img(self.QC, "figure_9.jpg", "C16", 400, 600)
-        self.insert_img(self.QC, "figure_11.jpg", "F16", 400, 600)
+        self.insert_img(self.QC, "figure_11.jpg", "H16", 400, 600)
 
     def write_plot(self) -> None:
         """
@@ -614,7 +614,7 @@ class excel:
 
         # insert img from html file
         self.insert_img(self.plot, "figure_3.jpg", "A4", 600, 1000)
-        self.insert_img(self.plot, "cropped_figure_2.jpg", "H4", 500, 500)
+        self.insert_img(self.plot, "cropped_figure_2.jpg", "K4", 500, 500)
 
     def write_signatures(self) -> None:
         """
@@ -645,8 +645,8 @@ class excel:
 
         # insert img from html file
         self.insert_img(self.signatures, "figure_6.jpg", "A4", 600, 800)
-        self.insert_img(self.signatures, "figure_7.jpg", "E4", 600, 800)
-        self.insert_img(self.signatures, "figure_8.jpg", "M4", 600, 1100)
+        self.insert_img(self.signatures, "figure_7.jpg", "H4", 600, 800)
+        self.insert_img(self.signatures, "figure_8.jpg", "V4", 600, 1100)
 
     def get_clnsigconf(self, clinvarID) -> str:
         """
@@ -814,7 +814,7 @@ class excel:
                 "I4",
                 "J4",
                 "K4",
-                f"C{num_gene+6}",
+                f"A{num_gene+6}",
             ]
             self.bold_cell(to_bold, self.germline)
             # set border
@@ -967,8 +967,8 @@ class excel:
             row_ranges.append(f"A{cell}:H{cell}")
         self.all_border(row_ranges, self.summary)
         # insert img from html file
-        self.insert_img(self.summary, "figure_3.jpg", "A4", 300, 700)
-        self.insert_img(self.summary, "cropped_figure_2.jpg", "F4", 350, 350)
+        self.insert_img(self.summary, "figure_3.jpg", "A4", 350, 700)
+        self.insert_img(self.summary, "cropped_figure_2.jpg", "G4", 350, 350)
 
         # for scientist to copy
         table_title = (
