@@ -47,9 +47,9 @@ def main(**kwargs):
     html_images = html.get_images(inputs["supplementary_html"]["data"])
     html_tables = html.get_tables(inputs["supplementary_html"]["id"])
 
-    output_excel = pd.ExcelWriter("output.xlsx", engine="openpyxl")
-    excel.write_sheet(output_excel, "SOC")
-    output_excel.book.save("output.xlsx")
+    with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
+        excel.write_sheet(output_excel, "SOC")
+        output_excel.book.save("output.xlsx")
 
 
 if __name__ == "__main__":
