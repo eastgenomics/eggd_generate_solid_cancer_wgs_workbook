@@ -2,7 +2,7 @@
     "name": "eggd_generate_sc_wgs_workbook",
     "title": "eggd_generate_sc_wgs_workbook",
     "version": "2.0.0",
-    "summary": "Launches downstream analyses for Dias",
+    "summary": "Generates a workbook for solid cancer WGS data analysis",
     "dxapi": "1.0.0",
     "inputSpec": [
         {
