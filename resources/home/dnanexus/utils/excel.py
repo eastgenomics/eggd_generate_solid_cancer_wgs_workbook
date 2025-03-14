@@ -3,7 +3,7 @@ from openpyxl.styles import Alignment, DEFAULT_FONT, Font
 from openpyxl.worksheet.datavalidation import DataValidation
 import pandas as pd
 
-from configs import soc
+from utils import misc
 
 
 def open_file(file: str, file_type: str) -> pd.DataFrame:
@@ -14,7 +14,7 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
     file : str
         File path
     file_type : str
-        File type associated with the file path
+        File type with the file path
 
     Returns
     -------
@@ -48,41 +48,55 @@ def write_sheet(
 
     sheet = excel_writer.book.create_sheet(sheet_name)
 
-    for table in soc.CONFIG["tables"]:
+    type_config = misc.select_config(sheet_name)
+    assert type_config, "Config file couldn't be imported"
+
+    for table in type_config.CONFIG["tables"]:
         headers = table["headers"]
 
         for cell_x, cell_y in headers:
             value = headers[cell_x, cell_y]
             sheet.cell(cell_x, cell_y).value = value
 
-    if soc.CONFIG.get("to_merge"):
+    if type_config.CONFIG.get("to_merge"):
         # merge columns that have longer text
-        sheet.merge_cells(**soc.CONFIG.get("to_merge"))
+        sheet.merge_cells(**type_config.CONFIG.get("to_merge"))
 
     # align cells
-    for cell in soc.CONFIG["to_align"]:
+    for cell in type_config.CONFIG["to_align"]:
         sheet[cell].alignment = Alignment(wrapText=True, horizontal="center")
         if cell != "C1":
             sheet[cell].font = Font(italic=True)
 
     # titles to set to bold
-    for cell in soc.CONFIG["to_bold"]:
+    for cell in type_config.CONFIG["to_bold"]:
         sheet[cell].font = Font(bold=True, name=DEFAULT_FONT.name)
 
     # set column widths for readability
-    for cell, width in soc.CONFIG["col_width"]:
+    for cell, width in type_config.CONFIG["col_width"]:
         sheet.column_dimensions[cell].width = width
 
     # colour cells
-    for cell, color in soc.CONFIG["cells_to_colour"]:
+    for cell, color in type_config.CONFIG["cells_to_colour"]:
         sheet[cell].fill = color
 
-    # set borders around table areas
-    for cell_list in soc.CONFIG["borders"]:
-        for cell, type_border in cell_list:
-            sheet[cell].border = type_border
+    if type_config.CONFIG.get("borders"):
+        if type_config.CONFIG.get("borders").get("single_cells"):
+            # set borders around table areas
+            for cells, type_border in type_config.CONFIG["borders"][
+                "single_cells"
+            ]:
+                sheet[cell].border = type_border
 
-    for cells, options in soc.CONFIG["dropdowns"].items():
+        if type_config.CONFIG.get("borders").get("cell_rows"):
+            for cell_range, type_border in type_config.CONFIG.get(
+                "borders"
+            ).get("cell_rows"):
+                for cells in sheet[cell_range]:
+                    for cell in cells:
+                        cell.border = type_border
+
+    for cells, options in type_config.CONFIG["dropdowns"].items():
         dropdown = DataValidation(
             type="list", formula1=options, allow_blank=True
         )
