@@ -21,7 +21,8 @@ def open_html(file: str) -> BeautifulSoup:
         BeautifulSoup object for the HTML page
     """
 
-    return BeautifulSoup(file, features="lxml")
+    with open(file) as f:
+        return BeautifulSoup(f, features="lxml")
 
 
 def get_images(html: BeautifulSoup) -> list:
@@ -38,7 +39,7 @@ def get_images(html: BeautifulSoup) -> list:
         List of images in the HTML
     """
 
-    return [img for img in html.findAll("img")]
+    return [img.get("src") for img in html.findAll("img")]
 
 
 def get_tables(html: str) -> list:
