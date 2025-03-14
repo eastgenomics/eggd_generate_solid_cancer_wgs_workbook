@@ -48,12 +48,16 @@ def write_sheet(
 
     sheet = excel_writer.book.create_sheet(sheet_name)
 
-    for cell_x, cell_y in soc.CONFIG["headers"]:
-        value = soc.CONFIG["headers"][cell_x, cell_y]
-        sheet.cell(cell_x, cell_y).value = value
+    for table in soc.CONFIG["tables"]:
+        headers = table["headers"]
 
-    # merge columns that have longer text
-    sheet.merge_cells(start_row=1, end_row=1, start_column=3, end_column=6)
+        for cell_x, cell_y in headers:
+            value = headers[cell_x, cell_y]
+            sheet.cell(cell_x, cell_y).value = value
+
+    if soc.CONFIG.get("to_merge"):
+        # merge columns that have longer text
+        sheet.merge_cells(**soc.CONFIG.get("to_merge"))
 
     # align cells
     for cell in soc.CONFIG["to_align"]:
