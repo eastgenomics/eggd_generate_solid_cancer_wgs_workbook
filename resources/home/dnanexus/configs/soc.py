@@ -9,20 +9,30 @@ THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
 
 CONFIG = {
-    "headers": {
-        (1, 1): "Patient Details (Epic demographics)",
-        (1, 3): "Previous testing",
-        (2, 1): "NAME",
-        (2, 3): "Alteration",
-        (2, 4): "Assay",
-        (2, 5): "Result",
-        (2, 6): "WGS concordance",
-        (3, 1): "Sex, Age, DOB",
-        (4, 1): "Phone number",
-        (5, 1): "MRN",
-        (6, 1): "NHS Number",
-        (8, 1): "Histology",
-        (12, 1): "Comments",
+    "tables": [
+        {
+            "headers": {
+                (1, 1): "Patient Details (Epic demographics)",
+                (1, 3): "Previous testing",
+                (2, 1): "NAME",
+                (2, 3): "Alteration",
+                (2, 4): "Assay",
+                (2, 5): "Result",
+                (2, 6): "WGS concordance",
+                (3, 1): "Sex, Age, DOB",
+                (4, 1): "Phone number",
+                (5, 1): "MRN",
+                (6, 1): "NHS Number",
+                (8, 1): "Histology",
+                (12, 1): "Comments",
+            }
+        }
+    ],
+    "to_merge": {
+        "start_row": 1,
+        "end_row": 1,
+        "start_column": 3,
+        "end_column": 6,
     },
     "to_align": ["C1", "C2", "D2", "E2", "F2"],
     "to_bold": ["A1", "A8", "A12", "A16", "C1"],
