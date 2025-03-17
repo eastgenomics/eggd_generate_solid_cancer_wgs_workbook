@@ -49,7 +49,7 @@ def main(**kwargs):
 
     with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
         excel.write_sheet(output_excel, "SOC")
-        output_excel.book.save("output.xlsx")
+        excel.write_sheet(output_excel, "QC")
 
 
 if __name__ == "__main__":
