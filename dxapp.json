@@ -1,0 +1,102 @@
+{
+    "name": "eggd_generate_sc_wgs_workbook",
+    "title": "eggd_generate_sc_wgs_workbook",
+    "version": "2.0.0",
+    "summary": "Generates a workbook for solid cancer WGS data analysis",
+    "dxapi": "1.0.0",
+    "inputSpec": [
+        {
+            "name": "hotspots",
+            "label": "hotspots",
+            "class": "file",
+            "optional": false,
+            "help": "CSV file containing information about the cancer hotspots"
+        },
+        {
+            "name": "reference_gene_groups",
+            "label": "reference_gene_groups",
+            "class": "file",
+            "optional": false,
+            "help": "Excel file obtained from the Solid cancer team"
+        },
+        {
+            "name": "clinvar",
+            "label": "clinvar",
+            "class": "file",
+            "optional": false,
+            "help": "Clinvar asset VCF file"
+        },
+        {
+            "name": "clinvar_index",
+            "label": "clinvar_index",
+            "class": "file",
+            "optional": false,
+            "help": "Clinvar asset VCF index file"
+        },
+        {
+            "name": "supplementary_html",
+            "label": "supplementary_html",
+            "class": "file",
+            "optional": false,
+            "help": "HTML file from GEL"
+        },
+        {
+            "name": "reported_variants",
+            "label": "reported_variants",
+            "class": "file",
+            "optional": false,
+            "help": "CSV/excel file from GEL containing info on reported variants"
+        },
+        {
+            "name": "reported_structural_variants",
+            "label": "reported_structural_variants",
+            "class": "file",
+            "optional": false,
+            "help": "CSV/excel file from GEL containing info on reported structural variants"
+        }
+    ],
+    "outputSpec": [
+        {
+            "name": "workbook",
+            "label": "workbook",
+            "class": "file",
+            "optional": false,
+            "help": "Excel file containing extracted information for the GEL files"
+        }
+    ],
+    "runSpec": {
+        "timeoutPolicy": {
+            "*": {
+                "hours": 8
+            }
+        },
+        "interpreter": "bash",
+        "file": "resources/home/dnanexus/main.sh",
+        "distribution": "Ubuntu",
+        "release": "24.04",
+        "version": "0",
+        "headJobOnDemand": true
+    },
+    "access": {
+        "network": [
+            "*"
+        ],
+        "allProjects": "CONTRIBUTE",
+        "project": "CONTRIBUTE"
+    },
+    "developers": [
+        "org-emee_1"
+    ],
+    "authorizedUsers": [
+        "org-emee_1"
+    ],
+    "regionalOptions": {
+        "aws:eu-central-1": {
+            "systemRequirements": {
+                "*": {
+                    "instanceType": "mem1_ssd1_v2_x2"
+                }
+            }
+        }
+    }
+}
