@@ -64,18 +64,21 @@ CONFIG = {
         + [("A1", LOWER_BORDER), ("A8", LOWER_BORDER), ("A12", LOWER_BORDER)],
     },
     "dropdowns": {
-        (f"D{i}" for i in range(3, 9)): (
-            '"FISH,IHC,NGS,Sanger,NGS multi-gene panel,'
-            "RNA fusion panel,SNP array, Methylation array,"
-            "MALDI-TOF, MLPA, MS-MLPA, Chromosome breakage,"
-            'Digital droplet PCR, RT-PCR, LR-PCR"'
-        ),
-        (f"E{i}" for i in range(3, 9)): '"Detected, Not detected"',
-        (f"F{i}" for i in range(3, 9)): (
-            '"Novel,Concordant (detected),'
-            "Concordant (undetected),"
-            "Disconcordant (detected),"
-            'Disconcordant (undetected),N/A"'
-        ),
+        "cells": {
+            (f"D{i}" for i in range(3, 9)): (
+                '"FISH,IHC,NGS,Sanger,NGS multi-gene panel,'
+                "RNA fusion panel,SNP array, Methylation array,"
+                "MALDI-TOF, MLPA, MS-MLPA, Chromosome breakage,"
+                'Digital droplet PCR, RT-PCR, LR-PCR"'
+            ),
+            (f"E{i}" for i in range(3, 9)): '"Detected, Not detected"',
+            (f"F{i}" for i in range(3, 9)): (
+                '"Novel,Concordant (detected),'
+                "Concordant (undetected),"
+                "Disconcordant (detected),"
+                'Disconcordant (undetected),N/A"'
+            ),
+        },
+        "title": "",
     },
 }
