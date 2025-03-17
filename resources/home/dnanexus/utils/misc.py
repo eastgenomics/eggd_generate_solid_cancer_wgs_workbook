@@ -3,6 +3,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Optional
 
+# conditional path depending on whether the script is run on DNAnexus or not
 if Path("/home/dnanexus").exists():
     CONFIG_PATH = Path("/home/dnanexus/configs")
 else:
