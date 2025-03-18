@@ -1,6 +1,9 @@
 from openpyxl.styles import Border, Side
 from openpyxl.styles.fills import PatternFill
 
+from utils import html
+
+
 # prepare formatting
 THIN = Side(border_style="thin", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
@@ -18,7 +21,26 @@ CONFIG = {
                 (4, 6): "Tumour Site",
                 (4, 7): "Tumour Type",
                 (4, 8): "Germline Sample",
-            }
+            },
+            "values": {
+                (5, 1): ("Tumor info", 0, "Tumour Diagnosis Date"),
+                (5, 2): ("Sample info", 0, "Clinical Sample Date Time"),
+                (5, 3): ("Tumor info", 0, "Histopathology or SIHMDS LAB ID"),
+                (5, 4): [
+                    ("Tumor info", 0, "Presentation", "split"),
+                    ("Tumor info", 0, "Primary or Metastatic", "parentheses"),
+                ],
+                (5, 5): ("Patient info", 0, "Clinical Indication"),
+                (5, 6): ("Tumor info", 0, "Tumour Topography"),
+                (5, 7): [
+                    ("Sample info", 0, "Storage Medium", ""),
+                    ("Sample info", 0, "Source", ""),
+                ],
+                (5, 8): [
+                    ("Germline info", 0, "Storage Medium", ""),
+                    ("Germline info", 0, "Source", "parentheses"),
+                ],
+            },
         },
         {
             "headers": {
@@ -29,7 +51,16 @@ CONFIG = {
                 (7, 5): "Total Indels",
                 (7, 6): "Total SVs",
                 (7, 7): "TMB",
-            }
+            },
+            "values": {
+                (8, 1): ("Sample info", 0, "Tumour Content"),
+                (8, 2): ("Sample info", 0, "Calculated Tumour Content"),
+                (8, 3): ("Sample info", 0, "Calculated Overall Ploidy"),
+                (8, 4): ("Sequencing info", 1, "Total somatic SNVs"),
+                (8, 5): ("Sequencing info", 1, "Total somatic indels"),
+                (8, 6): ("Sequencing info", 1, "Total somatic SVs"),
+                (8, 7): html.get_tag_sibling,
+            },
         },
         {
             "headers": {
@@ -39,7 +70,37 @@ CONFIG = {
                 (10, 4): "Chimeric DNA frag, %",
                 (10, 5): "Insert size, bp",
                 (10, 6): "Unevenness, x",
-            }
+            },
+            "values": {
+                (11, 1): ("Sequencing info", 0, "Sample type"),
+                (11, 2): (
+                    "Sequencing info",
+                    0,
+                    "Genome-wide coverage mean, x",
+                ),
+                (11, 3): ("Sequencing info", 0, "Mapped reads, %"),
+                (11, 4): ("Sequencing info", 0, "Chimeric DNA fragments, %"),
+                (11, 5): ("Sequencing info", 0, "Insert size median, bp"),
+                (11, 6): (
+                    "Sequencing info",
+                    0,
+                    "Unevenness of local genome coverage, x",
+                ),
+                (12, 1): ("Sequencing info", 1, "Sample type"),
+                (12, 2): (
+                    "Sequencing info",
+                    1,
+                    "Genome-wide coverage mean, x",
+                ),
+                (12, 3): ("Sequencing info", 1, "Mapped reads, %"),
+                (12, 4): ("Sequencing info", 1, "Chimeric DNA fragments, %"),
+                (12, 5): ("Sequencing info", 1, "Insert size median, bp"),
+                (12, 6): (
+                    "Sequencing info",
+                    1,
+                    "Unevenness of local genome coverage, x",
+                ),
+            },
         },
         {
             "headers": {
