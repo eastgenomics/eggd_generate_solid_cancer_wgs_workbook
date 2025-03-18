@@ -53,10 +53,16 @@ def main(**kwargs):
     # validate the tables as the order in the html and the config file should
     # be the same
     for i in range(len(tables.CONFIG)):
-        tables.validate_table(
-            html_tables[i], tables.CONFIG[i]["expected_headers"]
+        alternative_headers = tables.find_headers(
+            html_tables[i],
+            tables.CONFIG[i]["expected_headers"],
+            tables.CONFIG[i]["alternatives"],
         )
-        data_tables[tables.CONFIG[i]["name"]] = html_tables[i]
+
+        data_tables[tables.CONFIG[i]["name"]] = {
+            "data": html_tables[i],
+            "alternatives": alternative_headers,
+        }
 
     with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
         excel.write_sheet(output_excel, "SOC")
