@@ -1,9 +1,11 @@
+from bs4 import BeautifulSoup
 import openpyxl
 from openpyxl.styles import Alignment, DEFAULT_FONT, Font
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 import pandas as pd
 
+from configs.tables import get_table_value
 from utils import misc
 
 
@@ -30,7 +32,10 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
 
 
 def write_sheet(
-    excel_writer: pd.ExcelWriter, sheet_name: str
+    excel_writer: pd.ExcelWriter,
+    sheet_name: str,
+    data_tables: list = None,
+    soup: BeautifulSoup = None,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
     """Using a config file, write in the appropriate data
 
@@ -53,7 +58,7 @@ def write_sheet(
     assert type_config, "Config file couldn't be imported"
 
     if type_config.CONFIG.get("tables"):
-        write_tables(sheet, type_config.CONFIG["tables"])
+        write_tables(sheet, type_config.CONFIG["tables"], data_tables, soup)
 
     if type_config.CONFIG.get("to_merge"):
         # merge columns that have longer text
@@ -80,7 +85,9 @@ def write_sheet(
     return sheet
 
 
-def write_tables(sheet: Worksheet, config_data):
+def write_tables(
+    sheet: Worksheet, config_data: list, data_tables: list, soup: BeautifulSoup
+):
     """Write the tables from the config
 
     Parameters
@@ -89,17 +96,65 @@ def write_tables(sheet: Worksheet, config_data):
         Worksheet to write the tables into
     config_data : list
         List of tables to write
+    data_tables: list
+        List of dict for table configuration
+    soup: BeautifulSoup
+        HTML page
     """
 
     for table in config_data:
         headers = table["headers"]
 
         for cell_x, cell_y in headers:
-            value = headers[cell_x, cell_y]
-            sheet.cell(cell_x, cell_y).value = value
+            value_to_write = headers[cell_x, cell_y]
+            sheet.cell(cell_x, cell_y).value = value_to_write
+
+        if table.get("values"):
+            values = table.get("values")
+
+            for cell_x, cell_y in values:
+                # if the value is a list, it means that concatenation is
+                # required
+                if isinstance(values[cell_x, cell_y], list):
+                    value_to_write = []
+
+                    for table_name, row, column, formatting in values[
+                        cell_x, cell_y
+                    ]:
+                        subvalue = get_table_value(
+                            table_name,
+                            row,
+                            column,
+                            data_tables,
+                            formatting,
+                        )
+                        value_to_write.append(subvalue)
+
+                    value_to_write = " ".join(value_to_write)
+
+                # single value to add in the table
+                elif isinstance(values[cell_x, cell_y], tuple):
+                    table_name, row, column = values[cell_x, cell_y]
+                    value_to_write = get_table_value(
+                        table_name, row, column, data_tables
+                    )
+                else:
+                    # special hardcoded case, haven't found a way to make that
+                    # better for now (which means it'll probably stay that way
+                    # forever)
+                    value_to_write = values[cell_x, cell_y](
+                        soup,
+                        "b",
+                        (
+                            "Total number of somatic non-synonymous small "
+                            "variants per megabase"
+                        ),
+                    )
+
+                sheet.cell(cell_x, cell_y).value = value_to_write
 
 
-def align_cells(sheet: Worksheet, config_data):
+def align_cells(sheet: Worksheet, config_data: list):
     """For given list of cells, align the cells
 
     Parameters
@@ -114,7 +169,7 @@ def align_cells(sheet: Worksheet, config_data):
         sheet[cell].alignment = Alignment(wrapText=True, horizontal="center")
 
 
-def bold_cells(sheet: Worksheet, config_data):
+def bold_cells(sheet: Worksheet, config_data: list):
     """Given a list of cells, bold them
 
     Parameters
@@ -129,7 +184,7 @@ def bold_cells(sheet: Worksheet, config_data):
         sheet[cell].font = Font(bold=True, name=DEFAULT_FONT.name)
 
 
-def set_col_width(sheet: Worksheet, config_data):
+def set_col_width(sheet: Worksheet, config_data: list):
     """Given a list of columns, set their width
 
     Parameters
@@ -144,7 +199,7 @@ def set_col_width(sheet: Worksheet, config_data):
         sheet.column_dimensions[cell].width = width
 
 
-def color_cells(sheet: Worksheet, config_data):
+def color_cells(sheet: Worksheet, config_data: list):
     """Given a list of cells and their color, color the cells appropriately
 
     Parameters
@@ -159,7 +214,7 @@ def color_cells(sheet: Worksheet, config_data):
         sheet[cell].fill = color
 
 
-def draw_borders(sheet: Worksheet, config_data):
+def draw_borders(sheet: Worksheet, config_data: dict):
     """Draw borders around the cells
 
     Parameters
@@ -182,7 +237,7 @@ def draw_borders(sheet: Worksheet, config_data):
                     cell.border = type_border
 
 
-def generate_dropdowns(sheet: Worksheet, config_data):
+def generate_dropdowns(sheet: Worksheet, config_data: dict):
     """Write in the dropdown menus
 
     Parameters
