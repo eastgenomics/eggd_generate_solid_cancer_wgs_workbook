@@ -53,7 +53,7 @@ def main(**kwargs):
     # validate the tables as the order in the html and the config file should
     # be the same
     for i in range(len(tables.CONFIG)):
-        alternative_headers = tables.find_headers(
+        alternative_headers = tables.find_alternative_headers(
             html_tables[i],
             tables.CONFIG[i]["expected_headers"],
             tables.CONFIG[i]["alternatives"],
