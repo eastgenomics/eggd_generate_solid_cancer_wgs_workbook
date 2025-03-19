@@ -2,6 +2,7 @@ import argparse
 
 import pandas as pd
 
+from configs import tables
 from utils import excel, html, vcf
 
 
@@ -47,9 +48,30 @@ def main(**kwargs):
     html_images = html.get_images(inputs["supplementary_html"]["data"])
     html_tables = html.get_tables(inputs["supplementary_html"]["id"])
 
+    data_tables = {}
+
+    # validate the tables as the order in the html and the config file should
+    # be the same
+    for i in range(len(tables.CONFIG)):
+        alternative_headers = tables.find_alternative_headers(
+            html_tables[i],
+            tables.CONFIG[i]["expected_headers"],
+            tables.CONFIG[i]["alternatives"],
+        )
+
+        data_tables[tables.CONFIG[i]["name"]] = {
+            "data": html_tables[i],
+            "alternatives": alternative_headers,
+        }
+
     with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
         excel.write_sheet(output_excel, "SOC")
-        output_excel.book.save("output.xlsx")
+        excel.write_sheet(
+            output_excel,
+            "QC",
+            data_tables,
+            inputs["supplementary_html"]["data"],
+        )
 
 
 if __name__ == "__main__":

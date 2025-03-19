@@ -1,3 +1,5 @@
+import re
+
 from bs4 import BeautifulSoup
 import pandas as pd
 
@@ -21,7 +23,8 @@ def open_html(file: str) -> BeautifulSoup:
         BeautifulSoup object for the HTML page
     """
 
-    return BeautifulSoup(file, features="lxml")
+    with open(file) as f:
+        return BeautifulSoup(f, features="lxml")
 
 
 def get_images(html: BeautifulSoup) -> list:
@@ -38,7 +41,7 @@ def get_images(html: BeautifulSoup) -> list:
         List of images in the HTML
     """
 
-    return [img for img in html.findAll("img")]
+    return [img.get("src") for img in html.findAll("img")]
 
 
 def get_tables(html: str) -> list:
@@ -56,3 +59,24 @@ def get_tables(html: str) -> list:
     """
 
     return pd.read_html(html)
+
+
+def get_tag_sibling(soup: BeautifulSoup, tag: str, pattern: str) -> str:
+    """Given a tag and a pattern, get the adjacent element value
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Beautiful soup object
+    tag : str
+        Tag to look the pattern in
+    pattern : str
+        Pattern to look for
+
+    Returns
+    -------
+    str
+        Value of the next sibling
+    """
+
+    return soup.find(tag, text=re.compile(pattern)).next_sibling.strip()
