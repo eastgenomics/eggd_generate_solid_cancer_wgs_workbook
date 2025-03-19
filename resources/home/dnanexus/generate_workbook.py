@@ -45,7 +45,7 @@ def main(**kwargs):
         inputs[name]["data"] = data
 
     # get images and tables from the html file
-    html_images = html.get_images(inputs["supplementary_html"]["data"])
+    html_images = html.download_images(inputs["supplementary_html"]["data"])
     html_tables = html.get_tables(inputs["supplementary_html"]["id"])
 
     data_tables = {}
@@ -69,8 +69,13 @@ def main(**kwargs):
         excel.write_sheet(
             output_excel,
             "QC",
-            data_tables,
-            inputs["supplementary_html"]["data"],
+            html_tables=data_tables,
+            soup=inputs["supplementary_html"]["data"],
+        )
+        excel.write_sheet(
+            output_excel,
+            "plot",
+            html_images=html_images,
         )
 
 
