@@ -63,24 +63,24 @@ CONFIG = [
 ]
 
 
-def get_table_value(
-    config_name: str,
+def get_table_value_in_html_table(
+    table_name_in_config: str,
     row: int,
     column: str,
-    tables: list,
+    html_tables: list,
     formatting: str = None,
 ) -> str:
     """Get the table value in the matched df for writing in the worksheet
 
     Parameters
     ----------
-    config_name : str
+    table_name_in_config : str
         Name of the table in the table config file
     row : int
         Number of the row to look data in
     column : str
         Column name to look data in
-    tables : list
+    html_tables : list
         List of the tables stored in the html
     formatting : str, optional
         String describing how to modify the table value, by default None
@@ -91,8 +91,8 @@ def get_table_value(
         Value from the dataframe
     """
 
-    for table_name, table_info in tables.items():
-        if config_name == table_name:
+    for table_name, table_info in html_tables.items():
+        if table_name_in_config == table_name:
             # check if we have an alternative for the given column name i.e.
             # that column name is already not present
             if column in table_info["alternatives"]:
@@ -110,11 +110,11 @@ def get_table_value(
     return value_to_return
 
 
-def find_headers(
+def find_alternative_headers(
     table: pd.DataFrame, expected_headers: list, alternatives: list
 ):
-    """Validation step for checking that the appropriate tables have the
-    appropriate headers
+    """Check that the expected headers are present and if not, find
+    alternatives in the config
 
     Parameters
     ----------

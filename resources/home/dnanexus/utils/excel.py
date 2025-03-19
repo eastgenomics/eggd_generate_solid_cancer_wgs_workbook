@@ -5,7 +5,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 import pandas as pd
 
-from configs.tables import get_table_value
+from configs.tables import get_table_value_in_html_table
 from utils import misc
 
 
@@ -86,7 +86,7 @@ def write_sheet(
 
 
 def write_tables(
-    sheet: Worksheet, config_data: list, data_tables: list, soup: BeautifulSoup
+    sheet: Worksheet, config_data: list, html_tables: list, soup: BeautifulSoup
 ):
     """Write the tables from the config
 
@@ -96,21 +96,21 @@ def write_tables(
         Worksheet to write the tables into
     config_data : list
         List of tables to write
-    data_tables: list
-        List of dict for table configuration
+    html_tables: list
+        List of dict for the tables extracted from the HTML
     soup: BeautifulSoup
         HTML page
     """
 
-    for table in config_data:
-        headers = table["headers"]
+    for config_table in config_data:
+        headers = config_table["headers"]
 
         for cell_x, cell_y in headers:
             value_to_write = headers[cell_x, cell_y]
             sheet.cell(cell_x, cell_y).value = value_to_write
 
-        if table.get("values"):
-            values = table.get("values")
+        if config_table.get("values"):
+            values = config_table.get("values")
 
             for cell_x, cell_y in values:
                 # if the value is a list, it means that concatenation is
@@ -118,14 +118,17 @@ def write_tables(
                 if isinstance(values[cell_x, cell_y], list):
                     value_to_write = []
 
-                    for table_name, row, column, formatting in values[
-                        cell_x, cell_y
-                    ]:
-                        subvalue = get_table_value(
-                            table_name,
+                    for (
+                        table_name_in_config,
+                        row,
+                        column,
+                        formatting,
+                    ) in values[cell_x, cell_y]:
+                        subvalue = get_table_value_in_html_table(
+                            table_name_in_config,
                             row,
                             column,
-                            data_tables,
+                            html_tables,
                             formatting,
                         )
                         value_to_write.append(subvalue)
@@ -134,9 +137,9 @@ def write_tables(
 
                 # single value to add in the table
                 elif isinstance(values[cell_x, cell_y], tuple):
-                    table_name, row, column = values[cell_x, cell_y]
-                    value_to_write = get_table_value(
-                        table_name, row, column, data_tables
+                    table_name_in_config, row, column = values[cell_x, cell_y]
+                    value_to_write = get_table_value_in_html_table(
+                        table_name_in_config, row, column, html_tables
                     )
                 else:
                     # special hardcoded case, haven't found a way to make that
