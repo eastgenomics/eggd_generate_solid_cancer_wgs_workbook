@@ -6,9 +6,10 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 import pandas as pd
 from PIL import Image
+import vcfpy
 
 from configs.tables import get_table_value_in_html_table
-from utils import misc
+from utils import misc, vcf
 
 
 def open_file(file: str, file_type: str) -> pd.DataFrame:
@@ -28,9 +29,105 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
     """
 
     if file_type == "csv":
-        return pd.read_csv(file)
+        df = pd.read_csv(file)
     elif file_type == "xls":
-        return pd.read_excel(file)
+        df = pd.read_excel(file)
+
+    if "ClinVar ID" in df.columns:
+        df["ClinVar ID"] = df["ClinVar ID"].astype(str)
+        df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
+
+    return df
+
+
+def process_reported_variants_germline(
+    df: pd.DataFrame, clinvar_resource: vcfpy.Reader
+) -> pd.DataFrame:
+    """Process the data from the reported variants excel file
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe from parsing the reported variants excel file
+    clinvar_resource : vcfpy.Reader
+        vcfpy.Reader object from the Clinvar resource
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing clinical significance info for germline variants
+    """
+
+    df = df[df["Origin"].str.lower() == "germline"]
+
+    if df.empty:
+        return None
+
+    df.reset_index(drop=True, inplace=True)
+
+    clinvar_ids_to_find = [
+        value for value in df.loc[:, "ClinVar ID"].to_numpy()
+    ]
+    clinvar_info = vcf.find_clinvar_info(
+        clinvar_resource, *clinvar_ids_to_find
+    )
+
+    # add the clinvar info by merging the clinvar dataframe
+    df = df.merge(clinvar_info, on="ClinVar ID", how="left")
+
+    # split the col to get gnomAD
+    df[["GE", "gnomAD"]] = df[
+        "Population germline allele frequency (GE | gnomAD)"
+    ].str.split("|", expand=True)
+
+    df.drop(
+        ["GE", "Population germline allele frequency (GE | gnomAD)"],
+        axis=1,
+        inplace=True,
+    )
+    df.loc[:, "Variant Class"] = ""
+    df.loc[:, "Actionability"] = ""
+    df = df[
+        [
+            "Gene",
+            "GRCh38 coordinates;ref/alt allele",
+            "CDS change and protein change",
+            "Predicted consequences",
+            "Genotype",
+            "Variant Class",
+            "Actionability",
+            "Gene mode of action",
+            "clnsigconf",
+            "gnomAD",
+        ]
+    ]
+
+    return df
+
+
+def process_reported_variants_somatic(df: pd.DataFrame) -> pd.DataFrame:
+    """Get the somatic variants and format the data for them
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe from parsing the reported variants excel file
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with additional formatting for c. and p. annotation
+    """
+
+    # select only somatic rows
+    df = df[df["Origin"].str.lower().str.contains("somatic")]
+    df.reset_index(drop=True, inplace=True)
+    df[["c_dot", "p_dot"]] = df["CDS change and protein change"].str.split(
+        r"(?=;p)", n=1, expand=True
+    )
+    df["p_dot"] = df["p_dot"].str.slice(1)
+
+    return df
 
 
 def write_sheet(
