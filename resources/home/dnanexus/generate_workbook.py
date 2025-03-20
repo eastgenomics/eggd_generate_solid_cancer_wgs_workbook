@@ -44,6 +44,15 @@ def main(**kwargs):
 
         inputs[name]["data"] = data
 
+    germline_df = excel.process_reported_variants_germline(
+        inputs["reported_variants"]["data"],
+        inputs["clinvar"]["data"],
+    )
+    somatic_df = excel.process_reported_variants_somatic(
+        inputs["reported_variants"]["data"],
+        inputs["clinvar"]["data"],
+    )
+
     # get images and tables from the html file
     html_images = html.download_images(inputs["supplementary_html"]["data"])
     html_tables = html.get_tables(inputs["supplementary_html"]["id"])
