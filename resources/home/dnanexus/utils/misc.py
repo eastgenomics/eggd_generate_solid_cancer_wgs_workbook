@@ -26,7 +26,7 @@ def select_config(name_config: str) -> Optional[ModuleType]:
     """
 
     for config in CONFIG_PATH.glob("*.py"):
-        module_name = config.name.strip(".py")
+        module_name = config.name.replace(".py", "")
 
         if name_config.lower() == module_name:
             return importlib.import_module(

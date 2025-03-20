@@ -1,9 +1,11 @@
 from bs4 import BeautifulSoup
 import openpyxl
+from openpyxl import drawing
 from openpyxl.styles import Alignment, DEFAULT_FONT, Font
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 import pandas as pd
+from PIL import Image
 
 from configs.tables import get_table_value_in_html_table
 from utils import misc
@@ -34,7 +36,8 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
 def write_sheet(
     excel_writer: pd.ExcelWriter,
     sheet_name: str,
-    data_tables: list = None,
+    html_tables: list = None,
+    html_images: list = None,
     soup: BeautifulSoup = None,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
     """Using a config file, write in the appropriate data
@@ -45,6 +48,12 @@ def write_sheet(
         ExcelWriter object
     sheet_name : str
         Name of the sheet used to match the config
+    html_tables : list, optional
+        List of tables extracted from the HTML
+    html_images : list, optional
+        List of images extracted from the HTML
+    soup : BeautifulSoup, optional
+        BeautifulSoup object for the HTML file
 
     Returns
     -------
@@ -58,7 +67,7 @@ def write_sheet(
     assert type_config, "Config file couldn't be imported"
 
     if type_config.CONFIG.get("tables"):
-        write_tables(sheet, type_config.CONFIG["tables"], data_tables, soup)
+        write_tables(sheet, type_config.CONFIG["tables"], html_tables, soup)
 
     if type_config.CONFIG.get("to_merge"):
         # merge columns that have longer text
@@ -81,6 +90,9 @@ def write_sheet(
 
     if type_config.CONFIG.get("dropdowns"):
         generate_dropdowns(sheet, type_config.CONFIG["dropdowns"])
+
+    if type_config.CONFIG.get("images"):
+        insert_images(sheet, type_config.CONFIG["images"], html_images)
 
     return sheet
 
@@ -263,3 +275,26 @@ def generate_dropdowns(sheet: Worksheet, config_data: dict):
 
         for cell in cells:
             dropdown.add(sheet[cell])
+
+
+def insert_images(sheet: Worksheet, config_data: dict, images: list):
+    """Insert images in the given worksheet for that config file
+
+    Parameters
+    ----------
+    sheet : Worksheet
+        Worksheet in which to write the images
+    config_data : list
+        List of image data
+    images: list
+        List of images extracted from the HTML file
+    """
+
+    for image_data in config_data:
+        height, width = image_data["size"]
+        image_pil_obj = Image.open(images[image_data["img_index"]])
+        image = drawing.image.Image(image_pil_obj)
+        image.height = height
+        image.width = width
+        image.anchor = image_data["cell"]
+        sheet.add_image(image)

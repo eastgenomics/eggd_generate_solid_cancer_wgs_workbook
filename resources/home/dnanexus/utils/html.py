@@ -1,9 +1,11 @@
 import re
+import urllib.request
 
 from bs4 import BeautifulSoup
-import pandas as pd
-
 from bs4 import MarkupResemblesLocatorWarning
+import pandas as pd
+from PIL import Image
+
 import warnings
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
@@ -27,7 +29,7 @@ def open_html(file: str) -> BeautifulSoup:
         return BeautifulSoup(f, features="lxml")
 
 
-def get_images(html: BeautifulSoup) -> list:
+def download_images(html: BeautifulSoup) -> list:
     """Get all images in the BeautifulSoup object
 
     Parameters
@@ -41,7 +43,20 @@ def get_images(html: BeautifulSoup) -> list:
         List of images in the HTML
     """
 
-    return [img.get("src") for img in html.findAll("img")]
+    images = []
+
+    for i, img in enumerate(html.findAll("img"), 1):
+        img_path = f"figure_{i}.jpg"
+        urllib.request.urlretrieve(img.get("src"), img_path)
+
+        if i == 2:
+            im = Image.open(img_path)
+            im1 = im.crop((600, 600, 2400, 2400))
+            im1.save(img_path)
+
+        images.append(img_path)
+
+    return images
 
 
 def get_tables(html: str) -> list:
