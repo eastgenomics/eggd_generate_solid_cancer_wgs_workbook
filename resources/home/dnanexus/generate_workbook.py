@@ -74,7 +74,12 @@ def main(**kwargs):
         )
         excel.write_sheet(
             output_excel,
-            "plot",
+            "Plot",
+            html_images=html_images,
+        )
+        excel.write_sheet(
+            output_excel,
+            "Signatures",
             html_images=html_images,
         )
 
