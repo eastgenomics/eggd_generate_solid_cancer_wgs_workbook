@@ -50,7 +50,6 @@ def main(**kwargs):
     )
     somatic_df = excel.process_reported_variants_somatic(
         inputs["reported_variants"]["data"],
-        inputs["clinvar"]["data"],
     )
 
     # get images and tables from the html file
@@ -73,6 +72,19 @@ def main(**kwargs):
             "alternatives": alternative_headers,
         }
 
+    sheet_data = {
+        "germline_sheet": {
+            "tables": {1: {"values": germline_df}},
+            "to_bold": germline_df.shape[0] + 6,
+            "borders": {
+                "single_cells": [f"A{germline_df.shape[0] + 6}"],
+                "cell_rows": [
+                    f"A{i}:K{i}" for i in range(4, germline_df.shape[0] + 5)
+                ],
+            },
+        }
+    }
+
     with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
         excel.write_sheet(output_excel, "SOC")
         excel.write_sheet(
@@ -85,6 +97,11 @@ def main(**kwargs):
             output_excel,
             "plot",
             html_images=html_images,
+        )
+        excel.write_sheet(
+            output_excel,
+            "germline",
+            sheet_data=sheet_data,
         )
 
 
