@@ -136,6 +136,7 @@ def write_sheet(
     html_tables: list = None,
     html_images: list = None,
     soup: BeautifulSoup = None,
+    sheet_data: dict = None,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
     """Using a config file, write in the appropriate data
 
@@ -151,6 +152,8 @@ def write_sheet(
         List of images extracted from the HTML
     soup : BeautifulSoup, optional
         BeautifulSoup object for the HTML file
+    sheet_data: dict, optional
+        Dict of data for dynamic filling in the sheet
 
     Returns
     -------
@@ -163,33 +166,38 @@ def write_sheet(
     type_config = misc.select_config(sheet_name)
     assert type_config, "Config file couldn't be imported"
 
-    if type_config.CONFIG.get("tables"):
-        write_tables(sheet, type_config.CONFIG["tables"], html_tables, soup)
+    if hasattr(type_config, "fill_values"):
+        sheet_config = type_config.fill_values(sheet_data)
+    else:
+        sheet_config = type_config.CONFIG
 
-    if type_config.CONFIG.get("to_merge"):
+    if sheet_config.get("tables"):
+        write_tables(sheet, sheet_config["tables"], html_tables, soup)
+
+    if sheet_config.get("to_merge"):
         # merge columns that have longer text
-        sheet.merge_cells(**type_config.CONFIG["to_merge"])
+        sheet.merge_cells(**sheet_config["to_merge"])
 
-    if type_config.CONFIG.get("to_align"):
-        align_cells(sheet, type_config.CONFIG["to_align"])
+    if sheet_config.get("to_align"):
+        align_cells(sheet, sheet_config["to_align"])
 
-    if type_config.CONFIG.get("to_bold"):
-        bold_cells(sheet, type_config.CONFIG["to_bold"])
+    if sheet_config.get("to_bold"):
+        bold_cells(sheet, sheet_config["to_bold"])
 
-    if type_config.CONFIG.get("col_width"):
-        set_col_width(sheet, type_config.CONFIG["col_width"])
+    if sheet_config.get("col_width"):
+        set_col_width(sheet, sheet_config["col_width"])
 
-    if type_config.CONFIG.get("cells_to_colour"):
-        color_cells(sheet, type_config.CONFIG["cells_to_colour"])
+    if sheet_config.get("cells_to_colour"):
+        color_cells(sheet, sheet_config["cells_to_colour"])
 
-    if type_config.CONFIG.get("borders"):
-        draw_borders(sheet, type_config.CONFIG["borders"])
+    if sheet_config.get("borders"):
+        draw_borders(sheet, sheet_config["borders"])
 
-    if type_config.CONFIG.get("dropdowns"):
-        generate_dropdowns(sheet, type_config.CONFIG["dropdowns"])
+    if sheet_config.get("dropdowns"):
+        generate_dropdowns(sheet, sheet_config["dropdowns"])
 
-    if type_config.CONFIG.get("images"):
-        insert_images(sheet, type_config.CONFIG["images"], html_images)
+    if sheet_config.get("images"):
+        insert_images(sheet, sheet_config["images"], html_images)
 
     return sheet
 
@@ -263,6 +271,13 @@ def write_tables(
                         ),
                     )
 
+                sheet.cell(cell_x, cell_y).value = value_to_write
+
+        if config_table.get("dynamic_values"):
+            dynamic_values = config_table.get("dynamic_values")
+
+            for cell_x, cell_y in dynamic_values:
+                value_to_write = dynamic_values[cell_x, cell_y]
                 sheet.cell(cell_x, cell_y).value = value_to_write
 
 
