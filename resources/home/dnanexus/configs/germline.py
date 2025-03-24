@@ -40,7 +40,7 @@ CONFIG = {
         "J4",
         "K4",
     ],
-    "col_width": (
+    "col_width": [
         ("A", 20),
         ("B", 18),
         ("C", 22),
@@ -50,7 +50,7 @@ CONFIG = {
         ("H", 12),
         ("I", 22),
         ("K", 12),
-    ),
+    ],
     "cells_to_colour": [
         (f"{column}4", PatternFill(patternType="solid", start_color="ADD8E6"))
         for column in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"]

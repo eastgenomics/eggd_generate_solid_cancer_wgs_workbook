@@ -17,13 +17,13 @@ CONFIG = {
         "A1",
         "A38",
     ],
-    "col_width": (
+    "col_width": [
         ("A", 18),
         ("B", 22),
         ("C", 18),
         ("D", 22),
         ("E", 22),
-    ),
+    ],
     "borders": {
         "single_cells": [
             ("A38", LOWER_BORDER),

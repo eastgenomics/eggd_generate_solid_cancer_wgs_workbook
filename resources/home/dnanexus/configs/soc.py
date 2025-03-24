@@ -32,13 +32,13 @@ CONFIG = {
     },
     "to_align": ["C1", "C2", "D2", "E2", "F2"],
     "to_bold": ["A1", "A8", "A12", "A16", "C1"],
-    "col_width": (
+    "col_width": [
         ("A", 32),
         ("C", 16),
         ("E", 16),
         ("D", 26),
         ("F", 26),
-    ),
+    ],
     "cells_to_colour": [
         ("C3", PatternFill(patternType="solid", start_color="90EE90")),
         ("D3", PatternFill(patternType="solid", start_color="90EE90")),

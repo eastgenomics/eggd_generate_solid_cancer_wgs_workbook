@@ -117,7 +117,7 @@ CONFIG = {
         "G7",
         "H4",
     ],
-    "col_width": (
+    "col_width": [
         ("A", 22),
         ("B", 22),
         ("C", 22),
@@ -128,7 +128,7 @@ CONFIG = {
         ("H", 22),
         ("I", 22),
         ("J", 22),
-    ),
+    ],
     "cells_to_colour": [
         ("A4", PatternFill(patternType="solid", start_color="ADD8E6")),
         ("B4", PatternFill(patternType="solid", start_color="ADD8E6")),
