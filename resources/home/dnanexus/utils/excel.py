@@ -102,6 +102,8 @@ def process_reported_variants_germline(
         ]
     ]
 
+    df.fillna("", inplace=True)
+
     return df
 
 
@@ -136,7 +138,7 @@ def write_sheet(
     html_tables: list = None,
     html_images: list = None,
     soup: BeautifulSoup = None,
-    sheet_data: dict = None,
+    dynamic_data: dict = None,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
     """Using a config file, write in the appropriate data
 
@@ -152,7 +154,7 @@ def write_sheet(
         List of images extracted from the HTML
     soup : BeautifulSoup, optional
         BeautifulSoup object for the HTML file
-    sheet_data: dict, optional
+    dynamic_data: dict, optional
         Dict of data for dynamic filling in the sheet
 
     Returns
@@ -166,13 +168,17 @@ def write_sheet(
     type_config = misc.select_config(sheet_name)
     assert type_config, "Config file couldn't be imported"
 
-    if hasattr(type_config, "fill_values"):
-        sheet_config = type_config.fill_values(sheet_data)
+    if dynamic_data:
+        sheet_config = misc.merge_dicts(
+            type_config.CONFIG, dynamic_data, sheet_name
+        )
     else:
         sheet_config = type_config.CONFIG
 
-    if sheet_config.get("tables"):
-        write_tables(sheet, sheet_config["tables"], html_tables, soup)
+    if sheet_config.get("cells_to_write"):
+        write_cell_content(
+            sheet, sheet_config["cells_to_write"], html_tables, soup
+        )
 
     if sheet_config.get("to_merge"):
         # merge columns that have longer text
@@ -202,8 +208,8 @@ def write_sheet(
     return sheet
 
 
-def write_tables(
-    sheet: Worksheet, config_data: list, html_tables: list, soup: BeautifulSoup
+def write_cell_content(
+    sheet: Worksheet, config_data: dict, html_tables: list, soup: BeautifulSoup
 ):
     """Write the tables from the config
 
@@ -211,74 +217,60 @@ def write_tables(
     ----------
     sheet : Worksheet
         Worksheet to write the tables into
-    config_data : list
-        List of tables to write
+    config_data : dict
+        Dict of tables to write
     html_tables: list
         List of dict for the tables extracted from the HTML
     soup: BeautifulSoup
         HTML page
     """
 
-    for config_table in config_data:
-        headers = config_table["headers"]
+    for cell_pos, value in config_data.items():
+        cell_x, cell_y = cell_pos
 
-        for cell_x, cell_y in headers:
-            value_to_write = headers[cell_x, cell_y]
-            sheet.cell(cell_x, cell_y).value = value_to_write
+        if type(value) is str:
+            value_to_write = value
 
-        if config_table.get("values"):
-            values = config_table.get("values")
+        elif type(value) is list:
+            value_to_write = []
 
-            for cell_x, cell_y in values:
-                # if the value is a list, it means that concatenation is
-                # required
-                if isinstance(values[cell_x, cell_y], list):
-                    value_to_write = []
+            for (
+                table_name_in_config,
+                row,
+                column,
+                formatting,
+            ) in value:
+                subvalue = get_table_value_in_html_table(
+                    table_name_in_config,
+                    row,
+                    column,
+                    html_tables,
+                    formatting,
+                )
+                value_to_write.append(subvalue)
 
-                    for (
-                        table_name_in_config,
-                        row,
-                        column,
-                        formatting,
-                    ) in values[cell_x, cell_y]:
-                        subvalue = get_table_value_in_html_table(
-                            table_name_in_config,
-                            row,
-                            column,
-                            html_tables,
-                            formatting,
-                        )
-                        value_to_write.append(subvalue)
+            value_to_write = " ".join(value_to_write)
 
-                    value_to_write = " ".join(value_to_write)
+        # single value to add in the table
+        elif type(value) is tuple:
+            table_name_in_config, row, column = value
+            value_to_write = get_table_value_in_html_table(
+                table_name_in_config, row, column, html_tables
+            )
+        else:
+            # special hardcoded case, haven't found a way to make that
+            # better for now (which means it'll probably stay that way
+            # forever)
+            value_to_write = value(
+                soup,
+                "b",
+                (
+                    "Total number of somatic non-synonymous small "
+                    "variants per megabase"
+                ),
+            )
 
-                # single value to add in the table
-                elif isinstance(values[cell_x, cell_y], tuple):
-                    table_name_in_config, row, column = values[cell_x, cell_y]
-                    value_to_write = get_table_value_in_html_table(
-                        table_name_in_config, row, column, html_tables
-                    )
-                else:
-                    # special hardcoded case, haven't found a way to make that
-                    # better for now (which means it'll probably stay that way
-                    # forever)
-                    value_to_write = values[cell_x, cell_y](
-                        soup,
-                        "b",
-                        (
-                            "Total number of somatic non-synonymous small "
-                            "variants per megabase"
-                        ),
-                    )
-
-                sheet.cell(cell_x, cell_y).value = value_to_write
-
-        if config_table.get("dynamic_values"):
-            dynamic_values = config_table.get("dynamic_values")
-
-            for cell_x, cell_y in dynamic_values:
-                value_to_write = dynamic_values[cell_x, cell_y]
-                sheet.cell(cell_x, cell_y).value = value_to_write
+        sheet.cell(cell_x, cell_y).value = value_to_write
 
 
 def align_cells(sheet: Worksheet, config_data: list):
@@ -375,18 +367,19 @@ def generate_dropdowns(sheet: Worksheet, config_data: dict):
         Dict of data for the dropdown menus
     """
 
-    for cells, options in config_data["cells"].items():
-        dropdown = DataValidation(
-            type="list", formula1=options, allow_blank=True
-        )
-        dropdown.prompt = "Select from the list"
-        dropdown.promptTitle = config_data["title"]
-        dropdown.showInputMessage = True
-        dropdown.showErrorMessage = True
-        sheet.add_data_validation(dropdown)
+    for dropdown_info in config_data:
+        for cells, options in dropdown_info["cells"].items():
+            dropdown = DataValidation(
+                type="list", formula1=options, allow_blank=True
+            )
+            dropdown.prompt = "Select from the list"
+            dropdown.promptTitle = dropdown_info["title"]
+            dropdown.showInputMessage = True
+            dropdown.showErrorMessage = True
+            sheet.add_data_validation(dropdown)
 
-        for cell in cells:
-            dropdown.add(sheet[cell])
+            for cell in cells:
+                dropdown.add(sheet[cell])
 
 
 def insert_images(sheet: Worksheet, config_data: dict, images: list):
