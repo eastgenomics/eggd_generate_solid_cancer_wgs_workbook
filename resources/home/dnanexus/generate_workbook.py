@@ -2,7 +2,7 @@ import argparse
 
 import pandas as pd
 
-from configs import tables
+from configs import tables, germline
 from utils import excel, html, vcf
 
 
@@ -52,6 +52,10 @@ def main(**kwargs):
         inputs["reported_variants"]["data"],
     )
 
+    dynamic_values_per_sheet = {
+        "Germline": germline.add_dynamic_values(germline_df)
+    }
+
     # get images and tables from the html file
     html_images = html.download_images(inputs["supplementary_html"]["data"])
     html_tables = html.get_tables(inputs["supplementary_html"]["id"])
@@ -72,19 +76,6 @@ def main(**kwargs):
             "alternatives": alternative_headers,
         }
 
-    sheet_data = {
-        "germline_sheet": {
-            "tables": {1: {"values": germline_df}},
-            "to_bold": germline_df.shape[0] + 6,
-            "borders": {
-                "single_cells": [f"A{germline_df.shape[0] + 6}"],
-                "cell_rows": [
-                    f"A{i}:K{i}" for i in range(4, germline_df.shape[0] + 5)
-                ],
-            },
-        }
-    }
-
     with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
         excel.write_sheet(output_excel, "SOC")
         excel.write_sheet(
@@ -95,13 +86,13 @@ def main(**kwargs):
         )
         excel.write_sheet(
             output_excel,
-            "plot",
+            "Plot",
             html_images=html_images,
         )
         excel.write_sheet(
             output_excel,
-            "germline",
-            sheet_data=sheet_data,
+            "Germline",
+            dynamic_data=dynamic_values_per_sheet,
         )
 
 
