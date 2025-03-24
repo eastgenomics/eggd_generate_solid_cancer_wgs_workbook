@@ -9,25 +9,21 @@ THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
 
 CONFIG = {
-    "tables": [
-        {
-            "headers": {
-                (1, 1): "Patient Details (Epic demographics)",
-                (1, 3): "Previous testing",
-                (2, 1): "NAME",
-                (2, 3): "Alteration",
-                (2, 4): "Assay",
-                (2, 5): "Result",
-                (2, 6): "WGS concordance",
-                (3, 1): "Sex, Age, DOB",
-                (4, 1): "Phone number",
-                (5, 1): "MRN",
-                (6, 1): "NHS Number",
-                (8, 1): "Histology",
-                (12, 1): "Comments",
-            }
-        }
-    ],
+    "cells_to_write": {
+        (1, 1): "Patient Details (Epic demographics)",
+        (1, 3): "Previous testing",
+        (2, 1): "NAME",
+        (2, 3): "Alteration",
+        (2, 4): "Assay",
+        (2, 5): "Result",
+        (2, 6): "WGS concordance",
+        (3, 1): "Sex, Age, DOB",
+        (4, 1): "Phone number",
+        (5, 1): "MRN",
+        (6, 1): "NHS Number",
+        (8, 1): "Histology",
+        (12, 1): "Comments",
+    },
     "to_merge": {
         "start_row": 1,
         "end_row": 1,
@@ -63,22 +59,34 @@ CONFIG = {
         ]
         + [("A1", LOWER_BORDER), ("A8", LOWER_BORDER), ("A12", LOWER_BORDER)],
     },
-    "dropdowns": {
-        "cells": {
-            (f"D{i}" for i in range(3, 9)): (
-                '"FISH,IHC,NGS,Sanger,NGS multi-gene panel,'
-                "RNA fusion panel,SNP array, Methylation array,"
-                "MALDI-TOF, MLPA, MS-MLPA, Chromosome breakage,"
-                'Digital droplet PCR, RT-PCR, LR-PCR"'
-            ),
-            (f"E{i}" for i in range(3, 9)): '"Detected, Not detected"',
-            (f"F{i}" for i in range(3, 9)): (
-                '"Novel,Concordant (detected),'
-                "Concordant (undetected),"
-                "Disconcordant (detected),"
-                'Disconcordant (undetected),N/A"'
-            ),
+    "dropdowns": [
+        {
+            "cells": {
+                (f"D{i}" for i in range(3, 9)): (
+                    '"FISH,IHC,NGS,Sanger,NGS multi-gene panel,'
+                    "RNA fusion panel,SNP array, Methylation array,"
+                    "MALDI-TOF, MLPA, MS-MLPA, Chromosome breakage,"
+                    'Digital droplet PCR, RT-PCR, LR-PCR"'
+                ),
+            },
+            "title": "",
         },
-        "title": "",
-    },
+        {
+            "cells": {
+                (f"E{i}" for i in range(3, 9)): '"Detected, Not detected"'
+            },
+            "title": "",
+        },
+        {
+            "cells": {
+                (f"F{i}" for i in range(3, 9)): (
+                    '"Novel,Concordant (detected),'
+                    "Concordant (undetected),"
+                    "Disconcordant (detected),"
+                    'Disconcordant (undetected),N/A"'
+                )
+            },
+            "title": "",
+        },
+    ],
 }
