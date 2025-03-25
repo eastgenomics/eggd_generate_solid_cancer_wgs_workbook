@@ -2,7 +2,7 @@ import argparse
 
 import pandas as pd
 
-from configs import tables
+from configs import tables, germline
 from utils import excel, html, vcf
 
 
@@ -44,6 +44,18 @@ def main(**kwargs):
 
         inputs[name]["data"] = data
 
+    germline_df = excel.process_reported_variants_germline(
+        inputs["reported_variants"]["data"],
+        inputs["clinvar"]["data"],
+    )
+    somatic_df = excel.process_reported_variants_somatic(
+        inputs["reported_variants"]["data"],
+    )
+
+    dynamic_values_per_sheet = {
+        "Germline": germline.add_dynamic_values(germline_df)
+    }
+
     # get images and tables from the html file
     html_images = html.download_images(inputs["supplementary_html"]["data"])
     html_tables = html.get_tables(inputs["supplementary_html"]["id"])
@@ -81,6 +93,11 @@ def main(**kwargs):
             output_excel,
             "Signatures",
             html_images=html_images,
+        )
+        excel.write_sheet(
+            output_excel,
+            "Germline",
+            dynamic_data=dynamic_values_per_sheet,
         )
 
 

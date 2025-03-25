@@ -6,9 +6,10 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 import pandas as pd
 from PIL import Image
+import vcfpy
 
 from configs.tables import get_table_value_in_html_table
-from utils import misc
+from utils import misc, vcf
 
 
 def open_file(file: str, file_type: str) -> pd.DataFrame:
@@ -28,9 +29,107 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
     """
 
     if file_type == "csv":
-        return pd.read_csv(file)
+        df = pd.read_csv(file)
     elif file_type == "xls":
-        return pd.read_excel(file)
+        df = pd.read_excel(file)
+
+    if "ClinVar ID" in df.columns:
+        df["ClinVar ID"] = df["ClinVar ID"].astype(str)
+        df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
+
+    return df
+
+
+def process_reported_variants_germline(
+    df: pd.DataFrame, clinvar_resource: vcfpy.Reader
+) -> pd.DataFrame:
+    """Process the data from the reported variants excel file
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe from parsing the reported variants excel file
+    clinvar_resource : vcfpy.Reader
+        vcfpy.Reader object from the Clinvar resource
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing clinical significance info for germline variants
+    """
+
+    df = df[df["Origin"].str.lower() == "germline"]
+
+    if df.empty:
+        return None
+
+    df.reset_index(drop=True, inplace=True)
+
+    clinvar_ids_to_find = [
+        value for value in df.loc[:, "ClinVar ID"].to_numpy()
+    ]
+    clinvar_info = vcf.find_clinvar_info(
+        clinvar_resource, *clinvar_ids_to_find
+    )
+
+    # add the clinvar info by merging the clinvar dataframe
+    df = df.merge(clinvar_info, on="ClinVar ID", how="left")
+
+    # split the col to get gnomAD
+    df[["GE", "gnomAD"]] = df[
+        "Population germline allele frequency (GE | gnomAD)"
+    ].str.split("|", expand=True)
+
+    df.drop(
+        ["GE", "Population germline allele frequency (GE | gnomAD)"],
+        axis=1,
+        inplace=True,
+    )
+    df.loc[:, "Variant Class"] = ""
+    df.loc[:, "Actionability"] = ""
+    df = df[
+        [
+            "Gene",
+            "GRCh38 coordinates;ref/alt allele",
+            "CDS change and protein change",
+            "Predicted consequences",
+            "Genotype",
+            "Variant Class",
+            "Actionability",
+            "Gene mode of action",
+            "clnsigconf",
+            "gnomAD",
+        ]
+    ]
+
+    df.fillna("", inplace=True)
+
+    return df
+
+
+def process_reported_variants_somatic(df: pd.DataFrame) -> pd.DataFrame:
+    """Get the somatic variants and format the data for them
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe from parsing the reported variants excel file
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with additional formatting for c. and p. annotation
+    """
+
+    # select only somatic rows
+    df = df[df["Origin"].str.lower().str.contains("somatic")]
+    df.reset_index(drop=True, inplace=True)
+    df[["c_dot", "p_dot"]] = df["CDS change and protein change"].str.split(
+        r"(?=;p)", n=1, expand=True
+    )
+    df["p_dot"] = df["p_dot"].str.slice(1)
+
+    return df
 
 
 def write_sheet(
@@ -39,6 +138,7 @@ def write_sheet(
     html_tables: list = None,
     html_images: list = None,
     soup: BeautifulSoup = None,
+    dynamic_data: dict = None,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
     """Using a config file, write in the appropriate data
 
@@ -54,6 +154,8 @@ def write_sheet(
         List of images extracted from the HTML
     soup : BeautifulSoup, optional
         BeautifulSoup object for the HTML file
+    dynamic_data: dict, optional
+        Dict of data for dynamic filling in the sheet
 
     Returns
     -------
@@ -66,39 +168,48 @@ def write_sheet(
     type_config = misc.select_config(sheet_name)
     assert type_config, "Config file couldn't be imported"
 
-    if type_config.CONFIG.get("tables"):
-        write_tables(sheet, type_config.CONFIG["tables"], html_tables, soup)
+    if dynamic_data:
+        sheet_config = misc.merge_dicts(
+            type_config.CONFIG, dynamic_data, sheet_name
+        )
+    else:
+        sheet_config = type_config.CONFIG
 
-    if type_config.CONFIG.get("to_merge"):
+    if sheet_config.get("cells_to_write"):
+        write_cell_content(
+            sheet, sheet_config["cells_to_write"], html_tables, soup
+        )
+
+    if sheet_config.get("to_merge"):
         # merge columns that have longer text
-        sheet.merge_cells(**type_config.CONFIG["to_merge"])
+        sheet.merge_cells(**sheet_config["to_merge"])
 
-    if type_config.CONFIG.get("to_align"):
-        align_cells(sheet, type_config.CONFIG["to_align"])
+    if sheet_config.get("to_align"):
+        align_cells(sheet, sheet_config["to_align"])
 
-    if type_config.CONFIG.get("to_bold"):
-        bold_cells(sheet, type_config.CONFIG["to_bold"])
+    if sheet_config.get("to_bold"):
+        bold_cells(sheet, sheet_config["to_bold"])
 
-    if type_config.CONFIG.get("col_width"):
-        set_col_width(sheet, type_config.CONFIG["col_width"])
+    if sheet_config.get("col_width"):
+        set_col_width(sheet, sheet_config["col_width"])
 
-    if type_config.CONFIG.get("cells_to_colour"):
-        color_cells(sheet, type_config.CONFIG["cells_to_colour"])
+    if sheet_config.get("cells_to_colour"):
+        color_cells(sheet, sheet_config["cells_to_colour"])
 
-    if type_config.CONFIG.get("borders"):
-        draw_borders(sheet, type_config.CONFIG["borders"])
+    if sheet_config.get("borders"):
+        draw_borders(sheet, sheet_config["borders"])
 
-    if type_config.CONFIG.get("dropdowns"):
-        generate_dropdowns(sheet, type_config.CONFIG["dropdowns"])
+    if sheet_config.get("dropdowns"):
+        generate_dropdowns(sheet, sheet_config["dropdowns"])
 
-    if type_config.CONFIG.get("images"):
-        insert_images(sheet, type_config.CONFIG["images"], html_images)
+    if sheet_config.get("images"):
+        insert_images(sheet, sheet_config["images"], html_images)
 
     return sheet
 
 
-def write_tables(
-    sheet: Worksheet, config_data: list, html_tables: list, soup: BeautifulSoup
+def write_cell_content(
+    sheet: Worksheet, config_data: dict, html_tables: list, soup: BeautifulSoup
 ):
     """Write the tables from the config
 
@@ -106,67 +217,60 @@ def write_tables(
     ----------
     sheet : Worksheet
         Worksheet to write the tables into
-    config_data : list
-        List of tables to write
+    config_data : dict
+        Dict of tables to write
     html_tables: list
         List of dict for the tables extracted from the HTML
     soup: BeautifulSoup
         HTML page
     """
 
-    for config_table in config_data:
-        headers = config_table["headers"]
+    for cell_pos, value in config_data.items():
+        cell_x, cell_y = cell_pos
 
-        for cell_x, cell_y in headers:
-            value_to_write = headers[cell_x, cell_y]
-            sheet.cell(cell_x, cell_y).value = value_to_write
+        if type(value) is str:
+            value_to_write = value
 
-        if config_table.get("values"):
-            values = config_table.get("values")
+        elif type(value) is list:
+            value_to_write = []
 
-            for cell_x, cell_y in values:
-                # if the value is a list, it means that concatenation is
-                # required
-                if isinstance(values[cell_x, cell_y], list):
-                    value_to_write = []
+            for (
+                table_name_in_config,
+                row,
+                column,
+                formatting,
+            ) in value:
+                subvalue = get_table_value_in_html_table(
+                    table_name_in_config,
+                    row,
+                    column,
+                    html_tables,
+                    formatting,
+                )
+                value_to_write.append(subvalue)
 
-                    for (
-                        table_name_in_config,
-                        row,
-                        column,
-                        formatting,
-                    ) in values[cell_x, cell_y]:
-                        subvalue = get_table_value_in_html_table(
-                            table_name_in_config,
-                            row,
-                            column,
-                            html_tables,
-                            formatting,
-                        )
-                        value_to_write.append(subvalue)
+            value_to_write = " ".join(value_to_write)
 
-                    value_to_write = " ".join(value_to_write)
+        # single value to add in the table
+        elif type(value) is tuple:
+            table_name_in_config, row, column = value
+            value_to_write = get_table_value_in_html_table(
+                table_name_in_config, row, column, html_tables
+            )
+        else:
+            # special hardcoded case, haven't found a way to make that
+            # better for now (which means it'll probably stay that way
+            # forever)
+            value_to_write = value(
+                soup,
+                "b",
+                (
+                    "Total number of somatic non-synonymous small "
+                    "variants per megabase"
+                ),
+            )
 
-                # single value to add in the table
-                elif isinstance(values[cell_x, cell_y], tuple):
-                    table_name_in_config, row, column = values[cell_x, cell_y]
-                    value_to_write = get_table_value_in_html_table(
-                        table_name_in_config, row, column, html_tables
-                    )
-                else:
-                    # special hardcoded case, haven't found a way to make that
-                    # better for now (which means it'll probably stay that way
-                    # forever)
-                    value_to_write = values[cell_x, cell_y](
-                        soup,
-                        "b",
-                        (
-                            "Total number of somatic non-synonymous small "
-                            "variants per megabase"
-                        ),
-                    )
-
-                sheet.cell(cell_x, cell_y).value = value_to_write
+        sheet.cell(cell_x, cell_y).value = value_to_write
 
 
 def align_cells(sheet: Worksheet, config_data: list):
@@ -263,18 +367,19 @@ def generate_dropdowns(sheet: Worksheet, config_data: dict):
         Dict of data for the dropdown menus
     """
 
-    for cells, options in config_data["cells"].items():
-        dropdown = DataValidation(
-            type="list", formula1=options, allow_blank=True
-        )
-        dropdown.prompt = "Select from the list"
-        dropdown.promptTitle = config_data["title"]
-        dropdown.showInputMessage = True
-        dropdown.showErrorMessage = True
-        sheet.add_data_validation(dropdown)
+    for dropdown_info in config_data:
+        for cells, options in dropdown_info["cells"].items():
+            dropdown = DataValidation(
+                type="list", formula1=options, allow_blank=True
+            )
+            dropdown.prompt = "Select from the list"
+            dropdown.promptTitle = dropdown_info["title"]
+            dropdown.showInputMessage = True
+            dropdown.showErrorMessage = True
+            sheet.add_data_validation(dropdown)
 
-        for cell in cells:
-            dropdown.add(sheet[cell])
+            for cell in cells:
+                dropdown.add(sheet[cell])
 
 
 def insert_images(sheet: Worksheet, config_data: dict, images: list):
