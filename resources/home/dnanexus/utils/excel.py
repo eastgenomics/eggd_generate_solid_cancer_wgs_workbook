@@ -244,6 +244,103 @@ def process_reported_variants_somatic(
     return df
 
 
+def process_reported_SV(df: pd.DataFrame, refgene_dfs: dict) -> tuple:
+    """Process the reported structural variants excel
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe containing data from the structural variants excel
+    refgene_dfs : dict
+        Dict of dataframes from the refgene excel
+
+    Returns
+    -------
+    tuple
+        Tuple of the dataframes for Gain and Loss structural variants
+    """
+
+    df_loss = df[df["Type"].str.lower().str.contains("loss|loh")]
+    df_loss.reset_index(drop=True, inplace=True)
+
+    df_gain = df[df["Type"].str.lower().str.contains("gain")]
+    df_gain.reset_index(drop=True, inplace=True)
+
+    # populate the structural variant dataframe with data from the refgene
+    # excel file
+    lookup_refgene = (
+        ("COSMIC", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
+        ("Paed", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
+        ("Sarc", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
+        ("Neuro", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
+        ("Ovary", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
+        ("Haem", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
+    )
+
+    for sv_df in [df_loss, df_gain]:
+        for (
+            new_column,
+            col_to_map,
+            reference_df,
+            col_to_index,
+            col_to_look_up,
+        ) in lookup_refgene:
+            sv_df[new_column] = sv_df[col_to_map].map(
+                reference_df.set_index(col_to_index)[col_to_look_up]
+            )
+            sv_df[new_column] = sv_df[new_column].fillna("-")
+
+        sv_df.loc[:, "Variant class"] = ""
+        sv_df.loc[:, "Actionability"] = ""
+        sv_df.loc[:, "Comments"] = ""
+
+        sv_df[["Type", "Copy Number"]] = sv_df.Type.str.split(
+            r"\(|\)", expand=True
+        ).iloc[:, [0, 1]]
+        sv_df["Copy Number"] = sv_df["Copy Number"].astype(int)
+        sv_df["Size"] = sv_df.apply(
+            lambda x: "{:,.0f}".format(x["Size"]), axis=1
+        )
+
+        if list(sv_df["Type"].unique()) == ["GAIN"]:
+            sv_df.sort_values(
+                ["Event domain", "Copy Number"],
+                ascending=[True, False],
+                inplace=True,
+            )
+        else:
+            sv_df.sort_values(
+                ["Event domain", "Copy Number"],
+                ascending=[True, True],
+                inplace=True,
+            )
+
+    selected_col = [
+        "Event domain",
+        "Impacted transcript region",
+        "Gene",
+        "GRCh38 coordinates",
+        "Chromosomal bands",
+        "Type",
+        "Copy Number",
+        "Size",
+        "Gene mode of action",
+        "Variant class",
+        "Actionability",
+        "Comments",
+        "COSMIC",
+        "Paed",
+        "Sarc",
+        "Neuro",
+        "Ovary",
+        "Haem",
+    ]
+    df_loss = df_loss[selected_col]
+    df_gain = df_gain[selected_col]
+
+    return df_gain, df_loss
+
+
 def process_refgene(dfs: dict) -> dict:
     """Process the refgene group excel by replacing the NA by * in select
     columns
