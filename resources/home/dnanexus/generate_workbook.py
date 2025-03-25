@@ -91,6 +91,11 @@ def main(**kwargs):
         )
         excel.write_sheet(
             output_excel,
+            "Signatures",
+            html_images=html_images,
+        )
+        excel.write_sheet(
+            output_excel,
             "Germline",
             dynamic_data=dynamic_values_per_sheet,
         )

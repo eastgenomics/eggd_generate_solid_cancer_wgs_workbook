@@ -50,9 +50,9 @@ def download_images(html: BeautifulSoup) -> list:
         urllib.request.urlretrieve(img.get("src"), img_path)
 
         if i == 2:
-            im = Image.open(img_path)
-            im1 = im.crop((600, 600, 2400, 2400))
-            im1.save(img_path)
+            figure_2 = Image.open(img_path)
+            cropped_figure_2 = figure_2.crop((600, 600, 2400, 2400))
+            cropped_figure_2.save(img_path)
 
         images.append(img_path)
 
