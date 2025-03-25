@@ -1,0 +1,121 @@
+import string
+
+from openpyxl.styles import Border, Side
+from openpyxl.styles.fills import PatternFill
+from openpyxl.utils.dataframe import dataframe_to_rows
+import pandas as pd
+
+THIN = Side(border_style="thin", color="000000")
+THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+
+
+CONFIG = {
+    "cells_to_write": {
+        (1, i): value
+        for i, value in enumerate(
+            [
+                "Event domain",
+                "Impacted transcript region",
+                "Gene",
+                "GRCh38 coordinates",
+                "Chromosomal bands",
+                "Type",
+                "Copy Number",
+                "Size",
+                "Gene mode of action",
+                "Variant class",
+                "Actionability",
+                "Comments",
+                "COSMIC",
+                "Paed",
+                "Sarc",
+                "Neuro",
+                "Ovary",
+                "Haem",
+            ],
+            1,
+        )
+    },
+    "to_bold": [f"{string.ascii_uppercase[i]}1" for i in range(0, 19)],
+    "col_width": [
+        ("B", 12),
+        ("C", 16),
+        ("D", 22),
+        ("E", 20),
+        ("G", 16),
+        ("H", 14),
+        ("I", 22),
+        ("J", 20),
+        ("K", 20),
+        ("L", 20),
+        ("M", 22),
+        ("N", 20),
+        ("O", 16),
+        ("P", 16),
+        ("Q", 16),
+        ("R", 16),
+    ],
+    "borders": {
+        "cell_rows": [
+            ("A1:W1", THIN_BORDER),
+        ],
+    },
+    "auto_filter": "A:R",
+    "freeze_panes": "F1",
+}
+
+
+def add_dynamic_values(data: pd.DataFrame) -> dict:
+    nb_sv_variants = data.shape[0]
+
+    config_with_dynamic_values = {
+        "cells_to_write": {
+            # remove the col and row index from the writing?
+            (r_idx - 1, c_idx - 1): value
+            for r_idx, row in enumerate(dataframe_to_rows(data), 1)
+            for c_idx, value in enumerate(row, 1)
+            if c_idx != 1 and r_idx != 1
+        },
+        "cells_to_colour": [
+            (
+                f"{col}{i}",
+                PatternFill(patternType="solid", start_color="FFDBBB"),
+            )
+            for col in ["J", "K", "L"]
+            for i in range(1, nb_sv_variants + 2)
+        ]
+        + [
+            (
+                # letters M to R
+                f"{string.ascii_uppercase[i]}{j}",
+                PatternFill(patternType="solid", start_color="c4d9ef"),
+            )
+            for i in range(12, 18)
+            for j in range(1, nb_sv_variants + 2)
+        ],
+        "to_align": [f"G{i}" for i in range(2, nb_sv_variants + 2)],
+        "dropdowns": [
+            {
+                "cells": {
+                    (f"J{i}" for i in range(2, nb_sv_variants + 2)): (
+                        '"Pathogenic, Likely pathogenic,'
+                        "Uncertain, Likely passenger,"
+                        'Likely artefact"'
+                    ),
+                },
+                "title": "Variant class",
+            },
+            {
+                "cells": {
+                    (f"K{i}" for i in range(2, nb_sv_variants + 2)): (
+                        '"1. Predicts therapeutic response,'
+                        "2. Prognostic, 3. Defines diagnosis group,"
+                        '4. Eligibility for trial, 5. Other"'
+                    ),
+                },
+                "title": "Actionability",
+            },
+        ],
+    }
+
+    return config_with_dynamic_values
