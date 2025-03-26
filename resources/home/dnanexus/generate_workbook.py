@@ -2,7 +2,7 @@ import argparse
 
 import pandas as pd
 
-from configs import tables, germline
+from configs import tables, germline, snv
 from utils import excel, html, vcf
 
 
@@ -44,16 +44,22 @@ def main(**kwargs):
 
         inputs[name]["data"] = data
 
+    refgene_dfs = excel.process_refgene(
+        inputs["reference_gene_groups"]["data"]
+    )
     germline_df = excel.process_reported_variants_germline(
         inputs["reported_variants"]["data"],
         inputs["clinvar"]["data"],
     )
     somatic_df = excel.process_reported_variants_somatic(
         inputs["reported_variants"]["data"],
+        refgene_dfs,
+        inputs["hotspots"]["data"],
     )
 
     dynamic_values_per_sheet = {
-        "Germline": germline.add_dynamic_values(germline_df)
+        "Germline": germline.add_dynamic_values(germline_df),
+        "SNV": snv.add_dynamic_values(somatic_df),
     }
 
     # get images and tables from the html file
@@ -97,6 +103,11 @@ def main(**kwargs):
         excel.write_sheet(
             output_excel,
             "Germline",
+            dynamic_data=dynamic_values_per_sheet,
+        )
+        excel.write_sheet(
+            output_excel,
+            "SNV",
             dynamic_data=dynamic_values_per_sheet,
         )
 

@@ -1,6 +1,9 @@
+import re
+
 from bs4 import BeautifulSoup
 import openpyxl
 from openpyxl import drawing
+from openpyxl.formatting.rule import DataBarRule
 from openpyxl.styles import Alignment, DEFAULT_FONT, Font
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
@@ -10,6 +13,8 @@ import vcfpy
 
 from configs.tables import get_table_value_in_html_table
 from utils import misc, vcf
+
+pd.options.mode.chained_assignment = None
 
 
 def open_file(file: str, file_type: str) -> pd.DataFrame:
@@ -31,9 +36,11 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
     if file_type == "csv":
         df = pd.read_csv(file)
     elif file_type == "xls":
-        df = pd.read_excel(file)
+        df = pd.read_excel(file, sheet_name=None)
 
-    if "ClinVar ID" in df.columns:
+    # convert the clinvar id column as a string and remove the trailing .0 that
+    # the automatic conversion that pandas applies added
+    if df is pd.DataFrame and "ClinVar ID" in df.columns:
         df["ClinVar ID"] = df["ClinVar ID"].astype(str)
         df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
 
@@ -107,13 +114,19 @@ def process_reported_variants_germline(
     return df
 
 
-def process_reported_variants_somatic(df: pd.DataFrame) -> pd.DataFrame:
+def process_reported_variants_somatic(
+    df: pd.DataFrame, refgene_dfs: dict, hotspots_df: pd.DataFrame
+) -> pd.DataFrame:
     """Get the somatic variants and format the data for them
 
     Parameters
     ----------
     df : pd.DataFrame
         Dataframe from parsing the reported variants excel file
+    refgene_dfs : dict
+        Dict of dataframes from the refgene excel
+    hotspots_df : pd.DataFrame
+        Dataframe from parsing the hotspots excel file
 
     Returns
     -------
@@ -129,7 +142,144 @@ def process_reported_variants_somatic(df: pd.DataFrame) -> pd.DataFrame:
     )
     df["p_dot"] = df["p_dot"].str.slice(1)
 
+    df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
+    df["MTBP p."] = df["Gene"] + ":" + df["p_dot"]
+    df.fillna({"MTBP p.": ""}, inplace=True)
+
+    # convert string like: NRAS:p.Gln61Arg to NRAS:p.Gln61 for lookup in the
+    # hotspots excel
+    df["HS p."] = df["MTBP p."].apply(
+        lambda x: (
+            x[: re.search(r":p.[A-Za-z]+[0-9]+", x).end()]
+            if re.search(r":p.[A-Za-z]+[0-9]+", x)
+            else x
+        )
+    )
+
+    # populate the somatic variant dataframe with data from the refgene excel
+    # file
+    lookup_refgene = (
+        ("COSMIC", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
+        ("Paed", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
+        ("Sarc", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
+        ("Neuro", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
+        ("Ovary", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
+        ("Haem", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
+        ("HS_Sample", "HS p.", hotspots_df, "HS_PROTEIN_ID", "HS_Samples"),
+        (
+            "HS_Tumour",
+            "HS p.",
+            hotspots_df,
+            "HS_PROTEIN_ID",
+            "HS_Tumor Type Composition",
+        ),
+    )
+
+    for (
+        new_column,
+        col_to_map,
+        reference_df,
+        col_to_index,
+        col_to_look_up,
+    ) in lookup_refgene:
+        df[new_column] = df[col_to_map].map(
+            reference_df.set_index(col_to_index)[col_to_look_up]
+        )
+        df[new_column] = df[new_column].fillna("-")
+
+    df.loc[:, "Error flag"] = ""
+
+    df["con_count"] = df["Predicted consequences"].str.count(r"\;")
+
+    if df["con_count"].max() > 0:
+        df[["Predicted consequences", "Error flag"]] = df[
+            "Predicted consequences"
+        ].str.split(";", expand=True)
+
+    df.loc[:, "LOH"] = ""
+
+    df["VAF"] = df["VAF"].astype("str")
+    df["VAF_count"] = df["VAF"].str.count(r"\;")
+
+    if df["VAF_count"].max() > 0:
+        df[["VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
+
+    df.loc[:, "Variant class"] = ""
+    df.loc[:, "Actionability"] = ""
+    df.loc[:, "Comments"] = ""
+    df = df[
+        [
+            "Domain",
+            "Gene",
+            "GRCh38 coordinates;ref/alt allele",
+            "CDS change and protein change",
+            "Predicted consequences",
+            "VAF",
+            "LOH",
+            "Error flag",
+            "Alt allele/total read depth",
+            "Gene mode of action",
+            "Variant class",
+            "Actionability",
+            "Comments",
+            "COSMIC",
+            "Paed",
+            "Sarc",
+            "Neuro",
+            "Ovary",
+            "Haem",
+            "HS_Sample",
+            "HS_Tumour",
+            "MTBP c.",
+            "MTBP p.",
+        ]
+    ]
+    df.rename(
+        columns={
+            "GRCh38 coordinates;ref/alt allele": "GRCh38 coordinates",
+            "CDS change and protein change": "Variant",
+        },
+        inplace=True,
+    )
+    df.sort_values(["Domain", "VAF"], ascending=[True, False], inplace=True)
+    df = df.replace([None], [""], regex=True)
+    df["VAF"] = df["VAF"].astype(float)
+
     return df
+
+
+def process_refgene(dfs: dict) -> dict:
+    """Process the refgene group excel by replacing the NA by * in select
+    columns
+
+    Parameters
+    ----------
+    dfs : dict
+        Dict of dataframes corresponding to the data in the sheets in the
+        refgene group excel
+
+    Returns
+    -------
+    dict
+        Dict of processed dataframes
+    """
+
+    for df in [
+        dfs["cosmic"],
+        dfs["paed"],
+        dfs["sarc"],
+        dfs["neuro"],
+        dfs["ovarian"],
+        dfs["haem"],
+    ]:
+        if "Entities" in list(df.columns):
+            df["Entities"].astype(str)
+            df.fillna({"Entities": "*"}, inplace=True)
+        if "Driver" in list(df.columns):
+            df["Driver"].astype(str)
+            df.fillna({"Driver": "*"}, inplace=True)
+
+    return dfs
 
 
 def write_sheet(
@@ -205,6 +355,16 @@ def write_sheet(
     if sheet_config.get("images"):
         insert_images(sheet, sheet_config["images"], html_images)
 
+    if sheet_config.get("auto_filter"):
+        filters = sheet.auto_filter
+        filters.ref = sheet_config["auto_filter"]
+
+    if sheet_config.get("freeze_panes"):
+        sheet.freeze_panes = sheet[sheet_config["freeze_panes"]]
+
+    if sheet_config.get("data_bar"):
+        add_databar_rule(sheet, sheet_config["data_bar"])
+
     return sheet
 
 
@@ -228,7 +388,7 @@ def write_cell_content(
     for cell_pos, value in config_data.items():
         cell_x, cell_y = cell_pos
 
-        if type(value) is str:
+        if type(value) in [str, float, int]:
             value_to_write = value
 
         elif type(value) is list:
@@ -403,3 +563,26 @@ def insert_images(sheet: Worksheet, config_data: dict, images: list):
         image.width = width
         image.anchor = image_data["cell"]
         sheet.add_image(image)
+
+
+def add_databar_rule(sheet: Worksheet, range_cell: str):
+    """Add a databar for the range of cells given
+
+    Parameters
+    ----------
+    sheet : Worksheet
+        Sheet to add the databar(s) to
+    range_cell : str
+        String in "COL#:COL#" format for position of databar(s)
+    """
+
+    sheet.conditional_formatting.add(
+        range_cell,
+        DataBarRule(
+            start_type="num",
+            start_value=0,
+            end_type="num",
+            end_value=1,
+            color="FF3361",
+        ),
+    )
