@@ -2,7 +2,7 @@ import argparse
 
 import pandas as pd
 
-from configs import tables, germline, snv, gain, loss
+from configs import tables, germline, snv
 from utils import excel, html, vcf
 
 
@@ -56,15 +56,10 @@ def main(**kwargs):
         refgene_dfs,
         inputs["hotspots"]["data"],
     )
-    gain_df, loss_df = excel.process_reported_SV(
-        inputs["reported_structural_variants"]["data"], refgene_dfs
-    )
 
     dynamic_values_per_sheet = {
         "Germline": germline.add_dynamic_values(germline_df),
         "SNV": snv.add_dynamic_values(somatic_df),
-        "Gain": gain.add_dynamic_values(gain_df),
-        "Loss": loss.add_dynamic_values(loss_df),
     }
 
     # get images and tables from the html file
@@ -113,16 +108,6 @@ def main(**kwargs):
         excel.write_sheet(
             output_excel,
             "SNV",
-            dynamic_data=dynamic_values_per_sheet,
-        )
-        excel.write_sheet(
-            output_excel,
-            "Gain",
-            dynamic_data=dynamic_values_per_sheet,
-        )
-        excel.write_sheet(
-            output_excel,
-            "Loss",
             dynamic_data=dynamic_values_per_sheet,
         )
 
