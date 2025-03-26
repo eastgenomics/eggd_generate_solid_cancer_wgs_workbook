@@ -66,6 +66,20 @@ CONFIG = {
 
 
 def add_dynamic_values(data: pd.DataFrame) -> dict:
+    """Add dynamic values for the Loss config
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Dataframe for the Loss structural variants
+
+    Returns
+    -------
+    dict
+        Dict populated with the dynamic values processed for the Loss
+        structural variants
+    """
+
     nb_sv_variants = data.shape[0]
 
     config_with_dynamic_values = {

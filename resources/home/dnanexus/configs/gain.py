@@ -66,6 +66,20 @@ CONFIG = {
 
 
 def add_dynamic_values(data: pd.DataFrame) -> dict:
+    """Add dynamic values for the Gain config
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Dataframe for the Gain structural variants
+
+    Returns
+    -------
+    dict
+        Dict populated with the dynamic values processed for the Gain
+        structural variants
+    """
+
     nb_sv_variants = data.shape[0]
 
     config_with_dynamic_values = {
