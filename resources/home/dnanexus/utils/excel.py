@@ -123,6 +123,10 @@ def process_reported_variants_somatic(
     ----------
     df : pd.DataFrame
         Dataframe from parsing the reported variants excel file
+    refgene_dfs : dict
+        Dict of dataframes from the refgene excel
+    hotspots_df : pd.DataFrame
+        Dataframe from parsing the hotspots excel file
 
     Returns
     -------
