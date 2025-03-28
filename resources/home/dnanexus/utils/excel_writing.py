@@ -149,6 +149,10 @@ def write_cell_content(
             value_to_write = get_table_value_in_html_table(
                 table_name_in_config, row, column, html_tables
             )
+
+        elif value is None:
+            value_to_write = ""
+
         else:
             # special hardcoded case, haven't found a way to make that
             # better for now (which means it'll probably stay that way
