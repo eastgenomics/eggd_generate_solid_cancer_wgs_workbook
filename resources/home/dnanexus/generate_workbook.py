@@ -47,23 +47,42 @@ def main(**kwargs):
     refgene_dfs = excel_parsing.process_refgene(
         inputs["reference_gene_groups"]["data"]
     )
+
+    # list of tuple allowing:
+    # - the writing of the column (1st element)
+    # - by mapping 2nd element to 4th element
+    # - using the 3rd element as a reference df
+    # - and getting the 5th element from the reference column
+    lookup_refgene_data = (
+        ("COSMIC", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
+        ("Paed", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
+        ("Sarc", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
+        ("Neuro", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
+        ("Ovary", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
+        ("Haem", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
+    )
+
     germline_df = excel_parsing.process_reported_variants_germline(
         inputs["reported_variants"]["data"],
         inputs["clinvar"]["data"],
     )
     somatic_df = excel_parsing.process_reported_variants_somatic(
         inputs["reported_variants"]["data"],
-        refgene_dfs,
+        lookup_refgene_data,
         inputs["hotspots"]["data"],
     )
     gain_df = excel_parsing.process_reported_SV(
-        inputs["reported_structural_variants"]["data"], refgene_dfs, "gain"
+        inputs["reported_structural_variants"]["data"],
+        lookup_refgene_data,
+        "gain",
     )
     loss_df = excel_parsing.process_reported_SV(
-        inputs["reported_structural_variants"]["data"], refgene_dfs, "loss|loh"
+        inputs["reported_structural_variants"]["data"],
+        lookup_refgene_data,
+        "loss|loh",
     )
     fusion_df = excel_parsing.process_fusion_SV(
-        inputs["reported_structural_variants"]["data"], refgene_dfs
+        inputs["reported_structural_variants"]["data"], lookup_refgene_data
     )
 
     dynamic_values_per_sheet = {
