@@ -3,7 +3,8 @@ import re
 import pandas as pd
 import vcfpy
 
-from utils import vcf
+from configs import tables, sv
+from utils import misc, vcf
 
 
 def open_file(file: str, file_type: str) -> pd.DataFrame:
@@ -104,7 +105,7 @@ def process_reported_variants_germline(
 
 
 def process_reported_variants_somatic(
-    df: pd.DataFrame, refgene_dfs: dict, hotspots_df: pd.DataFrame
+    df: pd.DataFrame, lookup_refgene: tuple, hotspots_df: pd.DataFrame
 ) -> pd.DataFrame:
     """Get the somatic variants and format the data for them
 
@@ -112,6 +113,8 @@ def process_reported_variants_somatic(
     ----------
     df : pd.DataFrame
         Dataframe from parsing the reported variants excel file
+    lookup_refgene : tuple
+        Tuple of data allowing lookup in the refgene dataframes
 
     Returns
     -------
@@ -143,13 +146,7 @@ def process_reported_variants_somatic(
 
     # populate the somatic variant dataframe with data from the refgene excel
     # file
-    lookup_refgene = (
-        ("COSMIC", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
-        ("Paed", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
-        ("Sarc", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
-        ("Neuro", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
-        ("Ovary", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
-        ("Haem", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
+    lookup_refgene = lookup_refgene + (
         ("HS_Sample", "HS p.", hotspots_df, "HS_PROTEIN_ID", "HS_Samples"),
         (
             "HS_Tumour",
@@ -234,21 +231,23 @@ def process_reported_variants_somatic(
 
 
 def process_reported_SV(
-    df: pd.DataFrame, refgene_dfs: dict, type_sv: str
-) -> tuple:
+    df: pd.DataFrame, lookup_refgene: tuple, type_sv: str
+) -> pd.DataFrame:
     """Process the reported structural variants excel
 
     Parameters
     ----------
     df : pd.DataFrame
         Dataframe containing data from the structural variants excel
-    refgene_dfs : dict
-        Dict of dataframes from the refgene excel
+    lookup_refgene : tuple
+        Tuple of data allowing lookup in the refgene dataframes
+    type_sv: str
+        Type of structural variant to look at in the function
 
     Returns
     -------
-    tuple
-        Tuple of the dataframes for Gain and Loss structural variants
+    pd.DataFrame
+        Dataframe for variants with the given SV type
     """
 
     sv_df = df[df["Type"].str.lower().str.contains(type_sv)]
@@ -256,15 +255,6 @@ def process_reported_SV(
 
     # populate the structural variant dataframe with data from the refgene
     # excel file
-    lookup_refgene = (
-        ("COSMIC", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
-        ("Paed", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
-        ("Sarc", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
-        ("Neuro", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
-        ("Ovary", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
-        ("Haem", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
-    )
-
     for (
         new_column,
         col_to_map,
@@ -322,6 +312,129 @@ def process_reported_SV(
     ]
 
     return sv_df[selected_col]
+
+
+def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
+    """Process the fusions from the structural variants excel
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe containing the data from the structural variant excel
+    lookup_refgene : tuple
+        Tuple of data allowing lookup in the refgene dataframes
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing data for the fusion structural variants
+    """
+
+    df_SV = df[~df["Type"].str.lower().str.contains("loss|loh|gain")]
+
+    # split fusion columns
+    df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
+    fusion_count = df_SV["fusion_count"].max()
+
+    if fusion_count == 1:
+        df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(";", expand=True)
+    else:
+        fusion_col = []
+
+        for i in range(fusion_count):
+            fusion_col.append(f"Fusion_{i+1}")
+
+        fusion_col.insert(0, "Type")
+        df_SV[fusion_col] = df_SV.Type.str.split(";", expand=True)
+
+    # remove prefixes for single reads and paired reads and store in separate
+    # columns
+    df_SV[["Paired reads", "Split reads"]] = (
+        df_SV["Confidence/support"]
+        .apply(misc.split_confidence_support)
+        .to_list()
+    )
+
+    # get thousands separator
+    df_SV["Size"] = df_SV.apply(lambda x: "{:,.0f}".format(x["Size"]), axis=1)
+
+    # replace nan in size with empty string
+    df_SV.fillna({"Size": ""}, inplace=True)
+
+    # get gene counts and look up for each gene
+    df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
+    max_num_gene = df_SV["gene_count"].max() + 1
+
+    # split gene col and create look up col for them
+    if max_num_gene == 1:
+        # populate the structural variant dataframe with data from the refgene
+        # excel file
+        for (
+            new_column,
+            col_to_map,
+            reference_df,
+            col_to_index,
+            col_to_look_up,
+        ) in lookup_refgene:
+            df_SV[new_column] = misc.lookup_value_in_other_df(
+                df_SV, col_to_map, reference_df, col_to_index, col_to_look_up
+            )
+            df_SV[new_column] = df_SV[new_column].fillna("-")
+    else:
+        gene_col = []
+
+        for i in range(max_num_gene):
+            gene_col.append(f"Gene_{i+1}")
+
+        df_SV[gene_col] = df_SV["Gene"].str.split(";", expand=True)
+
+        for g in range(max_num_gene):
+            for (
+                new_column,
+                col_to_map,
+                reference_df,
+                col_to_index,
+                col_to_look_up,
+            ) in lookup_refgene:
+                df_SV[new_column] = misc.lookup_value_in_other_df(
+                    df_SV,
+                    col_to_map,
+                    reference_df,
+                    col_to_index,
+                    col_to_look_up,
+                )
+                df_SV.fillna({f"{new_column}_{g+1}": "-"}, inplace=True)
+
+    df_SV.loc[:, "Variant class"] = ""
+    df_SV.loc[:, "Actionability"] = ""
+    df_SV.loc[:, "Comments"] = ""
+
+    to_lookup = ("COSMIC", "Paed", "Sarc", "Neuro", "Ovary", "Haem")
+    lookup_col = [col for col in df_SV if col.startswith(to_lookup)]
+
+    expected_columns = sv.CONFIG["expected_columns"]
+    alternatives = sv.CONFIG["alternative_columns"]
+
+    alternative_columns = tables.find_alternative_headers(
+        df_SV, expected_columns, alternatives
+    )
+
+    subset_column = [
+        (
+            column
+            if column not in alternative_columns
+            else alternative_columns[column]
+        )
+        for column in expected_columns
+    ]
+
+    if fusion_count == 1:
+        selected_col = subset_column + lookup_col
+
+    else:
+        selected_col = subset_column.insert(6, fusion_col) + lookup_col
+
+    return df_SV[selected_col]
 
 
 def process_refgene(dfs: dict) -> dict:
