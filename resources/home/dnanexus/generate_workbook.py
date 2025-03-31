@@ -2,8 +2,8 @@ import argparse
 
 import pandas as pd
 
-from configs import tables, germline, snv
-from utils import excel, html, vcf
+from configs import tables, germline, snv, gain, loss, sv
+from utils import excel_parsing, excel_writing, html, vcf
 
 
 def main(**kwargs):
@@ -38,28 +38,59 @@ def main(**kwargs):
         if file_type == "vcf":
             data = vcf.open_vcf(file)
         elif file_type == "xls" or file_type == "csv":
-            data = excel.open_file(file, file_type)
+            data = excel_parsing.open_file(file, file_type)
         elif file_type == "html":
             data = html.open_html(file)
 
         inputs[name]["data"] = data
 
-    refgene_dfs = excel.process_refgene(
+    refgene_dfs = excel_parsing.process_refgene(
         inputs["reference_gene_groups"]["data"]
     )
-    germline_df = excel.process_reported_variants_germline(
+
+    # list of tuple allowing:
+    # - the writing of the column (1st element)
+    # - by mapping 2nd element to 4th element
+    # - using the 3rd element as a reference df
+    # - and getting the 5th element from the reference column
+    lookup_refgene_data = (
+        ("COSMIC", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
+        ("Paed", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
+        ("Sarc", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
+        ("Neuro", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
+        ("Ovary", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
+        ("Haem", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
+    )
+
+    germline_df = excel_parsing.process_reported_variants_germline(
         inputs["reported_variants"]["data"],
         inputs["clinvar"]["data"],
     )
-    somatic_df = excel.process_reported_variants_somatic(
+    somatic_df = excel_parsing.process_reported_variants_somatic(
         inputs["reported_variants"]["data"],
-        refgene_dfs,
+        lookup_refgene_data,
         inputs["hotspots"]["data"],
+    )
+    gain_df = excel_parsing.process_reported_SV(
+        inputs["reported_structural_variants"]["data"],
+        lookup_refgene_data,
+        "gain",
+    )
+    loss_df = excel_parsing.process_reported_SV(
+        inputs["reported_structural_variants"]["data"],
+        lookup_refgene_data,
+        "loss|loh",
+    )
+    fusion_df = excel_parsing.process_fusion_SV(
+        inputs["reported_structural_variants"]["data"], lookup_refgene_data
     )
 
     dynamic_values_per_sheet = {
         "Germline": germline.add_dynamic_values(germline_df),
         "SNV": snv.add_dynamic_values(somatic_df),
+        "Gain": gain.add_dynamic_values(gain_df),
+        "Loss": loss.add_dynamic_values(loss_df),
+        "SV": sv.add_dynamic_values(fusion_df),
     }
 
     # get images and tables from the html file
@@ -83,31 +114,46 @@ def main(**kwargs):
         }
 
     with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
-        excel.write_sheet(output_excel, "SOC")
-        excel.write_sheet(
+        excel_writing.write_sheet(output_excel, "SOC")
+        excel_writing.write_sheet(
             output_excel,
             "QC",
             html_tables=data_tables,
             soup=inputs["supplementary_html"]["data"],
         )
-        excel.write_sheet(
+        excel_writing.write_sheet(
             output_excel,
             "Plot",
             html_images=html_images,
         )
-        excel.write_sheet(
+        excel_writing.write_sheet(
             output_excel,
             "Signatures",
             html_images=html_images,
         )
-        excel.write_sheet(
+        excel_writing.write_sheet(
             output_excel,
             "Germline",
             dynamic_data=dynamic_values_per_sheet,
         )
-        excel.write_sheet(
+        excel_writing.write_sheet(
             output_excel,
             "SNV",
+            dynamic_data=dynamic_values_per_sheet,
+        )
+        excel_writing.write_sheet(
+            output_excel,
+            "Gain",
+            dynamic_data=dynamic_values_per_sheet,
+        )
+        excel_writing.write_sheet(
+            output_excel,
+            "Loss",
+            dynamic_data=dynamic_values_per_sheet,
+        )
+        excel_writing.write_sheet(
+            output_excel,
+            "SV",
             dynamic_data=dynamic_values_per_sheet,
         )
 
@@ -151,7 +197,10 @@ if __name__ == "__main__":
         "-rsv",
         "--reported_structural_variants",
         required=True,
-        help="CSV/excel file from GEL containing info on reported structural variants",
+        help=(
+            "CSV/excel file from GEL containing info on reported structural "
+            "variants"
+        ),
     )
 
     main(**vars(parser.parse_args()))
