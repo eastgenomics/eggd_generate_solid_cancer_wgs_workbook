@@ -126,6 +126,12 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             for i in range(1, nb_structural_variants + 2)
         ]
         + cells_to_color,
+        "to_bold": [
+            f"{string.ascii_uppercase[i]}1"
+            for i in range(
+                string.ascii_uppercase.index(last_column_letter) + 1
+            )
+        ],
         "dropdowns": [
             {
                 "cells": {
