@@ -362,6 +362,7 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
 
     # replace nan in size with empty string
     df_SV.fillna({"Size": ""}, inplace=True)
+    df_SV.replace({"Size": "nan"}, {"Size": ""}, inplace=True)
 
     # get gene counts and look up for each gene
     df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
