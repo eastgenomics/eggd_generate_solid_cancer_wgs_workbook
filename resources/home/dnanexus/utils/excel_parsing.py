@@ -115,6 +115,8 @@ def process_reported_variants_somatic(
         Dataframe from parsing the reported variants excel file
     lookup_refgene : tuple
         Tuple of data allowing lookup in the refgene dataframes
+    hotspots_df : pd.DataFrame
+        Dataframe containing data from the parsed hotspots excel
 
     Returns
     -------
@@ -164,8 +166,8 @@ def process_reported_variants_somatic(
         col_to_index,
         col_to_look_up,
     ) in lookup_refgene:
-        df[new_column] = df[col_to_map].map(
-            reference_df.set_index(col_to_index)[col_to_look_up]
+        df[new_column] = misc.lookup_value_in_other_df(
+            df, col_to_map, reference_df, col_to_index, col_to_look_up
         )
         df[new_column] = df[new_column].fillna("-")
 
@@ -262,8 +264,8 @@ def process_reported_SV(
         col_to_index,
         col_to_look_up,
     ) in lookup_refgene:
-        sv_df[new_column] = sv_df[col_to_map].map(
-            reference_df.set_index(col_to_index)[col_to_look_up]
+        sv_df[new_column] = misc.lookup_value_in_other_df(
+            sv_df, col_to_map, reference_df, col_to_index, col_to_look_up
         )
         sv_df[new_column] = sv_df[new_column].fillna("-")
 
