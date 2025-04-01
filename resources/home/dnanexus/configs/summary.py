@@ -176,19 +176,41 @@ CONFIG = {
 
 
 def add_dynamic_values(
-    SNV_df: pd.DataFrame,
+    SV_df: pd.DataFrame,
     fusion_count: int,
     SNV_df_columns: list,
     gain_df_columns: list,
     SV_df_columns: list,
-):
+) -> dict:
+    """Add dynamic values for the Summary sheet
+
+    Parameters
+    ----------
+    SV_df : pd.DataFrame
+        Dataframe containing the data for SV fusion variants and appropriate
+        additional data from inputs
+    fusion_count : int
+        Integer for the maximum number of fusion for a variant
+    SNV_df_columns : list
+        List of columns for the SNV dataframe
+    gain_df_columns : list
+        List of columns for the gain dataframe
+    SV_df_columns : list
+        List of columns for the SV dataframe
+
+    Returns
+    -------
+    dict
+        Dict containing data that needs to be merged to the CONFIG variable
+    """
+
     variant_class_column_letter = misc.get_column_letter(
-        SNV_df, "Variant class"
+        SV_df, "Variant class"
     )
     actionability_column_letter = misc.get_column_letter(
-        SNV_df, "Actionability"
+        SV_df, "Actionability"
     )
-    comments_column_letter = misc.get_column_letter(SNV_df, "Comments")
+    comments_column_letter = misc.get_column_letter(SV_df, "Comments")
 
     sv_pair = [
         (1, "C"),
