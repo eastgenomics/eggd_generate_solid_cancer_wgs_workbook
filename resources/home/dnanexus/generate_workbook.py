@@ -2,7 +2,7 @@ import argparse
 
 import pandas as pd
 
-from configs import tables, germline, snv, gain, loss, sv
+from configs import tables, germline, snv, gain, loss, sv, summary
 from utils import excel_parsing, excel_writing, html, vcf
 
 
@@ -81,7 +81,7 @@ def main(**kwargs):
         lookup_refgene_data,
         "loss|loh",
     )
-    fusion_df = excel_parsing.process_fusion_SV(
+    fusion_df, fusion_count = excel_parsing.process_fusion_SV(
         inputs["reported_structural_variants"]["data"], lookup_refgene_data
     )
 
@@ -91,6 +91,13 @@ def main(**kwargs):
         "Gain": gain.add_dynamic_values(gain_df),
         "Loss": loss.add_dynamic_values(loss_df),
         "SV": sv.add_dynamic_values(fusion_df),
+        "Summary": summary.add_dynamic_values(
+            fusion_df,
+            fusion_count,
+            list(somatic_df.columns),
+            list(gain_df.columns),
+            list(fusion_df.columns),
+        ),
     }
 
     # get images and tables from the html file
@@ -155,6 +162,12 @@ def main(**kwargs):
             output_excel,
             "SV",
             dynamic_data=dynamic_values_per_sheet,
+        )
+        excel_writing.write_sheet(
+            output_excel,
+            "Summary",
+            dynamic_data=dynamic_values_per_sheet,
+            html_images=html_images,
         )
 
 

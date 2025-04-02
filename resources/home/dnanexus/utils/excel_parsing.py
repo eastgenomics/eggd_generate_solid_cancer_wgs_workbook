@@ -328,8 +328,9 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
 
     Returns
     -------
-    pd.DataFrame
-        Dataframe containing data for the fusion structural variants
+    tuple
+        - Dataframe containing data for the fusion structural variants
+        - Max number of fusion
     """
 
     df_SV = df[~df["Type"].str.lower().str.contains("loss|loh|gain")]
@@ -437,7 +438,7 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     else:
         selected_col = subset_column.insert(6, fusion_col) + lookup_col
 
-    return df_SV[selected_col]
+    return df_SV[selected_col], fusion_count
 
 
 def process_refgene(dfs: dict) -> dict:
