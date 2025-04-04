@@ -91,6 +91,8 @@ CONFIG = {
         (1, 5): "=SOC!A9",
         (15, 1): "QC alerts",
         (16, 1): "None",
+        (15, 2): "Assessed purity",
+        (15, 3): "SNV TMB",
     },
     "to_bold": [
         "A1",
@@ -176,5 +178,9 @@ CONFIG = {
             },
             "title": "QC alerts",
         }
+    ],
+    "images": [
+        {"cell": "A18", "img_index": 8, "size": (600, 800)},
+        {"cell": "H18", "img_index": 10, "size": (600, 800)},
     ],
 }
