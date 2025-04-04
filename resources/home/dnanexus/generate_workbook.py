@@ -14,6 +14,14 @@ def main(**kwargs):
             "id": kwargs["reference_gene_groups"],
             "type": "xls",
         },
+        "panelapp": {
+            "id": kwargs["panelapp"],
+            "type": "xls",
+        },
+        "cytological_bands": {
+            "id": kwargs["cytological_bands"],
+            "type": "xls",
+        },
         "clinvar": {"id": kwargs["clinvar"], "type": "vcf"},
         "clinvar_index": {"id": kwargs["clinvar_index"], "type": "index"},
         "supplementary_html": {
@@ -166,7 +174,19 @@ if __name__ == "__main__":
         "-r",
         "--reference_gene_groups",
         required=True,
-        help="Excel file obtained from the Solid cancer team",
+        help="Excel file obtained from the Solid cancer team with reference information for COSMIC, and several type of cancer",
+    )
+    parser.add_argument(
+        "-p",
+        "--panelapp",
+        required=True,
+        help="Excel file obtained from the Solid cancer team with reference information for Panelapp",
+    )
+    parser.add_argument(
+        "-cb",
+        "--cytological_bands",
+        required=True,
+        help="Excel file obtained from the Solid cancer team with reference information for cytological bands",
     )
     parser.add_argument(
         "-c", "--clinvar", required=True, help="Clinvar asset VCF file"
