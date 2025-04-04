@@ -30,6 +30,8 @@ def main(**kwargs):
         },
     }
 
+    print("Parsing data...")
+
     # loop through the inputs to parse the files
     for name, info_dict in inputs.items():
         file = info_dict["id"]
@@ -43,6 +45,8 @@ def main(**kwargs):
             data = html.open_html(file)
 
         inputs[name]["data"] = data
+
+    print("Process parsed data...")
 
     refgene_dfs = excel_parsing.process_refgene(
         inputs["reference_gene_groups"]["data"]
@@ -120,55 +124,34 @@ def main(**kwargs):
             "alternatives": alternative_headers,
         }
 
+    sheets = [
+        {"sheet_name": "SOC"},
+        {
+            "sheet_name": "QC",
+            "html_tables": data_tables,
+            "soup": inputs["supplementary_html"]["data"],
+        },
+        {"sheet_name": "Plot", "html_images": html_images},
+        {"sheet_name": "Signatures", "html_images": html_images},
+        {"sheet_name": "Germline", "dynamic_data": dynamic_values_per_sheet},
+        {"sheet_name": "SNV", "dynamic_data": dynamic_values_per_sheet},
+        {"sheet_name": "Gain", "dynamic_data": dynamic_values_per_sheet},
+        {"sheet_name": "Loss", "dynamic_data": dynamic_values_per_sheet},
+        {"sheet_name": "SV", "dynamic_data": dynamic_values_per_sheet},
+        {
+            "sheet_name": "Summary",
+            "dynamic_data": dynamic_values_per_sheet,
+            "html_images": html_images,
+        },
+    ]
+
+    print("Writing sheets...")
+
     with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
-        excel_writing.write_sheet(output_excel, "SOC")
-        excel_writing.write_sheet(
-            output_excel,
-            "QC",
-            html_tables=data_tables,
-            soup=inputs["supplementary_html"]["data"],
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "Plot",
-            html_images=html_images,
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "Signatures",
-            html_images=html_images,
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "Germline",
-            dynamic_data=dynamic_values_per_sheet,
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "SNV",
-            dynamic_data=dynamic_values_per_sheet,
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "Gain",
-            dynamic_data=dynamic_values_per_sheet,
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "Loss",
-            dynamic_data=dynamic_values_per_sheet,
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "SV",
-            dynamic_data=dynamic_values_per_sheet,
-        )
-        excel_writing.write_sheet(
-            output_excel,
-            "Summary",
-            dynamic_data=dynamic_values_per_sheet,
-            html_images=html_images,
-        )
+        for sheet_data in sheets:
+            excel_writing.write_sheet(output_excel, **sheet_data)
+
+    print("Done!")
 
 
 if __name__ == "__main__":
