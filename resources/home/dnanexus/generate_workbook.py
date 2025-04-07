@@ -137,6 +137,7 @@ def main(**kwargs):
         {
             "sheet_name": "QC",
             "html_tables": data_tables,
+            "html_images": html_images,
             "soup": inputs["supplementary_html"]["data"],
         },
         {"sheet_name": "Plot", "html_images": html_images},
