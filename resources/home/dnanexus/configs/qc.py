@@ -184,7 +184,7 @@ CONFIG = {
         }
     ],
     "images": [
-        {"cell": "A18", "img_index": 8, "size": (600, 800)},
+        {"cell": "B18", "img_index": 8, "size": (600, 800)},
         {"cell": "H18", "img_index": 10, "size": (600, 800)},
     ],
 }
