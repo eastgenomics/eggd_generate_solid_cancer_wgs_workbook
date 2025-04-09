@@ -24,8 +24,13 @@ CONFIG = {
                 "Size",
                 "Gene mode of action",
                 "Variant class",
-                "Actionability",
-                "Comments",
+                "TSG_NMD",
+                "TSG_LOH",
+                "Splice fs?",
+                "SpliceAI",
+                "REVEL",
+                "OG_3' Ter",
+                "Recurrence somatic database",
                 "COSMIC",
                 "Paed",
                 "Sarc",
@@ -118,16 +123,6 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                     ),
                 },
                 "title": "Variant class",
-            },
-            {
-                "cells": {
-                    (f"K{i}" for i in range(2, nb_sv_variants + 2)): (
-                        '"1. Predicts therapeutic response,'
-                        "2. Prognostic, 3. Defines diagnosis group,"
-                        '4. Eligibility for trial, 5. Other"'
-                    ),
-                },
-                "title": "Actionability",
             },
         ],
     }
