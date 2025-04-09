@@ -5,6 +5,9 @@ from openpyxl.styles.fills import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
+from utils import misc
+
+
 THIN = Side(border_style="thin", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
@@ -24,24 +27,26 @@ CONFIG = {
                 "Size",
                 "Gene mode of action",
                 "Variant class",
-                "TSG_NMD",
-                "TSG_LOH",
-                "Splice fs?",
-                "SpliceAI",
-                "REVEL",
-                "OG_3' Ter",
-                "Recurrence somatic database",
-                "COSMIC",
-                "Paed",
-                "Sarc",
-                "Neuro",
-                "Ovary",
-                "Haem",
+                "OG_Amp",
+                "Focality",
+                "Full transcript",
+                "COSMIC Driver",
+                "COSMIC Alterations",
+                "Paed Driver",
+                "Paed Entities",
+                "Sarc Driver",
+                "Sarc Entities",
+                "Neuro Driver",
+                "Neuro Entities",
+                "Ovary Driver",
+                "Ovary Entities",
+                "Haem Driver",
+                "Haem Entities",
             ],
             1,
         )
     },
-    "to_bold": [f"{string.ascii_uppercase[i]}1" for i in range(0, 19)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 26)],
     "col_width": [
         ("B", 12),
         ("C", 16),
@@ -59,13 +64,20 @@ CONFIG = {
         ("P", 16),
         ("Q", 16),
         ("R", 16),
+        ("S", 16),
+        ("T", 16),
+        ("U", 16),
+        ("V", 16),
+        ("W", 16),
+        ("X", 16),
+        ("Y", 16),
     ],
     "borders": {
         "cell_rows": [
-            ("A1:W1", THIN_BORDER),
+            ("A1:Y1", THIN_BORDER),
         ],
     },
-    "auto_filter": "A:R",
+    "auto_filter": "A:Y",
     "freeze_panes": "F1",
 }
 
@@ -100,16 +112,16 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{col}{i}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for col in ["J", "K", "L"]
+            for col in ["J", "K", "L", "M"]
             for i in range(1, nb_sv_variants + 2)
         ]
         + [
             (
-                # letters M to R
+                # letters N to Y
                 f"{string.ascii_uppercase[i]}{j}",
                 PatternFill(patternType="solid", start_color="c4d9ef"),
             )
-            for i in range(12, 18)
+            for i in range(13, 25)
             for j in range(1, nb_sv_variants + 2)
         ],
         "to_align": [f"G{i}" for i in range(2, nb_sv_variants + 2)],
