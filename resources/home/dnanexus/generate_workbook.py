@@ -93,11 +93,16 @@ def main(**kwargs):
         inputs["reported_structural_variants"]["data"],
         lookup_refgene_data,
         "gain",
+        "OG_Amp",
+        "Focality",
+        "Full transcript",
     )
     loss_df = excel_parsing.process_reported_SV(
         inputs["reported_structural_variants"]["data"],
         lookup_refgene_data,
         "loss|loh",
+        "TSG_Hom",
+        "SNV_LOH",
     )
     fusion_df, fusion_count = excel_parsing.process_fusion_SV(
         inputs["reported_structural_variants"]["data"], lookup_refgene_data

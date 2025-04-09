@@ -252,7 +252,7 @@ def process_reported_variants_somatic(
 
 
 def process_reported_SV(
-    df: pd.DataFrame, lookup_refgene: tuple, type_sv: str
+    df: pd.DataFrame, lookup_refgene: tuple, type_sv: str, *check_columns
 ) -> pd.DataFrame:
     """Process the reported structural variants excel
 
@@ -289,13 +289,9 @@ def process_reported_SV(
         sv_df[new_column] = sv_df[new_column].fillna("-")
 
     sv_df.loc[:, "Variant class"] = ""
-    sv_df.loc[:, "TSG_NMD"] = ""
-    sv_df.loc[:, "TSG_LOH"] = ""
-    sv_df.loc[:, "Splice fs?"] = ""
-    sv_df.loc[:, "SpliceAI"] = ""
-    sv_df.loc[:, "REVEL"] = ""
-    sv_df.loc[:, "OG_3' Ter"] = ""
-    sv_df.loc[:, "Recurrence somatic database"] = ""
+
+    for column in check_columns:
+        sv_df.loc[:, column] = ""
 
     sv_df[["Type", "Copy Number"]] = sv_df.Type.str.split(
         r"\(|\)", expand=True
@@ -316,37 +312,35 @@ def process_reported_SV(
             inplace=True,
         )
 
-    selected_col = [
-        "Event domain",
-        "Impacted transcript region",
-        "Gene",
-        "GRCh38 coordinates",
-        "Chromosomal bands",
-        "Type",
-        "Copy Number",
-        "Size",
-        "Gene mode of action",
-        "Variant class",
-        "TSG_NMD",
-        "TSG_LOH",
-        "Splice fs?",
-        "SpliceAI",
-        "REVEL",
-        "OG_3' Ter",
-        "Recurrence somatic database",
-        "COSMIC Driver",
-        "COSMIC Entities",
-        "Paed Driver",
-        "Paed Entities",
-        "Sarc Driver",
-        "Sarc Entities",
-        "Neuro Driver",
-        "Neuro Entities",
-        "Ovary Driver",
-        "Ovary Entities",
-        "Haem Driver",
-        "Haem Entities",
-    ]
+    selected_col = (
+        [
+            "Event domain",
+            "Impacted transcript region",
+            "Gene",
+            "GRCh38 coordinates",
+            "Chromosomal bands",
+            "Type",
+            "Copy Number",
+            "Size",
+            "Gene mode of action",
+            "Variant class",
+        ]
+        + [column for column in check_columns]
+        + [
+            "COSMIC Driver",
+            "COSMIC Entities",
+            "Paed Driver",
+            "Paed Entities",
+            "Sarc Driver",
+            "Sarc Entities",
+            "Neuro Driver",
+            "Neuro Entities",
+            "Ovary Driver",
+            "Ovary Entities",
+            "Haem Driver",
+            "Haem Entities",
+        ]
+    )
 
     return sv_df[selected_col]
 
