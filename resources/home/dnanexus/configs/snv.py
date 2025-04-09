@@ -5,6 +5,8 @@ from openpyxl.styles.fills import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
+from utils import misc
+
 THIN = Side(border_style="thin", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
@@ -35,23 +37,25 @@ CONFIG = {
                 "HS_Total",
                 "HS_Sample",
                 "HS_Tumour",
-                "COSMIC",
-                "COSMIC",
-                "Paed",
-                "Paed",
-                "Sarc",
-                "Sarc",
-                "Neuro",
-                "Neuro",
-                "Haem",
-                "Haem",
+                "COSMIC Driver",
+                "COSMIC Alterations",
+                "Paed Driver",
+                "Paed Entities",
+                "Sarc Driver",
+                "Sarc Entities",
+                "Neuro Driver",
+                "Neuro Entities",
+                "Ovary Driver",
+                "Ovary Entities",
+                "Haem Driver",
+                "Haem Entities",
                 "MTBP c.",
                 "MTBP p.",
             ],
             1,
         )
     },
-    "to_bold": [f"{string.ascii_uppercase[i]}1" for i in range(0, 23)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 41)],
     "col_width": [
         ("B", 12),
         ("C", 28),
@@ -75,10 +79,10 @@ CONFIG = {
     ],
     "borders": {
         "cell_rows": [
-            ("A1:W1", THIN_BORDER),
+            ("A1:AI1", THIN_BORDER),
         ],
     },
-    "auto_filter": "F:W",
+    "auto_filter": "E:AI",
     "freeze_panes": "E1",
 }
 
@@ -109,36 +113,37 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             if c_idx != 1 and r_idx != 1
         },
         "cells_to_colour": [
+            # letters K to R
             (
-                f"{col}{i}",
+                f"{string.ascii_uppercase[i]}{j}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for col in ["K", "L", "M"]
-            for i in range(1, nb_somatic_variants + 2)
-        ]
-        + [
-            (
-                # letters N to S
-                f"{string.ascii_uppercase[i]}{j}",
-                PatternFill(patternType="solid", start_color="c4d9ef"),
-            )
-            for i in range(13, 19)
+            for i in range(10, 18)
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
             (
-                f"{col}{i}",
+                f"{letter}{j}",
+                PatternFill(patternType="solid", start_color="c4d9ef"),
+            )
+            for letter in ["S", "T", "U"]
+            for j in range(1, nb_somatic_variants + 2)
+        ]
+        + [
+            # letters V to AG
+            (
+                f"{misc.convert_index_to_letters(i)}{j}",
                 PatternFill(patternType="solid", start_color="00FFFF"),
             )
-            for col in ["T", "U"]
-            for i in range(1, nb_somatic_variants + 2)
+            for i in range(21, 35)
+            for j in range(1, nb_somatic_variants + 2)
         ]
         + [
             (
                 f"{col}{i}",
                 PatternFill(patternType="solid", start_color="dabcff"),
             )
-            for col in ["V", "W"]
+            for col in ["AH", "AI"]
             for i in range(1, nb_somatic_variants + 2)
         ],
         "dropdowns": [
@@ -151,16 +156,6 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                     ),
                 },
                 "title": "Variant class",
-            },
-            {
-                "cells": {
-                    (f"L{i}" for i in range(2, nb_somatic_variants + 2)): (
-                        '"1. Predicts therapeutic response,'
-                        "2. Prognostic, 3. Defines diagnosis group,"
-                        '4. Eligibility for trial, 5. Other"'
-                    ),
-                },
-                "title": "Actionability",
             },
         ],
         "data_bar": f"F2:F{nb_somatic_variants + 1}",
