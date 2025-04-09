@@ -188,7 +188,9 @@ def split_confidence_support(value: str) -> list:
     return returned_value
 
 
-def get_column_letter(df: pd.DataFrame, column_name: str = None) -> str:
+def get_column_letter_using_column_name(
+    df: pd.DataFrame, column_name: str = None
+) -> str:
     """Given a column name get the corresponding letter in a hypothetical
     excel worksheet. If not given, get the last column letter
 
@@ -206,12 +208,68 @@ def get_column_letter(df: pd.DataFrame, column_name: str = None) -> str:
     """
 
     for i, column in enumerate(df.columns):
+        # if the number of columns is over 26, i need to add the additional
+        # letter i.e. 27th column would be AA in Excel
+        if i >= 26:
+            nb_alphabet_passes = int(i / 26)
+            i -= nb_alphabet_passes * 26
+            additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+        else:
+            nb_alphabet_passes = 0
+            additional_letter = ""
+
         if column_name and column_name == column:
-            return string.ascii_uppercase[i]
+            return f"{additional_letter}{string.ascii_uppercase[i]}"
 
         # reached the last column
-        if len(df.columns) - 1 == i:
-            return string.ascii_uppercase[i]
+        if len(df.columns) - 1 == i + nb_alphabet_passes * 26:
+            return f"{additional_letter}{string.ascii_uppercase[i]}"
+
+
+def convert_letter_column_to_index(letters: str) -> int:
+    """Convert a letter string into its position in the alphabet
+
+    Parameters
+    ----------
+    letters : str
+        Letter string
+
+    Returns
+    -------
+    int
+        Position in the alphabet
+    """
+
+    if len(letters) == 1:
+        return string.ascii_uppercase.index(letters)
+    else:
+        return string.ascii_uppercase.index(
+            letters[0]
+        ) * 26 + string.ascii_uppercase.index(letters[1])
+
+
+def convert_index_to_letters(index: int) -> str:
+    """Convert a alphabet position into a letter
+
+    Parameters
+    ----------
+    index : int
+        Integer representing the position in the alphabet
+
+    Returns
+    -------
+    str
+        Equivalent letter of the position in the alphabet
+    """
+
+    if index >= 26:
+        nb_alphabet_passes = int(index / 26)
+        index -= nb_alphabet_passes * 26
+        additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+    else:
+        additional_letter = ""
+
+    return f"{additional_letter}{string.ascii_uppercase[index]}"
 
 
 def get_lookup_groups(df: pd.DataFrame) -> list:
@@ -237,3 +295,51 @@ def get_lookup_groups(df: pd.DataFrame) -> list:
             lookup_groups_position.append([j for j in range(i, i + 6)])
 
     return lookup_groups_position
+
+
+def convert_3_letter_protein_to_1(string_element: str) -> str:
+    """Convert the 3 letter protein to a 1 letter protein
+
+    Parameters
+    ----------
+    string_element : str
+        String element to convert
+
+    Returns
+    -------
+    str
+        Converted string
+    """
+
+    if type(string_element) is not str:
+        return string_element
+
+    mapping = {
+        "Ala": "A",
+        "Arg": "R",
+        "Asn": "N",
+        "Asp": "D",
+        "Cys": "C",
+        "Gln": "Q",
+        "Glu": "E",
+        "Gly": "G",
+        "His": "H",
+        "Ile": "I",
+        "Leu": "L",
+        "Lys": "K",
+        "Met": "M",
+        "Phe": "F",
+        "Pro": "P",
+        "Ser": "S",
+        "Thr": "T",
+        "Trp": "W",
+        "Tyr": "Y",
+        "Val": "V",
+    }
+
+    for three_letter_protein, single_letter_protein in mapping.items():
+        string_element = string_element.replace(
+            three_letter_protein, single_letter_protein
+        )
+
+    return string_element

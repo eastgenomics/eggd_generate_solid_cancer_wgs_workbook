@@ -204,13 +204,15 @@ def add_dynamic_values(
         Dict containing data that needs to be merged to the CONFIG variable
     """
 
-    variant_class_column_letter = misc.get_column_letter(
+    variant_class_column_letter = misc.get_column_letter_using_column_name(
         SV_df, "Variant class"
     )
-    actionability_column_letter = misc.get_column_letter(
+    actionability_column_letter = misc.get_column_letter_using_column_name(
         SV_df, "Actionability"
     )
-    comments_column_letter = misc.get_column_letter(SV_df, "Comments")
+    comments_column_letter = misc.get_column_letter_using_column_name(
+        SV_df, "Comments"
+    )
 
     sv_pair = [
         (1, "C"),

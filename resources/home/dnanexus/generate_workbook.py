@@ -66,12 +66,18 @@ def main(**kwargs):
     # - using the 3rd element as a reference df
     # - and getting the 5th element from the reference column
     lookup_refgene_data = (
-        ("COSMIC", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
-        ("Paed", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
-        ("Sarc", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
-        ("Neuro", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
-        ("Ovary", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
-        ("Haem", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
+        ("COSMIC Driver", "Gene", refgene_dfs["cosmic"], "Gene", "Driver_SV"),
+        ("COSMIC Entities", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
+        ("Paed Driver", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
+        ("Paed Entities", "Gene", refgene_dfs["paed"], "Gene", "Entities"),
+        ("Sarc Driver", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
+        ("Sarc Entities", "Gene", refgene_dfs["sarc"], "Gene", "Entities"),
+        ("Neuro Driver", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
+        ("Neuro Entities", "Gene", refgene_dfs["neuro"], "Gene", "Entities"),
+        ("Ovary Driver", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
+        ("Ovary Entities", "Gene", refgene_dfs["ovarian"], "Gene", "Entities"),
+        ("Haem Driver", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
+        ("Haem Entities", "Gene", refgene_dfs["haem"], "Gene", "Entities"),
     )
 
     germline_df = excel_parsing.process_reported_variants_germline(
