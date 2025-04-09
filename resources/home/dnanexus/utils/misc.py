@@ -295,3 +295,51 @@ def get_lookup_groups(df: pd.DataFrame) -> list:
             lookup_groups_position.append([j for j in range(i, i + 6)])
 
     return lookup_groups_position
+
+
+def convert_3_letter_protein_to_1(string_element: str) -> str:
+    """Convert the 3 letter protein to a 1 letter protein
+
+    Parameters
+    ----------
+    string_element : str
+        String element to convert
+
+    Returns
+    -------
+    str
+        Converted string
+    """
+
+    if type(string_element) is not str:
+        return string_element
+
+    mapping = {
+        "Ala": "A",
+        "Arg": "R",
+        "Asn": "N",
+        "Asp": "D",
+        "Cys": "C",
+        "Gln": "Q",
+        "Glu": "E",
+        "Gly": "G",
+        "His": "H",
+        "Ile": "I",
+        "Leu": "L",
+        "Lys": "K",
+        "Met": "M",
+        "Phe": "F",
+        "Pro": "P",
+        "Ser": "S",
+        "Thr": "T",
+        "Trp": "W",
+        "Tyr": "Y",
+        "Val": "V",
+    }
+
+    for three_letter_protein, single_letter_protein in mapping.items():
+        string_element = string_element.replace(
+            three_letter_protein, single_letter_protein
+        )
+
+    return string_element
