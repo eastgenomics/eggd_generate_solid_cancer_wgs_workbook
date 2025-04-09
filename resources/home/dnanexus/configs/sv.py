@@ -76,10 +76,10 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
 
     nb_structural_variants = data.shape[0]
 
-    last_column_letter = misc.get_column_letter(data)
-    variant_class_column_letter = misc.get_column_letter(data, "Variant class")
-    actionability_column_letter = misc.get_column_letter(data, "Actionability")
-    comments_column_letter = misc.get_column_letter(data, "Comments")
+    last_column_letter = misc.get_column_letter_using_column_name(data)
+    variant_class_column_letter = misc.get_column_letter_using_column_name(
+        data, "Variant class"
+    )
 
     lookup_groups = misc.get_lookup_groups(data)
 
@@ -115,21 +115,16 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         },
         "cells_to_colour": [
             (
-                f"{col}{i}",
+                f"{variant_class_column_letter}{i}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for col in [
-                variant_class_column_letter,
-                actionability_column_letter,
-                comments_column_letter,
-            ]
             for i in range(1, nb_structural_variants + 2)
         ]
         + cells_to_color,
         "to_bold": [
             f"{string.ascii_uppercase[i]}1"
             for i in range(
-                string.ascii_uppercase.index(last_column_letter) + 1
+                misc.convert_letter_column_to_index(last_column_letter) + 1
             )
         ],
         "dropdowns": [
@@ -145,19 +140,6 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                     ),
                 },
                 "title": "Variant class",
-            },
-            {
-                "cells": {
-                    (
-                        f"{actionability_column_letter}{i}"
-                        for i in range(2, nb_structural_variants + 2)
-                    ): (
-                        '"1. Predicts therapeutic response,'
-                        "2. Prognostic, 3. Defines diagnosis group,"
-                        '4. Eligibility for trial, 5. Other"'
-                    ),
-                },
-                "title": "Actionability",
             },
         ],
         "auto_filter": f"F:{last_column_letter}",
