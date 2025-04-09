@@ -133,7 +133,7 @@ def process_reported_variants_somatic(
     df["p_dot"] = df["p_dot"].str.slice(1)
 
     df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
-    df["MTBP p."] = df["Gene"] + ":" + df["p_dot"]
+    df["MTBP p."] = df["p_dot"].apply(misc.convert_3_letter_protein_to_1)
     df.fillna({"MTBP p.": ""}, inplace=True)
 
     # convert string like: NRAS:p.Gln61Arg to NRAS:p.Gln61 for lookup in the
@@ -149,6 +149,7 @@ def process_reported_variants_somatic(
     # populate the somatic variant dataframe with data from the refgene excel
     # file
     lookup_refgene = lookup_refgene + (
+        ("HS_Total", "HS p.", hotspots_df, "HS_PROTEIN_ID", "HS_Samples"),
         ("HS_Sample", "HS p.", hotspots_df, "HS_PROTEIN_ID", "HS_Samples"),
         (
             "HS_Tumour",
@@ -189,6 +190,14 @@ def process_reported_variants_somatic(
         df[["VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
 
     df.loc[:, "Variant class"] = ""
+    df.loc[:, "TSG_NMD"] = ""
+    df.loc[:, "TSG_LOH"] = ""
+    df.loc[:, "Splice fs?"] = ""
+    df.loc[:, "SpliceAI"] = ""
+    df.loc[:, "REVEL"] = ""
+    df.loc[:, "OG_3' Ter"] = ""
+    df.loc[:, "Recurrence somatic database"] = ""
+
     df = df[
         [
             "Domain",
@@ -202,13 +211,28 @@ def process_reported_variants_somatic(
             "Alt allele/total read depth",
             "Gene mode of action",
             "Variant class",
-            "COSMIC",
-            "Paed",
-            "Sarc",
-            "Neuro",
-            "Haem",
+            "TSG_NMD",
+            "TSG_LOH",
+            "Splice fs?",
+            "SpliceAI",
+            "REVEL",
+            "OG_3' Ter",
+            "Recurrence somatic database",
+            "HS_Total",
             "HS_Sample",
             "HS_Tumour",
+            "COSMIC Driver",
+            "COSMIC Entities",
+            "Paed Driver",
+            "Paed Entities",
+            "Sarc Driver",
+            "Sarc Entities",
+            "Neuro Driver",
+            "Neuro Entities",
+            "Ovary Driver",
+            "Ovary Entities",
+            "Haem Driver",
+            "Haem Entities",
             "MTBP c.",
             "MTBP p.",
         ]
@@ -265,8 +289,13 @@ def process_reported_SV(
         sv_df[new_column] = sv_df[new_column].fillna("-")
 
     sv_df.loc[:, "Variant class"] = ""
-    sv_df.loc[:, "Actionability"] = ""
-    sv_df.loc[:, "Comments"] = ""
+    sv_df.loc[:, "TSG_NMD"] = ""
+    sv_df.loc[:, "TSG_LOH"] = ""
+    sv_df.loc[:, "Splice fs?"] = ""
+    sv_df.loc[:, "SpliceAI"] = ""
+    sv_df.loc[:, "REVEL"] = ""
+    sv_df.loc[:, "OG_3' Ter"] = ""
+    sv_df.loc[:, "Recurrence somatic database"] = ""
 
     sv_df[["Type", "Copy Number"]] = sv_df.Type.str.split(
         r"\(|\)", expand=True
@@ -298,14 +327,25 @@ def process_reported_SV(
         "Size",
         "Gene mode of action",
         "Variant class",
-        "Actionability",
-        "Comments",
-        "COSMIC",
-        "Paed",
-        "Sarc",
-        "Neuro",
-        "Ovary",
-        "Haem",
+        "TSG_NMD",
+        "TSG_LOH",
+        "Splice fs?",
+        "SpliceAI",
+        "REVEL",
+        "OG_3' Ter",
+        "Recurrence somatic database",
+        "COSMIC Driver",
+        "COSMIC Entities",
+        "Paed Driver",
+        "Paed Entities",
+        "Sarc Driver",
+        "Sarc Entities",
+        "Neuro Driver",
+        "Neuro Entities",
+        "Ovary Driver",
+        "Ovary Entities",
+        "Haem Driver",
+        "Haem Entities",
     ]
 
     return sv_df[selected_col]
