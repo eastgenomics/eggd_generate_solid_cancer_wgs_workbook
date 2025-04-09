@@ -91,6 +91,8 @@ CONFIG = {
         (1, 5): "=SOC!A9",
         (15, 1): "QC alerts",
         (16, 1): "None",
+        (15, 2): "Assessed purity",
+        (15, 3): "SNV TMB",
     },
     "to_bold": [
         "A1",
@@ -101,9 +103,11 @@ CONFIG = {
         "B4",
         "B7",
         "B10",
+        "B15",
         "C4",
         "C7",
         "C10",
+        "C15",
         "D4",
         "D7",
         "D10",
@@ -155,6 +159,8 @@ CONFIG = {
     "borders": {
         "single_cells": [
             ("A15", LOWER_BORDER),
+            ("B15", LOWER_BORDER),
+            ("C15", LOWER_BORDER),
         ],
         "cell_rows": [
             ("A4:H4", THIN_BORDER),
@@ -176,5 +182,9 @@ CONFIG = {
             },
             "title": "QC alerts",
         }
+    ],
+    "images": [
+        {"cell": "B18", "img_index": 8, "size": (600, 800)},
+        {"cell": "H18", "img_index": 10, "size": (600, 800)},
     ],
 }

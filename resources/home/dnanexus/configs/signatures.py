@@ -5,21 +5,17 @@ THIN = Side(border_style="thin", color="000000")
 LOWER_BORDER = Border(bottom=THIN)
 
 CONFIG = {
-    "tables": [
-        {
-            "headers": {
-                (1, 1): "=SOC!A2",
-                (2, 1): "=SOC!A3",
-                (1, 3): "=SOC!A5",
-                (2, 3): "=SOC!A6",
-                (1, 5): "=SOC!A9",
-                (35, 1): "Pertinent chromosomal CNVs",
-                (35, 3): "Pertinent signatures",
-                (36, 1): "v2 (March 2015)",
-                (36, 3): "None",
-            }
-        },
-    ],
+    "cells_to_write": {
+        (1, 1): "=SOC!A2",
+        (2, 1): "=SOC!A3",
+        (1, 3): "=SOC!A5",
+        (2, 3): "=SOC!A6",
+        (1, 5): "=SOC!A9",
+        (35, 1): "Pertinent chromosomal CNVs",
+        (35, 3): "Pertinent signatures",
+        (36, 1): "v2 (March 2015)",
+        (36, 3): "None",
+    },
     "to_bold": ["A1", "A35", "C35"],
     "col_width": (
         ("A", 18),

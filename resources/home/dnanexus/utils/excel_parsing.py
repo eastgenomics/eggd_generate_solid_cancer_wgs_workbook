@@ -189,8 +189,6 @@ def process_reported_variants_somatic(
         df[["VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
 
     df.loc[:, "Variant class"] = ""
-    df.loc[:, "Actionability"] = ""
-    df.loc[:, "Comments"] = ""
     df = df[
         [
             "Domain",
@@ -204,13 +202,10 @@ def process_reported_variants_somatic(
             "Alt allele/total read depth",
             "Gene mode of action",
             "Variant class",
-            "Actionability",
-            "Comments",
             "COSMIC",
             "Paed",
             "Sarc",
             "Neuro",
-            "Ovary",
             "Haem",
             "HS_Sample",
             "HS_Tumour",
