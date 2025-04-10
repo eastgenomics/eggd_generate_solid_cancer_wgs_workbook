@@ -113,40 +113,6 @@ def merge_dicts(left_dict: dict, right_dict: dict, sheet: str) -> dict:
     return new_dict
 
 
-def lookup_value_in_other_df(
-    target_df: pd.DataFrame,
-    col_to_map: str,
-    reference_df: pd.DataFrame,
-    col_to_index: str,
-    col_to_look_up: str,
-) -> pd.Series:
-    """Map a column from a reference dataframe column to another dataframe's
-    column
-
-    Parameters
-    ----------
-    target_df : pd.DataFrame
-        Dataframe to map data to
-    col_to_map : str
-        Name of the column to map data to
-    reference_df : pd.DataFrame
-        Dataframe containing data to map from
-    col_to_index : str
-        Name of the column to index with
-    col_to_look_up : str
-        Name of the column to map from
-
-    Returns
-    -------
-    pd.Series
-        Series containing the data from the reference dataframe
-    """
-
-    return target_df[col_to_map].map(
-        reference_df.set_index(col_to_index)[col_to_look_up]
-    )
-
-
 def split_confidence_support(value: str) -> list:
     """Split a value for paired and single read information (used in a Pandas
     context)
