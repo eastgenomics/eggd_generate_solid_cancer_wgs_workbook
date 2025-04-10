@@ -105,7 +105,10 @@ def process_reported_variants_germline(
 
 
 def process_reported_variants_somatic(
-    df: pd.DataFrame, lookup_refgene: tuple, hotspots_df: pd.DataFrame
+    df: pd.DataFrame,
+    lookup_refgene: tuple,
+    hotspots_df: pd.DataFrame,
+    cyto_df: dict,
 ) -> pd.DataFrame:
     """Get the somatic variants and format the data for them
 
@@ -117,6 +120,8 @@ def process_reported_variants_somatic(
         Tuple of data allowing lookup in the refgene dataframes
     hotspots_df : pd.DataFrame
         Dataframe containing data from the parsed hotspots excel
+    cyto_df : dict
+        Dict containing dataframe of data per sheet for cytological bands
 
     Returns
     -------
@@ -158,18 +163,24 @@ def process_reported_variants_somatic(
             "HS_PROTEIN_ID",
             "HS_Tumor Type Composition",
         ),
+        ("Cyto", "Gene", cyto_df["Sheet1"], "Gene", "Cyto"),
     )
 
     for (
         new_column,
-        col_to_map,
+        mapping_column_target_df,
         reference_df,
-        col_to_index,
+        mapping_column_ref_df,
         col_to_look_up,
     ) in lookup_refgene:
-        df[new_column] = misc.lookup_value_in_other_df(
-            df, col_to_map, reference_df, col_to_index, col_to_look_up
+        # link the mapping column to the column of data in the ref df
+        reference_dict = dict(
+            zip(
+                reference_df[mapping_column_ref_df],
+                reference_df[col_to_look_up],
+            )
         )
+        df[new_column] = df[mapping_column_target_df].map(reference_dict)
         df[new_column] = df[new_column].fillna("-")
 
     df.loc[:, "Error flag"] = ""
@@ -203,6 +214,7 @@ def process_reported_variants_somatic(
             "Domain",
             "Gene",
             "GRCh38 coordinates;ref/alt allele",
+            "Cyto",
             "CDS change and protein change",
             "Predicted consequences",
             "VAF",
@@ -278,14 +290,19 @@ def process_reported_SV(
     # excel file
     for (
         new_column,
-        col_to_map,
+        mapping_column_target_df,
         reference_df,
-        col_to_index,
+        mapping_column_ref_df,
         col_to_look_up,
     ) in lookup_refgene:
-        sv_df[new_column] = misc.lookup_value_in_other_df(
-            sv_df, col_to_map, reference_df, col_to_index, col_to_look_up
+        # link the mapping column to the column of data in the ref df
+        reference_dict = dict(
+            zip(
+                reference_df[mapping_column_ref_df],
+                reference_df[col_to_look_up],
+            )
         )
+        sv_df[new_column] = sv_df[mapping_column_target_df].map(reference_dict)
         sv_df[new_column] = sv_df[new_column].fillna("-")
 
     sv_df.loc[:, "Variant class"] = ""
@@ -298,6 +315,9 @@ def process_reported_SV(
     ).iloc[:, [0, 1]]
     sv_df["Copy Number"] = sv_df["Copy Number"].astype(int)
     sv_df["Size"] = sv_df.apply(lambda x: "{:,.0f}".format(x["Size"]), axis=1)
+    sv_df[["Cyto 1", "Cyto 2"]] = sv_df["Chromosomal bands"].str.split(
+        ";", expand=True
+    )
 
     if list(sv_df["Type"].unique()) == ["GAIN"]:
         sv_df.sort_values(
@@ -318,10 +338,11 @@ def process_reported_SV(
             "Impacted transcript region",
             "Gene",
             "GRCh38 coordinates",
-            "Chromosomal bands",
             "Type",
             "Copy Number",
             "Size",
+            "Cyto 1",
+            "Cyto 2",
             "Gene mode of action",
             "Variant class",
         ]
@@ -404,13 +425,20 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
         # excel file
         for (
             new_column,
-            col_to_map,
+            mapping_column_target_df,
             reference_df,
-            col_to_index,
+            mapping_column_ref_df,
             col_to_look_up,
         ) in lookup_refgene:
-            df_SV[new_column] = misc.lookup_value_in_other_df(
-                df_SV, col_to_map, reference_df, col_to_index, col_to_look_up
+            # link the mapping column to the column of data in the ref df
+            reference_dict = dict(
+                zip(
+                    reference_df[mapping_column_ref_df],
+                    reference_df[col_to_look_up],
+                )
+            )
+            df_SV[new_column] = df_SV[mapping_column_target_df].map(
+                reference_dict
             )
             df_SV[new_column] = df_SV[new_column].fillna("-")
     else:
@@ -424,17 +452,20 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
         for g in range(max_num_gene):
             for (
                 new_column,
-                col_to_map,
+                mapping_column_target_df,
                 reference_df,
-                col_to_index,
+                mapping_column_ref_df,
                 col_to_look_up,
             ) in lookup_refgene:
-                df_SV[new_column] = misc.lookup_value_in_other_df(
-                    df_SV,
-                    col_to_map,
-                    reference_df,
-                    col_to_index,
-                    col_to_look_up,
+                # link the mapping column to the column of data in the ref df
+                reference_dict = dict(
+                    zip(
+                        reference_df[mapping_column_ref_df],
+                        reference_df[col_to_look_up],
+                    )
+                )
+                df_SV[new_column] = df_SV[mapping_column_target_df].map(
+                    reference_dict
                 )
                 df_SV.fillna({f"{new_column}_{g+1}": "-"}, inplace=True)
 
