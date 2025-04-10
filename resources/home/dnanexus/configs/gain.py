@@ -21,10 +21,11 @@ CONFIG = {
                 "Impacted transcript region",
                 "Gene",
                 "GRCh38 coordinates",
-                "Chromosomal bands",
                 "Type",
                 "Copy Number",
                 "Size",
+                "Cyto 1",
+                "Cyto 2",
                 "Gene mode of action",
                 "Variant class",
                 "OG_Amp",
@@ -51,11 +52,11 @@ CONFIG = {
         ("B", 12),
         ("C", 16),
         ("D", 22),
-        ("E", 20),
+        ("E", 14),
         ("G", 16),
         ("H", 14),
-        ("I", 22),
-        ("J", 20),
+        ("I", 14),
+        ("J", 14),
         ("K", 20),
         ("L", 20),
         ("M", 22),
@@ -74,11 +75,11 @@ CONFIG = {
     ],
     "borders": {
         "cell_rows": [
-            ("A1:Y1", THIN_BORDER),
+            ("A1:AA1", THIN_BORDER),
         ],
     },
-    "auto_filter": "A:Y",
-    "freeze_panes": "F1",
+    "auto_filter": "A:AA",
+    "freeze_panes": "E1",
 }
 
 
@@ -112,7 +113,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{col}{i}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for col in ["J", "K", "L", "M"]
+            for col in ["K", "L", "M", "N"]
             for i in range(1, nb_sv_variants + 2)
         ]
         + [
@@ -121,14 +122,14 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{string.ascii_uppercase[i]}{j}",
                 PatternFill(patternType="solid", start_color="c4d9ef"),
             )
-            for i in range(13, 25)
+            for i in range(14, 26)
             for j in range(1, nb_sv_variants + 2)
         ],
-        "to_align": [f"G{i}" for i in range(2, nb_sv_variants + 2)],
+        "to_align": [f"F{i}" for i in range(2, nb_sv_variants + 2)],
         "dropdowns": [
             {
                 "cells": {
-                    (f"J{i}" for i in range(2, nb_sv_variants + 2)): (
+                    (f"K{i}" for i in range(2, nb_sv_variants + 2)): (
                         '"Pathogenic, Likely pathogenic,'
                         "Uncertain, Likely passenger,"
                         'Likely artefact"'

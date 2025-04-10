@@ -19,6 +19,7 @@ CONFIG = {
                 "Domain",
                 "Gene",
                 "GRCh38 coordinates",
+                "Cyto",
                 "Variant",
                 "Predicted consequences",
                 "VAF",
@@ -55,11 +56,11 @@ CONFIG = {
             1,
         )
     },
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 41)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 42)],
     "col_width": [
         ("B", 12),
         ("C", 28),
-        ("D", 28),
+        ("D", 14),
         ("E", 18),
         ("F", 14),
         ("J", 20),
@@ -79,11 +80,11 @@ CONFIG = {
     ],
     "borders": {
         "cell_rows": [
-            ("A1:AI1", THIN_BORDER),
+            ("A1:AJ1", THIN_BORDER),
         ],
     },
-    "auto_filter": "E:AI",
-    "freeze_panes": "E1",
+    "auto_filter": "E:AJ",
+    "freeze_panes": "F1",
 }
 
 
@@ -118,7 +119,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{string.ascii_uppercase[i]}{j}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for i in range(10, 18)
+            for i in range(11, 19)
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
@@ -126,7 +127,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{letter}{j}",
                 PatternFill(patternType="solid", start_color="c4d9ef"),
             )
-            for letter in ["S", "T", "U"]
+            for letter in ["T", "U", "V"]
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
@@ -135,7 +136,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{misc.convert_index_to_letters(i)}{j}",
                 PatternFill(patternType="solid", start_color="00FFFF"),
             )
-            for i in range(21, 35)
+            for i in range(22, 36)
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
@@ -143,13 +144,13 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{col}{i}",
                 PatternFill(patternType="solid", start_color="dabcff"),
             )
-            for col in ["AH", "AI"]
+            for col in ["AI", "AJ"]
             for i in range(1, nb_somatic_variants + 2)
         ],
         "dropdowns": [
             {
                 "cells": {
-                    (f"K{i}" for i in range(2, nb_somatic_variants + 2)): (
+                    (f"L{i}" for i in range(2, nb_somatic_variants + 2)): (
                         '"Pathogenic, Likely pathogenic,'
                         "Uncertain, Likely passenger,"
                         'Likely artefact"'
@@ -158,7 +159,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 "title": "Variant class",
             },
         ],
-        "data_bar": f"F2:F{nb_somatic_variants + 1}",
+        "data_bar": f"G2:G{nb_somatic_variants + 1}",
     }
 
     return config_with_dynamic_values
