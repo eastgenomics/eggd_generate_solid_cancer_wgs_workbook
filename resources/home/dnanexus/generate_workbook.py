@@ -64,7 +64,7 @@ def main(**kwargs):
     # - the writing of the column (1st element)
     # - by mapping 2nd element to 4th element
     # - using the 3rd element as a reference df
-    # - and getting the 5th element from the reference column
+    # - and getting the data from the column named by the 5th element
     lookup_refgene_data = (
         ("COSMIC Driver", "Gene", refgene_dfs["cosmic"], "Gene", "Driver_SV"),
         ("COSMIC Entities", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
@@ -88,6 +88,7 @@ def main(**kwargs):
         inputs["reported_variants"]["data"],
         lookup_refgene_data,
         inputs["hotspots"]["data"],
+        inputs["cytological_bands"]["data"],
     )
     gain_df = excel_parsing.process_reported_SV(
         inputs["reported_structural_variants"]["data"],
