@@ -75,6 +75,9 @@ def write_sheet(
     if sheet_config.get("col_width"):
         set_col_width(sheet, sheet_config["col_width"])
 
+    if sheet_config.get("row_height"):
+        set_row_height(sheet, sheet_config["row_height"])
+
     if sheet_config.get("cells_to_colour"):
         color_cells(sheet, sheet_config["cells_to_colour"])
 
@@ -212,6 +215,21 @@ def set_col_width(sheet: Worksheet, config_data: list):
 
     for cell, width in config_data:
         sheet.column_dimensions[cell].width = width
+
+
+def set_row_height(sheet: Worksheet, config_data: list):
+    """Given a list of rows, set their height
+
+    Parameters
+    ----------
+    sheet : Worksheet
+        Worksheet in which to set the height
+    config_data : list
+        List of tuple with the row and its height to set
+    """
+
+    for cell, height in config_data:
+        sheet.row_dimensions[cell].height = height
 
 
 def color_cells(sheet: Worksheet, config_data: list):
