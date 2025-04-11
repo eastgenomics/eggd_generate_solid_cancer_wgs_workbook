@@ -59,6 +59,7 @@ def main(**kwargs):
     refgene_dfs = excel_parsing.process_refgene(
         inputs["reference_gene_groups"]["data"]
     )
+    panelapp_dfs = excel_parsing.process_panelapp(inputs["panelapp"]["data"])
 
     # list of tuple allowing:
     # - the writing of the column (1st element)
@@ -83,6 +84,7 @@ def main(**kwargs):
     germline_df = excel_parsing.process_reported_variants_germline(
         inputs["reported_variants"]["data"],
         inputs["clinvar"]["data"],
+        panelapp_dfs,
     )
     somatic_df = excel_parsing.process_reported_variants_somatic(
         inputs["reported_variants"]["data"],
