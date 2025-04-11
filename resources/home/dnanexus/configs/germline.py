@@ -87,7 +87,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         "to_bold": [f"A{nb_germline_variants + 6}"],
         "to_align": [f"I{i}" for i in range(4, nb_germline_variants + 5)]
         + [f"J{i}" for i in range(4, nb_germline_variants + 5)],
-        "row_height": [(i, 30) for i in range(5, nb_germline_variants + 6)],
+        "row_height": [(i, 40) for i in range(5, nb_germline_variants + 6)],
         "borders": {
             "single_cells": [(f"A{nb_germline_variants + 6}", LOWER_BORDER)],
             "cell_rows": [
