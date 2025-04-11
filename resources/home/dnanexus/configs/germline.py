@@ -17,14 +17,13 @@ CONFIG = {
         (4, 1): "Gene",
         (4, 2): "GRCh38 Coordinates",
         (4, 3): "Variant",
-        (4, 4): "Consequence",
-        (4, 5): "Genotype",
-        (4, 6): "Variant Class",
-        (4, 7): "Actionability",
-        (4, 8): "Role in Cancer",
-        (4, 9): "ClinVar",
-        (4, 10): "gnomAD",
-        (4, 11): "Tumour VAF",
+        (4, 4): "Genotype",
+        (4, 5): "gnomAD",
+        (4, 6): "Role in Cancer",
+        (4, 7): "ClinVar",
+        (4, 8): "Tumour VAF",
+        (4, 9): "Panelapp Adult v2.2",
+        (4, 10): "Panelapp Chilhood v4.0",
     },
     "to_bold": [
         "A1",
@@ -38,7 +37,6 @@ CONFIG = {
         "H4",
         "I4",
         "J4",
-        "K4",
     ],
     "col_width": [
         ("A", 20),
@@ -48,12 +46,12 @@ CONFIG = {
         ("F", 22),
         ("G", 18),
         ("H", 12),
-        ("I", 22),
-        ("K", 12),
+        ("I", 44),
+        ("J", 44),
     ],
     "cells_to_colour": [
         (f"{column}4", PatternFill(patternType="solid", start_color="ADD8E6"))
-        for column in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"]
+        for column in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
     ],
 }
 
@@ -87,39 +85,16 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             (nb_germline_variants + 7, 1): "None",
         },
         "to_bold": [f"A{nb_germline_variants + 6}"],
+        "to_align": [f"I{i}" for i in range(4, nb_germline_variants + 5)]
+        + [f"J{i}" for i in range(4, nb_germline_variants + 5)],
+        "row_height": [(i, 40) for i in range(5, nb_germline_variants + 6)],
         "borders": {
             "single_cells": [(f"A{nb_germline_variants + 6}", LOWER_BORDER)],
             "cell_rows": [
-                (f"A{i}:K{i}", THIN_BORDER)
+                (f"A{i}:J{i}", THIN_BORDER)
                 for i in range(4, nb_germline_variants + 5)
             ],
         },
-        "dropdowns": [
-            {
-                "cells": {
-                    tuple(
-                        [f"F{i}" for i in range(5, nb_germline_variants + 5)]
-                    ): (
-                        '"Pathogenic, Likely pathogenic,'
-                        "Uncertain, Likely passenger,"
-                        'Likely artefact"'
-                    ),
-                },
-                "title": "Variant class",
-            },
-            {
-                "cells": {
-                    tuple(
-                        [f"G{i}" for i in range(5, nb_germline_variants + 5)]
-                    ): (
-                        '"1. Predicts therapeutic response,'
-                        "2. Prognostic, 3. Defines diagnosis group,"
-                        '4. Eligibility for trial, 5. Other"'
-                    ),
-                },
-                "title": "Actionability",
-            },
-        ],
     }
 
     return config_with_dynamic_values
