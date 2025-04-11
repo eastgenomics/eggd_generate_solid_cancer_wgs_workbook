@@ -38,7 +38,7 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
 
 
 def process_reported_variants_germline(
-    df: pd.DataFrame, clinvar_resource: vcfpy.Reader
+    df: pd.DataFrame, clinvar_resource: vcfpy.Reader, panelapp_dfs: dict
 ) -> pd.DataFrame:
     """Process the data from the reported variants excel file
 
@@ -48,6 +48,8 @@ def process_reported_variants_germline(
         Dataframe from parsing the reported variants excel file
     clinvar_resource : vcfpy.Reader
         vcfpy.Reader object from the Clinvar resource
+    panelapp_dfs : dict
+        Dict containing dfs to Panelapp adult and childhood data
 
     Returns
     -------
@@ -77,25 +79,54 @@ def process_reported_variants_germline(
         "Population germline allele frequency (GE | gnomAD)"
     ].str.split("|", expand=True)
 
-    df.drop(
-        ["GE", "Population germline allele frequency (GE | gnomAD)"],
-        axis=1,
-        inplace=True,
+    df.loc[:, "Tumour VAF"] = ""
+
+    lookup_panelapp_data = (
+        (
+            "PanelApp Adult_v2.2",
+            "Gene",
+            panelapp_dfs["Adult v2.2"],
+            "Gene Symbol",
+            "Formatted mode",
+        ),
+        (
+            "PanelApp Childhood_v4.0",
+            "Gene",
+            panelapp_dfs["Childhood v4.0"],
+            "Gene Symbol",
+            "Formatted mode",
+        ),
     )
-    df.loc[:, "Variant Class"] = ""
-    df.loc[:, "Actionability"] = ""
+
+    for (
+        new_column,
+        mapping_column_target_df,
+        reference_df,
+        mapping_column_ref_df,
+        col_to_look_up,
+    ) in lookup_panelapp_data:
+        # link the mapping column to the column of data in the ref df
+        reference_dict = dict(
+            zip(
+                reference_df[mapping_column_ref_df],
+                reference_df[col_to_look_up],
+            )
+        )
+        df[new_column] = df[mapping_column_target_df].map(reference_dict)
+        df[new_column] = df[new_column].fillna("-")
+
     df = df[
         [
             "Gene",
             "GRCh38 coordinates;ref/alt allele",
             "CDS change and protein change",
-            "Predicted consequences",
             "Genotype",
-            "Variant Class",
-            "Actionability",
+            "gnomAD",
             "Gene mode of action",
             "clnsigconf",
-            "gnomAD",
+            "Tumour VAF",
+            "PanelApp Adult_v2.2",
+            "PanelApp Childhood_v4.0",
         ]
     ]
 
@@ -533,3 +564,37 @@ def process_refgene(dfs: dict) -> dict:
             df.fillna({"Driver": "*"}, inplace=True)
 
     return dfs
+
+
+def process_panelapp(dfs: dict) -> dict:
+    """Process and format panelapp reference dataframes for use in the
+    Germline sheet
+
+    Parameters
+    ----------
+    dfs : dict
+        Dict of sheets of the panelapp reference file and the corresponding
+        dataframes parsed from the sheets
+
+    Returns
+    -------
+    dict
+        Dict of sheets with the corresponding reformatted dataframes
+    """
+
+    data = {}
+
+    for type_df, df in dfs.items():
+        df.fillna({"Gene Symbol": ""}, inplace=True)
+        df.fillna({"Mode": ""}, inplace=True)
+        df.fillna({"Phenotypes": ""}, inplace=True)
+        df["Mode"] = df["Mode"].astype(str)
+        df["Phenotypes"] = df["Phenotypes"].astype(str)
+
+        df["Formatted mode"] = (
+            df["Mode"] + " " + df["Phenotypes"].apply(lambda x: f"[{x}]")
+        )
+        df = df[["Gene Symbol", "Formatted mode"]]
+        data[type_df] = df
+
+    return data
