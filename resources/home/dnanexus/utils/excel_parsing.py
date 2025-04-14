@@ -172,27 +172,36 @@ def process_reported_variants_somatic(
     df["MTBP p."] = df["p_dot"].apply(misc.convert_3_letter_protein_to_1)
     df.fillna({"MTBP p.": ""}, inplace=True)
 
-    # convert string like: NRAS:p.Gln61Arg to NRAS:p.Gln61 for lookup in the
-    # hotspots excel
-    df["HS p."] = df["MTBP p."].apply(
-        lambda x: (
-            x[: re.search(r":p.[A-Za-z]+[0-9]+", x).end()]
-            if re.search(r":p.[A-Za-z]+[0-9]+", x)
-            else x
-        )
+    df["HS tissue lookup"] = (
+        df["Gene"] + ":" + df["MTBP p."].str.replace("p.", "")
+    )
+    df["HS mutation lookup"] = df["HS tissue lookup"].apply(
+        lambda x: re.sub(r"[A-Z]+$", "", x)
     )
 
     # populate the somatic variant dataframe with data from the refgene excel
     # file
     lookup_refgene = lookup_refgene + (
-        ("HS_Total", "HS p.", hotspots_df, "HS_PROTEIN_ID", "HS_Samples"),
-        ("HS_Sample", "HS p.", hotspots_df, "HS_PROTEIN_ID", "HS_Samples"),
         (
-            "HS_Tumour",
-            "HS p.",
-            hotspots_df,
-            "HS_PROTEIN_ID",
-            "HS_Tumor Type Composition",
+            "HS_Total",
+            "HS mutation lookup",
+            hotspots_df["HS_Samples"],
+            "Gene_AA",
+            "Total",
+        ),
+        (
+            "HS_Mut",
+            "HS mutation lookup",
+            hotspots_df["HS_Samples"],
+            "Gene_AA",
+            "Mutations",
+        ),
+        (
+            "HS_Tissue",
+            "HS tissue lookup",
+            hotspots_df["HS_Tissue"],
+            "Gene_Mut",
+            "Tissue",
         ),
         ("Cyto", "Gene", cyto_df["Sheet1"], "Gene", "Cyto"),
     )
@@ -262,8 +271,8 @@ def process_reported_variants_somatic(
             "OG_3' Ter",
             "Recurrence somatic database",
             "HS_Total",
-            "HS_Sample",
-            "HS_Tumour",
+            "HS_Mut",
+            "HS_Tissue",
             "COSMIC Driver",
             "COSMIC Entities",
             "Paed Driver",
@@ -548,20 +557,35 @@ def process_refgene(dfs: dict) -> dict:
         Dict of processed dataframes
     """
 
-    for df in [
-        dfs["cosmic"],
-        dfs["paed"],
-        dfs["sarc"],
-        dfs["neuro"],
-        dfs["ovarian"],
-        dfs["haem"],
-    ]:
+    output_dataframe = None
+
+    for sheet_name, df in dfs.items():
+        columns_to_extract = ["Gene"]
+
         if "Entities" in list(df.columns):
             df["Entities"].astype(str)
             df.fillna({"Entities": "*"}, inplace=True)
+            df[f"{sheet_name} entities"] = df["Entities"]
+            columns_to_extract.append(f"{sheet_name} entities")
+
         if "Driver" in list(df.columns):
             df["Driver"].astype(str)
             df.fillna({"Driver": "*"}, inplace=True)
+            df[f"{sheet_name} driver"] = df["Driver"]
+            columns_to_extract.append(f"{sheet_name} driver")
+
+        if "Driver_SNV" in list(df.columns):
+            df[f"{sheet_name} SNV driver"] = df["Driver_SNV"]
+            columns_to_extract.append(f"{sheet_name} SNV driver")
+
+        df = df[columns_to_extract]
+
+        if output_dataframe is None:
+            output_dataframe = df
+        else:
+            output_dataframe = output_dataframe.merge(
+                df, how="outer", on="Gene"
+            )
 
     return dfs
 
