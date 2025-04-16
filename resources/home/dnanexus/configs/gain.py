@@ -130,7 +130,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             {
                 "cells": {
                     (f"K{i}" for i in range(2, nb_sv_variants + 2)): (
-                        '"Pathogenic, Likely pathogenic,'
+                        '"Oncogenic, Likely oncogenic,'
                         "Uncertain, Likely passenger,"
                         'Likely artefact"'
                     ),

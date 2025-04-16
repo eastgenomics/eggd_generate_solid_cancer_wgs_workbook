@@ -9,7 +9,7 @@ from utils import excel_parsing, excel_writing, html, vcf
 def main(**kwargs):
     # prepare inputs and link type with the args
     inputs = {
-        "hotspots": {"id": kwargs["hotspots"], "type": "csv"},
+        "hotspots": {"id": kwargs["hotspots"], "type": "xls"},
         "reference_gene_groups": {
             "id": kwargs["reference_gene_groups"],
             "type": "xls",
