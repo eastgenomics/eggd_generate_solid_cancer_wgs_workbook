@@ -2,7 +2,7 @@ import argparse
 
 import pandas as pd
 
-from configs import tables, germline, snv, gain, loss, sv, summary
+from configs import tables, germline, snv, gain, loss, refgene, sv, summary
 from utils import excel_parsing, excel_writing, html, vcf
 
 
@@ -56,7 +56,7 @@ def main(**kwargs):
 
     print("Process parsed data...")
 
-    refgene_dfs = excel_parsing.process_refgene(
+    refgene_df = excel_parsing.process_refgene(
         inputs["reference_gene_groups"]["data"]
     )
     panelapp_dfs = excel_parsing.process_panelapp(inputs["panelapp"]["data"])
@@ -67,18 +67,18 @@ def main(**kwargs):
     # - using the 3rd element as a reference df
     # - and getting the data from the column named by the 5th element
     lookup_refgene_data = (
-        ("COSMIC Driver", "Gene", refgene_dfs["cosmic"], "Gene", "Driver_SV"),
-        ("COSMIC Entities", "Gene", refgene_dfs["cosmic"], "Gene", "Entities"),
-        ("Paed Driver", "Gene", refgene_dfs["paed"], "Gene", "Driver"),
-        ("Paed Entities", "Gene", refgene_dfs["paed"], "Gene", "Entities"),
-        ("Sarc Driver", "Gene", refgene_dfs["sarc"], "Gene", "Driver"),
-        ("Sarc Entities", "Gene", refgene_dfs["sarc"], "Gene", "Entities"),
-        ("Neuro Driver", "Gene", refgene_dfs["neuro"], "Gene", "Driver"),
-        ("Neuro Entities", "Gene", refgene_dfs["neuro"], "Gene", "Entities"),
-        ("Ovary Driver", "Gene", refgene_dfs["ovarian"], "Gene", "Driver"),
-        ("Ovary Entities", "Gene", refgene_dfs["ovarian"], "Gene", "Entities"),
-        ("Haem Driver", "Gene", refgene_dfs["haem"], "Gene", "Driver"),
-        ("Haem Entities", "Gene", refgene_dfs["haem"], "Gene", "Entities"),
+        ("COSMIC Driver", "Gene", refgene_df, "Gene", "Alteration"),
+        ("COSMIC Entities", "Gene", refgene_df, "Gene", "Entities"),
+        ("Paed Driver", "Gene", refgene_df, "Gene", "Paed_Alteration"),
+        ("Paed Entities", "Gene", refgene_df, "Gene", "Paed_Entities"),
+        ("Sarc Driver", "Gene", refgene_df, "Gene", "Sarcoma_Alteration"),
+        ("Sarc Entities", "Gene", refgene_df, "Gene", "Sarcoma_Entites"),
+        ("Neuro Driver", "Gene", refgene_df, "Gene", "Neuro_Alteration"),
+        ("Neuro Entities", "Gene", refgene_df, "Gene", "Neuro_Entities"),
+        ("Ovary Driver", "Gene", refgene_df, "Gene", "Ovarian_Alteration"),
+        ("Ovary Entities", "Gene", refgene_df, "Gene", "Ovarian_Entities"),
+        ("Haem Driver", "Gene", refgene_df, "Gene", "Haem_Alteration"),
+        ("Haem Entities", "Gene", refgene_df, "Gene", "Haem_Entities"),
     )
 
     germline_df = excel_parsing.process_reported_variants_germline(
@@ -111,6 +111,16 @@ def main(**kwargs):
         inputs["reported_structural_variants"]["data"], lookup_refgene_data
     )
 
+    refgene_df = excel_parsing.lookup_data_from_variants(
+        refgene_df,
+        **{
+            "somatic": somatic_df,
+            "gain": gain_df,
+            "loss": loss_df,
+            "fusion": fusion_df,
+        }
+    )
+
     dynamic_values_per_sheet = {
         "Germline": germline.add_dynamic_values(germline_df),
         "SNV": snv.add_dynamic_values(somatic_df),
@@ -124,6 +134,7 @@ def main(**kwargs):
             list(gain_df.columns),
             list(fusion_df.columns),
         ),
+        "Refgene": refgene.add_dynamic_values(refgene_df),
     }
 
     # get images and tables from the html file
@@ -166,6 +177,7 @@ def main(**kwargs):
             "dynamic_data": dynamic_values_per_sheet,
             "html_images": html_images,
         },
+        {"sheet_name": "Refgene", "dynamic_data": dynamic_values_per_sheet},
     ]
 
     print("Writing sheets...")
