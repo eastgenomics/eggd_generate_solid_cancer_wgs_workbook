@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import vcfpy
 
-from configs import tables, sv
+from configs import tables, sv, refgene
 from utils import misc, vcf
 
 
@@ -292,7 +292,6 @@ def process_reported_variants_somatic(
     df.rename(
         columns={
             "GRCh38 coordinates;ref/alt allele": "GRCh38 coordinates",
-            "CDS change and protein change": "Variant",
         },
         inplace=True,
     )
@@ -559,35 +558,46 @@ def process_refgene(dfs: dict) -> dict:
 
     output_dataframe = None
 
-    for sheet_name, df in dfs.items():
-        columns_to_extract = ["Gene"]
+    for sheet_name in refgene.SHEETS2COLUMNS:
+        if sheet_name in dfs:
+            df = dfs[sheet_name]
+            df.rename(columns=refgene.SHEETS2COLUMNS[sheet_name], inplace=True)
+            df = df[list(refgene.SHEETS2COLUMNS[sheet_name].values())]
+        else:
+            found_alternative = False
 
-        if "Entities" in list(df.columns):
-            df["Entities"].astype(str)
-            df.fillna({"Entities": "*"}, inplace=True)
-            df[f"{sheet_name} entities"] = df["Entities"]
-            columns_to_extract.append(f"{sheet_name} entities")
+            for key, alternatives in refgene.RESCUE_COLUMNS.items():
+                if key == sheet_name:
+                    for alternative in alternatives:
+                        if alternative in dfs:
+                            df = dfs[alternative]
+                            df.rename(
+                                columns=refgene.SHEETS2COLUMNS[sheet_name],
+                                inplace=True,
+                            )
+                            df = df[
+                                list(
+                                    refgene.SHEETS2COLUMNS[sheet_name].values()
+                                )
+                            ]
+                            found_alternative = True
+                            break
 
-        if "Driver" in list(df.columns):
-            df["Driver"].astype(str)
-            df.fillna({"Driver": "*"}, inplace=True)
-            df[f"{sheet_name} driver"] = df["Driver"]
-            columns_to_extract.append(f"{sheet_name} driver")
+            assert (
+                found_alternative
+            ), f"Couldn't find an alternative to sheet name: {sheet_name}"
 
-        if "Driver_SNV" in list(df.columns):
-            df[f"{sheet_name} SNV driver"] = df["Driver_SNV"]
-            columns_to_extract.append(f"{sheet_name} SNV driver")
-
-        df = df[columns_to_extract]
-
+        # in the first loop just assign the output dataframe to the processed
+        # df
         if output_dataframe is None:
             output_dataframe = df
         else:
+            # on the other loops, merge dataframes using the Gene column
             output_dataframe = output_dataframe.merge(
                 df, how="outer", on="Gene"
             )
 
-    return dfs
+    return output_dataframe
 
 
 def process_panelapp(dfs: dict) -> dict:
@@ -622,3 +632,52 @@ def process_panelapp(dfs: dict) -> dict:
         data[type_df] = df
 
     return data
+
+
+def lookup_data_from_variants(
+    refgene_df: pd.DataFrame, **kwargs
+) -> pd.DataFrame:
+    """Lookup data from other variant dataframes and add it to the refgene df
+
+    Parameters
+    ----------
+    refgene_df : pd.DataFrame
+        Dataframe containing the refgene data
+
+    Returns
+    -------
+    pd.DataFrame
+        Refgene data dataframe with data from variant dataframes
+    """
+
+    lookup_variant_data = (
+        (
+            "SNV",
+            "Gene",
+            kwargs["somatic"],
+            "Gene",
+            "CDS change and protein change",
+        ),
+        ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number"),
+    )
+
+    for (
+        new_column,
+        mapping_column_target_df,
+        reference_df,
+        mapping_column_ref_df,
+        col_to_look_up,
+    ) in lookup_variant_data:
+        # link the mapping column to the column of data in the ref df
+        reference_dict = dict(
+            zip(
+                reference_df[mapping_column_ref_df],
+                reference_df[col_to_look_up],
+            )
+        )
+        refgene_df[new_column] = refgene_df[mapping_column_target_df].map(
+            reference_dict
+        )
+        refgene_df[new_column] = refgene_df[new_column].fillna("-")
+
+    return refgene_df
