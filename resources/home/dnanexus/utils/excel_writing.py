@@ -51,9 +51,11 @@ def write_sheet(
     assert type_config, f"Config file {sheet_name} couldn't be imported"
 
     if dynamic_data:
+        dynamic_data_for_config = dynamic_data[sheet_name]
         sheet_config = misc.merge_dicts(
-            type_config.CONFIG, dynamic_data, sheet_name
+            type_config.CONFIG, dynamic_data_for_config
         )
+
     else:
         sheet_config = type_config.CONFIG
 
