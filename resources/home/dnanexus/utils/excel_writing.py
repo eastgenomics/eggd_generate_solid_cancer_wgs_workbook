@@ -48,7 +48,7 @@ def write_sheet(
     sheet = excel_writer.book.create_sheet(sheet_name)
 
     type_config = misc.select_config(sheet_name)
-    assert type_config, "Config file couldn't be imported"
+    assert type_config, f"Config file {sheet_name} couldn't be imported"
 
     if dynamic_data:
         sheet_config = misc.merge_dicts(
