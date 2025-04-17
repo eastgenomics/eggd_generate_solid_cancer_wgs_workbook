@@ -166,7 +166,17 @@ def get_column_letter_using_column_name(
         if i >= 26:
             nb_alphabet_passes = int(i / 26)
             i -= nb_alphabet_passes * 26
-            additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+
+            if nb_alphabet_passes <= 26:
+                additional_letter = string.ascii_uppercase[
+                    nb_alphabet_passes - 1
+                ]
+
+            else:
+                raise ValueError(
+                    "This function cannot handle more than "
+                    f"{nb_alphabet_passes * 26 + 26} columns"
+                )
         else:
             nb_alphabet_passes = 0
             additional_letter = ""
@@ -195,10 +205,14 @@ def convert_letter_column_to_index(letters: str) -> int:
 
     if len(letters) == 1:
         return string.ascii_uppercase.index(letters)
-    else:
+    elif len(letters) == 2:
         return string.ascii_uppercase.index(
             letters[0]
         ) * 26 + string.ascii_uppercase.index(letters[1])
+    else:
+        raise ValueError(
+            f"Cannot handle more than 2 letter letter column: {letters}"
+        )
 
 
 def convert_index_to_letters(index: int) -> str:
