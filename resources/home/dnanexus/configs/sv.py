@@ -124,7 +124,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         "to_bold": [
             f"{string.ascii_uppercase[i]}1"
             for i in range(
-                misc.convert_letter_column_to_index(last_column_letter) + 1
+                misc.convert_letter_column_to_index(last_column_letter)
             )
         ],
         "dropdowns": [
