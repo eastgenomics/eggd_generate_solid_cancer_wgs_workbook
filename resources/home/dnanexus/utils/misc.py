@@ -39,7 +39,7 @@ def select_config(name_config: str) -> Optional[ModuleType]:
     return None
 
 
-def merge_dicts(left_dict: dict, right_dict: dict) -> dict:
+def merge_dicts(original_dict: dict, new_dict: dict) -> dict:
     """Recursive function to merge 2 dicts:
     - Get unique keys from both dicts
     - Get common keys:
@@ -49,9 +49,9 @@ def merge_dicts(left_dict: dict, right_dict: dict) -> dict:
 
     Parameters
     ----------
-    left_dict : dict
+    original_dict : dict
         First dict to merge
-    right_dict : dict
+    new_dict : dict
         Second dict to merge
 
     Returns
@@ -60,49 +60,52 @@ def merge_dicts(left_dict: dict, right_dict: dict) -> dict:
         Dict containing merged data from both dicts
     """
 
-    unique_left_dict_keys = [
+    unique_original_dict_keys = [
         left_key
-        for left_key in left_dict.keys()
-        if left_key not in right_dict.keys()
+        for left_key in original_dict.keys()
+        if left_key not in new_dict.keys()
     ]
 
-    unique_right_dict_keys = [
+    unique_new_dict_keys = [
         right_key
-        for right_key in right_dict.keys()
-        if right_key not in left_dict.keys()
+        for right_key in new_dict.keys()
+        if right_key not in original_dict.keys()
     ]
 
     new_dict = {}
 
     # add all unique keys from both dicts
-    for key in unique_left_dict_keys:
-        new_dict[key] = left_dict[key]
+    for key in unique_original_dict_keys:
+        new_dict[key] = original_dict[key]
 
-    for key in unique_right_dict_keys:
-        new_dict[key] = right_dict[key]
+    for key in unique_new_dict_keys:
+        new_dict[key] = new_dict[key]
 
     # get the common keys as it will require some processing
-    common_keys = set(left_dict.keys()).intersection(right_dict)
+    common_keys = set(original_dict.keys()).intersection(new_dict)
 
     for key in common_keys:
-        left_value = left_dict[key]
-        right_value = right_dict[key]
+        original_value = original_dict[key]
+        new_value = new_dict[key]
 
         # if the types of the values for the same key are not the same, there's
         # a problem
-        assert type(left_value) is type(
-            right_value
-        ), f"Types are not identical {left_value} | {right_value}"
+        assert type(original_value) is type(
+            new_value
+        ), f"Types are not identical {original_value} | {new_value}"
 
         # if the type of the values is a list, just concatenate them
-        if type(left_value) is list:
-            new_dict[key] = left_value + right_value
+        if type(original_value) is list:
+            new_dict[key] = original_value + new_value
 
         # if the type of the values is a dict, run the function recursively
         # until we reach keys that can be simply added or lists that we can
         # concatenate
-        elif type(left_value) is dict:
-            new_dict[key] = merge_dicts(left_value, right_value)
+        elif type(original_value) is dict:
+            new_dict[key] = merge_dicts(original_value, new_value)
+
+        else:
+            new_dict[key] = new_value
 
     return new_dict
 
