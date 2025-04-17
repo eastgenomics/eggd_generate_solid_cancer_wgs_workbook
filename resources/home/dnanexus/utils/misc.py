@@ -125,28 +125,18 @@ def split_confidence_support(value: str) -> list:
         2 element list containing information for the paired reads and single
         reads (in that order)
     """
-    returned_value = []
 
-    if "PR-" in value and "SR-" in value:
-        value = value.split(";")
+    returned_value = ["", ""]
 
-        for v in value:
-            if "PR-" in v:
-                cleaned_value = v.replace("PR-", "")
-            elif "SR-" in v:
-                cleaned_value = v.replace("SR-", "")
-            else:
-                cleaned_value = ""
+    values = value.split(";")
 
-            returned_value.append(cleaned_value)
-
-    else:
-        if "PR-" in value:
-            returned_value.append(value.replace("PR-", ""))
-            returned_value.append("")
-        elif "SR-" in value:
-            returned_value.append("")
-            returned_value.append(value.replace("SR-", ""))
+    for v in values:
+        if "PR-" in v:
+            cleaned_value = v.replace("PR-", "")
+            returned_value[0] = cleaned_value
+        elif "SR-" in v:
+            cleaned_value = v.replace("SR-", "")
+            returned_value[1] = cleaned_value
 
     return returned_value
 
