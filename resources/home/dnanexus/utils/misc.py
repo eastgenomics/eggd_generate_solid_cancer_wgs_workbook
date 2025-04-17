@@ -61,15 +61,11 @@ def merge_dicts(original_dict: dict, new_dict: dict) -> dict:
     """
 
     unique_original_dict_keys = [
-        left_key
-        for left_key in original_dict.keys()
-        if left_key not in new_dict.keys()
+        left_key for left_key in original_dict if left_key not in new_dict
     ]
 
     unique_new_dict_keys = [
-        right_key
-        for right_key in new_dict.keys()
-        if right_key not in original_dict.keys()
+        right_key for right_key in new_dict if right_key not in original_dict
     ]
 
     return_dict = {}
