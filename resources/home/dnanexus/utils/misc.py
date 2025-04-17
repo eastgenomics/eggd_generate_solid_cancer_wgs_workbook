@@ -234,7 +234,15 @@ def convert_index_to_letters(index: int) -> str:
     if index >= 26:
         nb_alphabet_passes = int(index / 26)
         index -= nb_alphabet_passes * 26
-        additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+
+        if nb_alphabet_passes <= 26:
+            additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+
+        else:
+            raise ValueError(
+                "This function cannot handle more than "
+                f"{nb_alphabet_passes * 26 + 26} columns"
+            )
     else:
         additional_letter = ""
 
