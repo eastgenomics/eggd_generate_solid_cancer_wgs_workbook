@@ -72,14 +72,14 @@ def merge_dicts(original_dict: dict, new_dict: dict) -> dict:
         if right_key not in original_dict.keys()
     ]
 
-    new_dict = {}
+    return_dict = {}
 
     # add all unique keys from both dicts
     for key in unique_original_dict_keys:
-        new_dict[key] = original_dict[key]
+        return_dict[key] = original_dict[key]
 
     for key in unique_new_dict_keys:
-        new_dict[key] = new_dict[key]
+        return_dict[key] = new_dict[key]
 
     # get the common keys as it will require some processing
     common_keys = set(original_dict.keys()).intersection(new_dict)
@@ -96,18 +96,18 @@ def merge_dicts(original_dict: dict, new_dict: dict) -> dict:
 
         # if the type of the values is a list, just concatenate them
         if type(original_value) is list:
-            new_dict[key] = original_value + new_value
+            return_dict[key] = original_value + new_value
 
         # if the type of the values is a dict, run the function recursively
         # until we reach keys that can be simply added or lists that we can
         # concatenate
         elif type(original_value) is dict:
-            new_dict[key] = merge_dicts(original_value, new_value)
+            return_dict[key] = merge_dicts(original_value, new_value)
 
         else:
-            new_dict[key] = new_value
+            return_dict[key] = new_value
 
-    return new_dict
+    return return_dict
 
 
 def split_confidence_support(value: str) -> list:
