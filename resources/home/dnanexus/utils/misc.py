@@ -39,7 +39,7 @@ def select_config(name_config: str) -> Optional[ModuleType]:
     return None
 
 
-def merge_dicts(left_dict: dict, right_dict: dict, sheet: str) -> dict:
+def merge_dicts(left_dict: dict, right_dict: dict) -> dict:
     """Recursive function to merge 2 dicts:
     - Get unique keys from both dicts
     - Get common keys:
@@ -53,18 +53,12 @@ def merge_dicts(left_dict: dict, right_dict: dict, sheet: str) -> dict:
         First dict to merge
     right_dict : dict
         Second dict to merge
-    sheet : str
-        Name of the sheet for capturing the right data
 
     Returns
     -------
     dict
         Dict containing merged data from both dicts
     """
-
-    # get the unique keys from both dicts
-    if right_dict.get(sheet):
-        right_dict = right_dict.get(sheet)
 
     unique_left_dict_keys = [
         left_key
@@ -108,7 +102,7 @@ def merge_dicts(left_dict: dict, right_dict: dict, sheet: str) -> dict:
         # until we reach keys that can be simply added or lists that we can
         # concatenate
         elif type(left_value) is dict:
-            new_dict[key] = merge_dicts(left_value, right_value, sheet)
+            new_dict[key] = merge_dicts(left_value, right_value)
 
     return new_dict
 
