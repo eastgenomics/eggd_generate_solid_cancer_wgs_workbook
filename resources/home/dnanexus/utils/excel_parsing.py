@@ -28,12 +28,6 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
     elif file_type == "xls":
         df = pd.read_excel(file, sheet_name=None)
 
-    # convert the clinvar id column as a string and remove the trailing .0 that
-    # the automatic conversion that pandas applies added
-    if df is pd.DataFrame and "ClinVar ID" in df.columns:
-        df["ClinVar ID"] = df["ClinVar ID"].astype(str)
-        df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
-
     return df
 
 
@@ -61,6 +55,11 @@ def process_reported_variants_germline(
 
     if df.empty:
         return None
+
+    # convert the clinvar id column as a string and remove the trailing .0 that
+    # the automatic conversion that pandas applies added
+    df["ClinVar ID"] = df["ClinVar ID"].astype(str)
+    df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
 
     df.reset_index(drop=True, inplace=True)
 
