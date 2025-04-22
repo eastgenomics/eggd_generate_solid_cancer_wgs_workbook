@@ -51,6 +51,9 @@ def process_reported_variants_germline(
         Dataframe containing clinical significance info for germline variants
     """
 
+    if "Origin" not in df:
+        return None
+
     df = df[df["Origin"].str.lower() == "germline"]
 
     if df.empty:
