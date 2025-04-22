@@ -2,7 +2,7 @@ name: pytest
 on: [push, pull_request]
 
 jobs:
-  build:
+  Pytest:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
