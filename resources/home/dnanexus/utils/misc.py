@@ -39,7 +39,7 @@ def select_config(name_config: str) -> Optional[ModuleType]:
     return None
 
 
-def merge_dicts(left_dict: dict, right_dict: dict, sheet: str) -> dict:
+def merge_dicts(original_dict: dict, new_dict: dict) -> dict:
     """Recursive function to merge 2 dicts:
     - Get unique keys from both dicts
     - Get common keys:
@@ -49,12 +49,10 @@ def merge_dicts(left_dict: dict, right_dict: dict, sheet: str) -> dict:
 
     Parameters
     ----------
-    left_dict : dict
+    original_dict : dict
         First dict to merge
-    right_dict : dict
+    new_dict : dict
         Second dict to merge
-    sheet : str
-        Name of the sheet for capturing the right data
 
     Returns
     -------
@@ -62,55 +60,50 @@ def merge_dicts(left_dict: dict, right_dict: dict, sheet: str) -> dict:
         Dict containing merged data from both dicts
     """
 
-    # get the unique keys from both dicts
-    if right_dict.get(sheet):
-        right_dict = right_dict.get(sheet)
-
-    unique_left_dict_keys = [
-        left_key
-        for left_key in left_dict.keys()
-        if left_key not in right_dict.keys()
+    unique_original_dict_keys = [
+        left_key for left_key in original_dict if left_key not in new_dict
     ]
 
-    unique_right_dict_keys = [
-        right_key
-        for right_key in right_dict.keys()
-        if right_key not in left_dict.keys()
+    unique_new_dict_keys = [
+        right_key for right_key in new_dict if right_key not in original_dict
     ]
 
-    new_dict = {}
+    return_dict = {}
 
     # add all unique keys from both dicts
-    for key in unique_left_dict_keys:
-        new_dict[key] = left_dict[key]
+    for key in unique_original_dict_keys:
+        return_dict[key] = original_dict[key]
 
-    for key in unique_right_dict_keys:
-        new_dict[key] = right_dict[key]
+    for key in unique_new_dict_keys:
+        return_dict[key] = new_dict[key]
 
     # get the common keys as it will require some processing
-    common_keys = set(left_dict.keys()).intersection(right_dict)
+    common_keys = set(original_dict.keys()).intersection(new_dict)
 
     for key in common_keys:
-        left_value = left_dict[key]
-        right_value = right_dict[key]
+        original_value = original_dict[key]
+        new_value = new_dict[key]
 
         # if the types of the values for the same key are not the same, there's
         # a problem
-        assert type(left_value) is type(
-            right_value
-        ), f"Types are not identical {left_value} | {right_value}"
+        assert type(original_value) is type(
+            new_value
+        ), f"Types are not identical {original_value} | {new_value}"
 
         # if the type of the values is a list, just concatenate them
-        if type(left_value) is list:
-            new_dict[key] = left_value + right_value
+        if type(original_value) is list:
+            return_dict[key] = original_value + new_value
 
         # if the type of the values is a dict, run the function recursively
         # until we reach keys that can be simply added or lists that we can
         # concatenate
-        elif type(left_value) is dict:
-            new_dict[key] = merge_dicts(left_value, right_value, sheet)
+        elif type(original_value) is dict:
+            return_dict[key] = merge_dicts(original_value, new_value)
 
-    return new_dict
+        else:
+            return_dict[key] = new_value
+
+    return return_dict
 
 
 def split_confidence_support(value: str) -> list:
@@ -128,28 +121,18 @@ def split_confidence_support(value: str) -> list:
         2 element list containing information for the paired reads and single
         reads (in that order)
     """
-    returned_value = []
 
-    if "PR-" in value and "SR-" in value:
-        value = value.split(";")
+    returned_value = ["", ""]
 
-        for v in value:
-            if "PR-" in v:
-                cleaned_value = v.replace("PR-", "")
-            elif "SR-" in v:
-                cleaned_value = v.replace("SR-", "")
-            else:
-                cleaned_value = ""
+    values = value.split(";")
 
-            returned_value.append(cleaned_value)
-
-    else:
-        if "PR-" in value:
-            returned_value.append(value.replace("PR-", ""))
-            returned_value.append("")
-        elif "SR-" in value:
-            returned_value.append("")
-            returned_value.append(value.replace("SR-", ""))
+    for v in values:
+        if "PR-" in v:
+            cleaned_value = v.replace("PR-", "")
+            returned_value[0] = cleaned_value
+        elif "SR-" in v:
+            cleaned_value = v.replace("SR-", "")
+            returned_value[1] = cleaned_value
 
     return returned_value
 
@@ -179,7 +162,17 @@ def get_column_letter_using_column_name(
         if i >= 26:
             nb_alphabet_passes = int(i / 26)
             i -= nb_alphabet_passes * 26
-            additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+
+            if nb_alphabet_passes <= 26:
+                additional_letter = string.ascii_uppercase[
+                    nb_alphabet_passes - 1
+                ]
+
+            else:
+                raise ValueError(
+                    "This function cannot handle more than "
+                    f"{nb_alphabet_passes * 26 + 26} columns"
+                )
         else:
             nb_alphabet_passes = 0
             additional_letter = ""
@@ -207,11 +200,17 @@ def convert_letter_column_to_index(letters: str) -> int:
     """
 
     if len(letters) == 1:
-        return string.ascii_uppercase.index(letters)
+        return string.ascii_uppercase.index(letters) + 1
+    elif len(letters) == 2:
+        return (
+            (string.ascii_uppercase.index(letters[0]) + 1) * 26
+            + string.ascii_uppercase.index(letters[1])
+            + 1
+        )
     else:
-        return string.ascii_uppercase.index(
-            letters[0]
-        ) * 26 + string.ascii_uppercase.index(letters[1])
+        raise ValueError(
+            f"Cannot handle more than 2 letter letter column: {letters}"
+        )
 
 
 def convert_index_to_letters(index: int) -> str:
@@ -231,7 +230,15 @@ def convert_index_to_letters(index: int) -> str:
     if index >= 26:
         nb_alphabet_passes = int(index / 26)
         index -= nb_alphabet_passes * 26
-        additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+
+        if nb_alphabet_passes <= 26:
+            additional_letter = string.ascii_uppercase[nb_alphabet_passes - 1]
+
+        else:
+            raise ValueError(
+                "This function cannot handle more than "
+                f"{nb_alphabet_passes * 26 + 26} columns"
+            )
     else:
         additional_letter = ""
 
