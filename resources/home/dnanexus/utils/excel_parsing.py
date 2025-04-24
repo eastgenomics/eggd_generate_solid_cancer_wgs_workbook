@@ -157,6 +157,9 @@ def process_reported_variants_somatic(
         Dataframe with additional formatting for c. and p. annotation
     """
 
+    if "Origin" not in df:
+        return None
+
     # select only somatic rows
     df = df[df["Origin"].str.lower().str.contains("somatic")]
 
@@ -328,6 +331,9 @@ def process_reported_SV(
         Dataframe for variants with the given SV type
     """
 
+    if "Type" not in df.columns:
+        return None
+
     sv_df = df[df["Type"].str.lower().str.contains(type_sv)]
 
     if sv_df.empty:
@@ -436,6 +442,9 @@ def process_fusion_SV(
         - Dataframe containing data for the fusion structural variants
         - Max number of fusion
     """
+
+    if "Type" not in df.columns:
+        return None
 
     df_SV = df[~df["Type"].str.lower().str.contains("loss|loh|gain")]
 
