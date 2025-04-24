@@ -20,11 +20,13 @@ CONFIG = {
                 "Gene",
                 "GRCh38 coordinates",
                 "Cyto",
+                "RefSeq IDs",
                 "Variant",
                 "Predicted consequences",
+                "Error flag",
+                "Population germline allele frequency (GE | gnomAD)",
                 "VAF",
                 "LOH",
-                "Error flag",
                 "Alt allele/total read depth",
                 "Gene mode of action",
                 "Variant class",
@@ -56,35 +58,25 @@ CONFIG = {
             1,
         )
     },
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 42)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 38)],
     "col_width": [
         ("B", 12),
-        ("C", 28),
+        ("C", 20),
         ("D", 14),
-        ("E", 18),
-        ("F", 14),
-        ("J", 20),
-        ("K", 20),
-        ("L", 20),
-        ("M", 20),
-        ("N", 20),
-        ("O", 14),
-        ("P", 22),
-        ("Q", 26),
-        ("R", 18),
-        ("S", 18),
-        ("T", 16),
-        ("U", 16),
-        ("V", 18),
-        ("W", 18),
+        ("E", 20),
+        ("F", 22),
     ],
     "borders": {
         "cell_rows": [
-            ("A1:AJ1", THIN_BORDER),
+            ("A1:AL1", THIN_BORDER),
         ],
     },
-    "auto_filter": "E:AJ",
-    "freeze_panes": "F1",
+    "row_height": [(1, 80)],
+    "auto_filter": "E:AL",
+    "freeze_panes": "G1",
+    "text_orientation": [
+        (f"{misc.convert_index_to_letters(i)}1", 90) for i in range(13, 38)
+    ],
 }
 
 
@@ -114,12 +106,12 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             if c_idx != 1 and r_idx != 1
         },
         "cells_to_colour": [
-            # letters K to R
+            # letters N to U
             (
                 f"{string.ascii_uppercase[i]}{j}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for i in range(11, 19)
+            for i in range(13, 21)
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
@@ -127,16 +119,16 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{letter}{j}",
                 PatternFill(patternType="solid", start_color="c4d9ef"),
             )
-            for letter in ["T", "U", "V"]
+            for letter in ["V", "W", "X"]
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
-            # letters V to AG
+            # letters Y to AJ
             (
                 f"{misc.convert_index_to_letters(i)}{j}",
                 PatternFill(patternType="solid", start_color="00FFFF"),
             )
-            for i in range(22, 36)
+            for i in range(24, 38)
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
@@ -144,13 +136,13 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{col}{i}",
                 PatternFill(patternType="solid", start_color="dabcff"),
             )
-            for col in ["AI", "AJ"]
+            for col in ["AK", "AL"]
             for i in range(1, nb_somatic_variants + 2)
         ],
         "dropdowns": [
             {
                 "cells": {
-                    (f"L{i}" for i in range(2, nb_somatic_variants + 2)): (
+                    (f"N{i}" for i in range(2, nb_somatic_variants + 2)): (
                         '"Oncogenic, Likely oncogenic,'
                         "Uncertain, Likely passenger,"
                         'Likely artefact"'
@@ -159,7 +151,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 "title": "Variant class",
             },
         ],
-        "data_bar": f"G2:G{nb_somatic_variants + 1}",
+        "data_bar": f"I2:I{nb_somatic_variants + 1}",
     }
 
     return config_with_dynamic_values
