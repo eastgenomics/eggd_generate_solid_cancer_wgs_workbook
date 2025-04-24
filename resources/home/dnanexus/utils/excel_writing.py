@@ -102,6 +102,9 @@ def write_sheet(
     if sheet_config.get("data_bar"):
         add_databar_rule(sheet, sheet_config["data_bar"])
 
+    if sheet_config.get("text_orientation"):
+        rotate_text(sheet, sheet_config["text_orientation"])
+
     return sheet
 
 
@@ -342,3 +345,19 @@ def add_databar_rule(sheet: Worksheet, range_cell: str):
             color="FF3361",
         ),
     )
+
+
+def rotate_text(sheet: Worksheet, config_data: list):
+    """Given a list of cells, orient them to the associated rotation
+    (in degrees)
+
+    Parameters
+    ----------
+    sheet : Worksheet
+        Worksheet in which to rotate the cell's text
+    config_data : list
+        List of cells and their rotation
+    """
+
+    for cell, text_rotation in config_data:
+        sheet[cell].alignment = Alignment(text_rotation=text_rotation)
