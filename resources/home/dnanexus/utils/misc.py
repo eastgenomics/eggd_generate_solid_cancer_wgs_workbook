@@ -203,10 +203,8 @@ def convert_letter_column_to_index(letters: str) -> int:
         return string.ascii_uppercase.index(letters) + 1
     elif len(letters) == 2:
         return (
-            (string.ascii_uppercase.index(letters[0]) + 1) * 26
-            + string.ascii_uppercase.index(letters[1])
-            + 1
-        )
+            string.ascii_uppercase.index(letters[0]) + 1
+        ) * 26 + string.ascii_uppercase.index(letters[1])
     else:
         raise ValueError(
             f"Cannot handle more than 2 letter letter column: {letters}"
