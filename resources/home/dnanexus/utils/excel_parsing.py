@@ -164,6 +164,10 @@ def process_reported_variants_somatic(
 
     # select only somatic rows
     df = df[df["Origin"].str.lower().str.contains("somatic")]
+
+    if df.empty:
+        return None
+
     df.reset_index(drop=True, inplace=True)
     df[["c_dot", "p_dot"]] = df["CDS change and protein change"].str.split(
         r"(?=;p)", n=1, expand=True
@@ -325,6 +329,10 @@ def process_reported_SV(
     """
 
     sv_df = df[df["Type"].str.lower().str.contains(type_sv)]
+
+    if sv_df.empty:
+        return None
+
     sv_df.reset_index(drop=True, inplace=True)
 
     # populate the structural variant dataframe with data from the refgene
@@ -425,6 +433,9 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     """
 
     df_SV = df[~df["Type"].str.lower().str.contains("loss|loh|gain")]
+
+    if df_SV.empty:
+        return None
 
     # split fusion columns
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
