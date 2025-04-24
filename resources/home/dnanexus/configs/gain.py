@@ -18,8 +18,9 @@ CONFIG = {
         for i, value in enumerate(
             [
                 "Event domain",
-                "Impacted transcript region",
                 "Gene",
+                "RefSeq IDs",
+                "Impacted transcript region",
                 "GRCh38 coordinates",
                 "Type",
                 "Copy Number",
@@ -47,39 +48,27 @@ CONFIG = {
             1,
         )
     },
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 26)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 27)],
     "col_width": [
         ("B", 12),
         ("C", 16),
-        ("D", 22),
-        ("E", 14),
-        ("G", 16),
+        ("D", 16),
+        ("E", 22),
         ("H", 14),
-        ("I", 14),
-        ("J", 14),
-        ("K", 20),
-        ("L", 20),
-        ("M", 22),
-        ("N", 20),
-        ("O", 16),
-        ("P", 16),
-        ("Q", 16),
-        ("R", 16),
-        ("S", 16),
-        ("T", 16),
-        ("U", 16),
-        ("V", 16),
-        ("W", 16),
-        ("X", 16),
-        ("Y", 16),
+        ("I", 10),
+        ("J", 10),
     ],
     "borders": {
         "cell_rows": [
             ("A1:AA1", THIN_BORDER),
         ],
     },
+    "row_height": [(1, 80)],
     "auto_filter": "A:AA",
-    "freeze_panes": "E1",
+    "freeze_panes": "F1",
+    "text_orientation": [
+        (f"{misc.convert_index_to_letters(i)}1", 90) for i in range(11, 38)
+    ],
 }
 
 
@@ -113,23 +102,23 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{col}{i}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for col in ["K", "L", "M", "N"]
+            for col in ["L", "M", "N", "O"]
             for i in range(1, nb_sv_variants + 2)
         ]
         + [
             (
-                # letters N to Y
-                f"{string.ascii_uppercase[i]}{j}",
+                # letters P to AA
+                f"{misc.convert_index_to_letters(i)}{j}",
                 PatternFill(patternType="solid", start_color="c4d9ef"),
             )
-            for i in range(14, 26)
+            for i in range(15, 27)
             for j in range(1, nb_sv_variants + 2)
         ],
-        "to_align": [f"F{i}" for i in range(2, nb_sv_variants + 2)],
+        "to_align": [f"G{i}" for i in range(2, nb_sv_variants + 2)],
         "dropdowns": [
             {
                 "cells": {
-                    (f"K{i}" for i in range(2, nb_sv_variants + 2)): (
+                    (f"L{i}" for i in range(2, nb_sv_variants + 2)): (
                         '"Oncogenic, Likely oncogenic,'
                         "Uncertain, Likely passenger,"
                         'Likely artefact"'
