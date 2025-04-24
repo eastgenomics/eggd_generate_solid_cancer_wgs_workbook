@@ -164,13 +164,16 @@ def process_reported_variants_somatic(
     df["p_dot"] = df["p_dot"].str.slice(1)
 
     df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
-    df["MTBP p."] = df["p_dot"].apply(misc.convert_3_letter_protein_to_1)
+    df["MTBP p."] = (
+        df["Gene"]
+        + ":"
+        + df["p_dot"]
+        .apply(misc.convert_3_letter_protein_to_1)
+        .str.replace("p.", "")
+    )
     df.fillna({"MTBP p.": ""}, inplace=True)
 
-    df["HS tissue lookup"] = (
-        df["Gene"] + ":" + df["MTBP p."].str.replace("p.", "")
-    )
-    df["HS mutation lookup"] = df["HS tissue lookup"].apply(
+    df["HS mutation lookup"] = df["MTBP p."].apply(
         lambda x: re.sub(r"[A-Z]+$", "", x)
     )
 
@@ -193,7 +196,7 @@ def process_reported_variants_somatic(
         ),
         (
             "HS_Tissue",
-            "HS tissue lookup",
+            "MTBP p.",
             hotspots_df["HS_Tissue"],
             "Gene_Mut",
             "Tissue",
