@@ -74,11 +74,6 @@ def process_reported_variants_germline(
     # add the clinvar info by merging the clinvar dataframe
     df = df.merge(clinvar_info, on="ClinVar ID", how="left")
 
-    # split the col to get gnomAD
-    df[["GE", "gnomAD"]] = df[
-        "Population germline allele frequency (GE | gnomAD)"
-    ].str.split("|", expand=True)
-
     df.loc[:, "Tumour VAF"] = ""
 
     lookup_panelapp_data = (
@@ -121,7 +116,7 @@ def process_reported_variants_germline(
             "GRCh38 coordinates;ref/alt allele",
             "CDS change and protein change",
             "Genotype",
-            "gnomAD",
+            "Population germline allele frequency (GE | gnomAD)",
             "Gene mode of action",
             "clnsigconf",
             "Tumour VAF",
@@ -255,11 +250,13 @@ def process_reported_variants_somatic(
             "Gene",
             "GRCh38 coordinates;ref/alt allele",
             "Cyto",
+            "RefSeq IDs",
             "CDS change and protein change",
             "Predicted consequences",
+            "Error flag",
+            "Population germline allele frequency (GE | gnomAD)",
             "VAF",
             "LOH",
-            "Error flag",
             "Alt allele/total read depth",
             "Gene mode of action",
             "Variant class",
@@ -374,8 +371,9 @@ def process_reported_SV(
     selected_col = (
         [
             "Event domain",
-            "Impacted transcript region",
             "Gene",
+            "RefSeq IDs",
+            "Impacted transcript region",
             "GRCh38 coordinates",
             "Type",
             "Copy Number",
