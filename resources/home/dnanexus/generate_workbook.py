@@ -133,6 +133,7 @@ def main(**kwargs):
             list(somatic_df.columns),
             list(gain_df.columns),
             list(fusion_df.columns),
+            list(germline_df.columns),
         ),
         "Refgene": refgene.add_dynamic_values(refgene_df),
     }
