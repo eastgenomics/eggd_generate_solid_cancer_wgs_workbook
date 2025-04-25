@@ -105,6 +105,9 @@ def write_sheet(
     if sheet_config.get("text_orientation"):
         rotate_text(sheet, sheet_config["text_orientation"])
 
+    if sheet_config.get("wrap_text"):
+        wrap_text(sheet, sheet_config["wrap_text"])
+
     return sheet
 
 
@@ -361,3 +364,20 @@ def rotate_text(sheet: Worksheet, config_data: list):
 
     for cell, text_rotation in config_data:
         sheet[cell].alignment = Alignment(text_rotation=text_rotation)
+
+
+def wrap_text(sheet: Worksheet, config_data: list):
+    """Given a list of cells, wrap the text in the cell and align the text
+
+    Parameters
+    ----------
+    sheet : Worksheet
+        Worksheet in which to wrap the cell's text
+    config_data : list
+        List of cells
+    """
+
+    for cell in config_data:
+        sheet[cell].alignment = Alignment(
+            wrapText=True, horizontal="center", vertical="center"
+        )
