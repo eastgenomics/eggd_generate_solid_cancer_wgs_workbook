@@ -1,10 +1,13 @@
-import string
-
+from openpyxl.styles import Border, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
 from utils import misc
+
+# prepare formatting
+THIN = Side(border_style="thin", color="000000")
+THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
 
 CONFIG = {
@@ -17,30 +20,6 @@ CONFIG = {
         ("I", 12),
         ("J", 14),
         ("M", 18),
-        ("S", 18),
-        ("T", 18),
-        ("U", 18),
-        ("V", 18),
-        ("W", 18),
-        ("X", 18),
-        ("Y", 18),
-        ("Z", 18),
-        ("AA", 18),
-        ("AB", 18),
-        ("AC", 18),
-        ("AD", 18),
-        ("AE", 18),
-        ("AF", 18),
-        ("AG", 18),
-        ("AH", 18),
-        ("AI", 18),
-        ("AJ", 18),
-        ("AK", 18),
-        ("AL", 18),
-        ("AM", 18),
-        ("AN", 18),
-        ("AO", 18),
-        ("AP", 18),
     ],
     "freeze_panes": "F1",
     "expected_columns": [
@@ -78,6 +57,7 @@ CONFIG = {
             ),
         ]
     ],
+    "row_height": [(1, 120)],
 }
 
 
@@ -163,6 +143,11 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             for i in range(
                 misc.convert_letter_column_to_index(last_column_letter) + 1
             )
+        ],
+        "borders": {"cell_rows": [(f"A1:{last_column_letter}1", THIN_BORDER)]},
+        "text_orientation": [
+            (f"{misc.convert_index_to_letters(i)}1", 90)
+            for i in range(lookup_start, lookup_end + 1)
         ],
         "dropdowns": [
             {
