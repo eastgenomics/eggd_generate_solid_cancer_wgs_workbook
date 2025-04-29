@@ -108,7 +108,9 @@ def main(**kwargs):
         "SNV_LOH",
     )
     fusion_df, fusion_count = excel_parsing.process_fusion_SV(
-        inputs["reported_structural_variants"]["data"], lookup_refgene_data
+        inputs["reported_structural_variants"]["data"],
+        lookup_refgene_data,
+        inputs["cytological_bands"]["data"],
     )
 
     refgene_df = excel_parsing.lookup_data_from_variants(
