@@ -679,4 +679,36 @@ def lookup_data_from_variants(
         )
         refgene_df[new_column] = refgene_df[new_column].fillna("-")
 
+    df_fusion = kwargs["fusion"]
+
+    gene_col = []
+
+    for i in range(df_fusion["Gene"].str.count(r"\;").max() + 1):
+        gene_col.append(f"Gene_{i+1}")
+
+    df_fusion[gene_col] = df_fusion["Gene"].str.split(";", expand=True)
+
+    # dynamic number of columns to be generated out of fusion partners
+    for (
+        new_column,
+        mapping_column_target_df,
+        reference_df,
+        col_to_look_up,
+    ) in [("SV_{}", "Gene", df_fusion, "Type")]:
+        for gene in gene_col:
+            column_to_write = new_column.format(gene.lower())
+            # link the mapping column to the column of data in the ref df
+            reference_dict = dict(
+                zip(
+                    reference_df[gene],
+                    reference_df[col_to_look_up],
+                )
+            )
+            refgene_df[column_to_write] = refgene_df[
+                mapping_column_target_df
+            ].map(reference_dict)
+            refgene_df[column_to_write] = refgene_df[column_to_write].fillna(
+                "-"
+            )
+
     return refgene_df
