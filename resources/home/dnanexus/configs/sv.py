@@ -86,9 +86,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         variant_class_column_letter
     )
 
-    first_letter_lookup_groups = misc.letter_operation(
-        variant_class_column_letter, "+4"
-    )
+    first_letter_lookup_groups = variant_class_column_index + 4
 
     cells_to_color = []
 
