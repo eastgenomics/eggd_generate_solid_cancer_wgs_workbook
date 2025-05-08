@@ -429,6 +429,9 @@ def process_fusion_SV(
 
     df_SV = df[~df["Type"].str.lower().str.contains("loss|loh|gain")]
 
+    if df_SV.empty:
+        return None, 0
+
     # split fusion columns
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
     fusion_count = df_SV["fusion_count"].max()
@@ -531,10 +534,9 @@ def process_fusion_SV(
         selected_col = subset_column + lookup_cols
 
     else:
-        selected_col = (
-            subset_column.insert(14, cyto_cols).insert(6, fusion_col)
-            + lookup_cols
-        )
+        subset_column.insert(14, cyto_cols)
+        subset_column.insert(6, fusion_col)
+        selected_col = subset_column + lookup_cols
 
     return df_SV[selected_col], fusion_count
 
