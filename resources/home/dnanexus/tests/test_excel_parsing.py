@@ -143,11 +143,22 @@ def sv_variant_data():
             "Impacted transcript region": ["region1", "region2", "region3"],
             "Gene": ["gene1", "gene2", "gene3"],
             "GRCh38 coordinates": ["coor1", "coor2", "coor3"],
-            "Type": ["gain", "gain", "loss"],
-            "Copy Number": ["1", "2", "3"],
-            "Size": ["10", "20", "30"],
+            "Type": ["GAIN(1)", "GAIN(3)", "LOSS(2)"],
+            "Size": [10, 20, 30],
             "Chromosomal bands": ["cyto1;cyto2", "cyto3;cyto4", "cyto5;cyto6"],
             "Gene mode of action": ["mode1", "mode2", "mode3"],
+            "COSMIC Driver": ["", "", ""],
+            "COSMIC Entities": ["", "", ""],
+            "Paed Driver": ["", "", ""],
+            "Paed Entities": ["", "", ""],
+            "Sarc Driver": ["", "", ""],
+            "Sarc Entities": ["", "", ""],
+            "Neuro Driver": ["", "", ""],
+            "Neuro Entities": ["", "", ""],
+            "Ovary Driver": ["", "", ""],
+            "Ovary Entities": ["", "", ""],
+            "Haem Driver": ["", "", ""],
+            "Haem Entities": ["", "", ""],
         }
     )
 
@@ -390,11 +401,136 @@ class TestProcessReportedVariantsSomatic:
 
 class TestProcessReportedSV:
     @pytest.mark.parametrize(
-        "test_input", [{}, {"Type": ["not_right_type"], "Data": ["data1"]}]
+        "test_input",
+        [
+            {},
+            {"Type": ["not_right_type"], "Data": ["data1"]},
+            {"Data": ["data1"]},
+        ],
     )
     def test_no_data(self, test_input):
         test_inputs = [pd.DataFrame(test_input), (), "right_type"]
         assert excel_parsing.process_reported_SV(*test_inputs) is None
 
-    def test_process_single_row(self):
-        pass
+    def test_process_single_row_gain(self, sv_variant_data):
+        test_output = excel_parsing.process_reported_SV(
+            sv_variant_data.iloc[[0], :],
+            (),
+            "gain",
+            "new_column1",
+            "new_column2",
+        )
+
+        expected_output = pd.DataFrame(
+            {
+                "Event domain": ["domain1"],
+                "Impacted transcript region": ["region1"],
+                "Gene": ["gene1"],
+                "GRCh38 coordinates": ["coor1"],
+                "Type": ["GAIN"],
+                "Copy Number": [1],
+                "Size": ["10"],
+                "Cyto 1": ["cyto1"],
+                "Cyto 2": ["cyto2"],
+                "Gene mode of action": ["mode1"],
+                "Variant class": [""],
+                "new_column1": [""],
+                "new_column2": [""],
+                "COSMIC Driver": [""],
+                "COSMIC Entities": [""],
+                "Paed Driver": [""],
+                "Paed Entities": [""],
+                "Sarc Driver": [""],
+                "Sarc Entities": [""],
+                "Neuro Driver": [""],
+                "Neuro Entities": [""],
+                "Ovary Driver": [""],
+                "Ovary Entities": [""],
+                "Haem Driver": [""],
+                "Haem Entities": [""],
+            }
+        )
+
+        assert test_output.equals(expected_output)
+
+    def test_process_single_row_loss(self, sv_variant_data):
+        test_output = excel_parsing.process_reported_SV(
+            sv_variant_data.iloc[[2], :],
+            (),
+            "loss",
+            "new_column1",
+        )
+
+        expected_output = pd.DataFrame(
+            {
+                "Event domain": ["domain3"],
+                "Impacted transcript region": ["region3"],
+                "Gene": ["gene3"],
+                "GRCh38 coordinates": ["coor3"],
+                "Type": ["LOSS"],
+                "Copy Number": [2],
+                "Size": ["30"],
+                "Cyto 1": ["cyto5"],
+                "Cyto 2": ["cyto6"],
+                "Gene mode of action": ["mode3"],
+                "Variant class": [""],
+                "new_column1": [""],
+                "COSMIC Driver": [""],
+                "COSMIC Entities": [""],
+                "Paed Driver": [""],
+                "Paed Entities": [""],
+                "Sarc Driver": [""],
+                "Sarc Entities": [""],
+                "Neuro Driver": [""],
+                "Neuro Entities": [""],
+                "Ovary Driver": [""],
+                "Ovary Entities": [""],
+                "Haem Driver": [""],
+                "Haem Entities": [""],
+            }
+        )
+
+        assert test_output.equals(expected_output)
+
+    def test_process_multiple_rows_gain(self, sv_variant_data):
+        test_output = excel_parsing.process_reported_SV(
+            sv_variant_data,
+            (),
+            "gain",
+            "new_column1",
+            "new_column2",
+            "new_column3",
+        )
+
+        expected_output = pd.DataFrame(
+            {
+                "Event domain": ["domain1", "domain2"],
+                "Impacted transcript region": ["region1", "region2"],
+                "Gene": ["gene1", "gene2"],
+                "GRCh38 coordinates": ["coor1", "coor2"],
+                "Type": ["GAIN", "GAIN"],
+                "Copy Number": [1, 3],
+                "Size": ["10", "20"],
+                "Cyto 1": ["cyto1", "cyto3"],
+                "Cyto 2": ["cyto2", "cyto4"],
+                "Gene mode of action": ["mode1", "mode2"],
+                "Variant class": ["", ""],
+                "new_column1": ["", ""],
+                "new_column2": ["", ""],
+                "new_column3": ["", ""],
+                "COSMIC Driver": ["", ""],
+                "COSMIC Entities": ["", ""],
+                "Paed Driver": ["", ""],
+                "Paed Entities": ["", ""],
+                "Sarc Driver": ["", ""],
+                "Sarc Entities": ["", ""],
+                "Neuro Driver": ["", ""],
+                "Neuro Entities": ["", ""],
+                "Ovary Driver": ["", ""],
+                "Ovary Entities": ["", ""],
+                "Haem Driver": ["", ""],
+                "Haem Entities": ["", ""],
+            }
+        )
+
+        assert test_output.equals(expected_output)
