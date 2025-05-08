@@ -446,6 +446,8 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     if df_SV.empty:
         return None
 
+    df_SV.reset_index(drop=True, inplace=True)
+
     # split fusion columns
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
     fusion_count = df_SV["fusion_count"].max()
