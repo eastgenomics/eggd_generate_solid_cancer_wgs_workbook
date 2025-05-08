@@ -334,7 +334,7 @@ def process_reported_SV(
     if "Type" not in df.columns:
         return None
 
-    sv_df = df[df["Type"].str.lower().str.fullmatch(type_sv)]
+    sv_df = df[df["Type"].str.lower().str.match(type_sv)]
 
     if sv_df.empty:
         return None
