@@ -455,7 +455,11 @@ def process_fusion_SV(
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
     fusion_count = df_SV["fusion_count"].max()
 
-    if fusion_count == 1:
+    if fusion_count == 0:
+        raise AssertionError(
+            "There should be at least one fusion for this row"
+        )
+    elif fusion_count == 1:
         df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(";", expand=True)
     else:
         fusion_col = []
@@ -531,7 +535,7 @@ def process_fusion_SV(
     df_SV.loc[:, "OG_Fusion"] = ""
     df_SV.loc[:, "OG_IntDup"] = ""
     df_SV.loc[:, "OG_IntDel"] = ""
-    df_SV.loc[:, "Disruptive"] = ""
+    df_SV.columns.loc[:, "Disruptive"] = ""
 
     expected_columns = sv.CONFIG["expected_columns"]
     alternatives = sv.CONFIG["alternative_columns"]
