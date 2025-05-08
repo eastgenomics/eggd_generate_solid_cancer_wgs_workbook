@@ -200,7 +200,7 @@ def convert_letter_column_to_index(letters: str) -> int:
     """
 
     if len(letters) == 1:
-        return string.ascii_uppercase.index(letters) + 1
+        return string.ascii_uppercase.index(letters)
     elif len(letters) == 2:
         return (
             string.ascii_uppercase.index(letters[0]) + 1
