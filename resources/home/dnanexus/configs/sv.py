@@ -34,7 +34,7 @@ CONFIG = {
         "Size",
         (
             "Population germline allele frequency (GESG | GECG for somatic "
-            "SVs or AF | AUC for germline CNVs)",
+            "SVs or AF | AUC for germline CNVs)"
         ),
         "Paired reads",
         "Split reads",
@@ -49,7 +49,7 @@ CONFIG = {
         [
             (
                 "Population germline allele frequency (GESG | GECG for "
-                "somatic SVs or AF | AUC for germline CNVs)",
+                "somatic SVs or AF | AUC for germline CNVs)"
             ),
             (
                 "Population germline allele frequency (AF | AUC for germline "
