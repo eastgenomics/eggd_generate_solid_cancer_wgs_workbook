@@ -161,7 +161,7 @@ class TestGetColumnLetterUsingColumnName:
 class TestConvertLetterColumnToIndex:
     @pytest.mark.parametrize(
         "test_input, expected",
-        [("G", 7), ("AC", 29), ("Z", 26), ("OJ", 400)],
+        [("G", 6), ("AC", 28), ("Z", 25), ("OJ", 399)],
     )
     def test_normal_cases(self, test_input, expected):
         assert misc.convert_letter_column_to_index(test_input) == expected
