@@ -167,6 +167,38 @@ def sv_variant_data():
 
 
 @pytest.fixture()
+def fusion_data():
+    fusion_data = pd.DataFrame(
+        {
+            "Event domain": ["domain1", "domain2", "domain3"],
+            "Impacted transcript region": [
+                "region1",
+                "region2",
+                "region3",
+            ],
+            "GRCh38 coordinates": ["coor1", "coor2", "coor3"],
+            "Chromosomal bands": ["cyto1", "cyto2", "cyto3"],
+            (
+                "Population germline allele frequency (GESG | GECG for "
+                "somatic SVs or AF | AUC for germline CNVs)"
+            ): ["freq1", "freq2", "freq3"],
+            "Gene mode of action": ["mode1", "mode2", "mode3"],
+            "Gene": ["gene1", "gene2;gene3", "gene4;gene5"],
+            "Type": ["GAIN(1)", "type1", "type2;type3"],
+            "Confidence/support": [
+                "PR-0/219;SR-16/216",
+                "PR-7/133",
+                "PR-1/69;SR-18/95",
+            ],
+            "Size": [10000, 200000, 300000],
+        }
+    )
+
+    yield fusion_data
+    del fusion_data
+
+
+@pytest.fixture()
 def refgene_data():
     refgene_df = {
         "Gene": ["gene1", "gene2", "gene3"],
@@ -530,6 +562,43 @@ class TestProcessReportedSV:
                 "Ovary Entities": ["", ""],
                 "Haem Driver": ["", ""],
                 "Haem Entities": ["", ""],
+            }
+        )
+
+        assert test_output.equals(expected_output)
+
+
+class TestProcessFusion:
+    @pytest.mark.parametrize("test_input", [{}, {"Data": ["data1"]}])
+    def test_no_data(self, test_input):
+        test_inputs = [pd.DataFrame(test_input), ()]
+        assert excel_parsing.process_fusion_SV(*test_inputs) is None
+
+    def test_single_row(self, fusion_data):
+        test_output = excel_parsing.process_fusion_SV(
+            fusion_data.iloc[[1], :], ()
+        )
+
+        expected_output = pd.DataFrame(
+            {
+                "Event domain": ["domain2"],
+                "Impacted transcript region": ["region2"],
+                "GRCh38 coordinates": ["coor2"],
+                "Chromosomal bands": ["cyto2"],
+                (
+                    "Population germline allele frequency (GESG | GECG for "
+                    "somatic SVs or AF | AUC for germline CNVs)"
+                ): ["freq2"],
+                "Gene mode of action": ["mode2"],
+                "Gene": ["gene2"],
+                "Type": ["type1"],
+                "Fusion": ["gene2"],
+                "Paired reads": ["7/133"],
+                "Split reads": [""],
+                "Size": ["200,000"],
+                "Variant class": [""],
+                "Actionability": [""],
+                "Comments": [""],
             }
         )
 
