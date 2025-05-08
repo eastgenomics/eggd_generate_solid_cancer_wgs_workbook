@@ -450,7 +450,11 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
     fusion_count = df_SV["fusion_count"].max()
 
-    if fusion_count == 1:
+    if fusion_count == 0:
+        raise AssertionError(
+            "There should be at least one fusion for this row"
+        )
+    elif fusion_count == 1:
         df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(";", expand=True)
     else:
         fusion_col = []
@@ -535,7 +539,7 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     df_SV.loc[:, "Comments"] = ""
 
     to_lookup = ("COSMIC", "Paed", "Sarc", "Neuro", "Ovary", "Haem")
-    lookup_col = [col for col in df_SV if col.startswith(to_lookup)]
+    lookup_col = [col for col in df_SV.columns if col.startswith(to_lookup)]
 
     expected_columns = sv.CONFIG["expected_columns"]
     alternatives = sv.CONFIG["alternative_columns"]
@@ -557,7 +561,8 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
         selected_col = subset_column + lookup_col
 
     else:
-        selected_col = subset_column.insert(6, fusion_col) + lookup_col
+        subset_column.insert(6, fusion_col)
+        selected_col = subset_column + lookup_col
 
     return df_SV[selected_col], fusion_count
 
