@@ -451,6 +451,8 @@ def process_fusion_SV(
     if df_SV.empty:
         return None, 0
 
+    df_SV.reset_index(drop=True, inplace=True)
+
     # split fusion columns
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
     fusion_count = df_SV["fusion_count"].max()
