@@ -184,7 +184,7 @@ def fusion_data():
             ): ["freq1", "freq2", "freq3"],
             "Gene mode of action": ["mode1", "mode2", "mode3"],
             "Gene": ["gene1", "gene2;gene3", "gene4;gene5"],
-            "Type": ["GAIN(1)", "type1", "type2;type3"],
+            "Type": ["GAIN(1)", "type1;type2", "type3;type4"],
             "Confidence/support": [
                 "PR-0/219;SR-16/216",
                 "PR-7/133",
@@ -575,31 +575,31 @@ class TestProcessFusion:
         assert excel_parsing.process_fusion_SV(*test_inputs) is None
 
     def test_single_row(self, fusion_data):
-        test_output = excel_parsing.process_fusion_SV(
+        test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
             fusion_data.iloc[[1], :], ()
         )
 
-        expected_output = pd.DataFrame(
+        expected_df = pd.DataFrame(
             {
                 "Event domain": ["domain2"],
                 "Impacted transcript region": ["region2"],
+                "Gene": ["gene2;gene3"],
                 "GRCh38 coordinates": ["coor2"],
                 "Chromosomal bands": ["cyto2"],
+                "Type": ["type1"],
+                "Fusion": ["type2"],
+                "Size": ["200,000"],
                 (
                     "Population germline allele frequency (GESG | GECG for "
                     "somatic SVs or AF | AUC for germline CNVs)"
                 ): ["freq2"],
-                "Gene mode of action": ["mode2"],
-                "Gene": ["gene2"],
-                "Type": ["type1"],
-                "Fusion": ["gene2"],
                 "Paired reads": ["7/133"],
                 "Split reads": [""],
-                "Size": ["200,000"],
+                "Gene mode of action": ["mode2"],
                 "Variant class": [""],
                 "Actionability": [""],
                 "Comments": [""],
             }
         )
 
-        assert test_output.equals(expected_output)
+        assert test_df_output.equals(expected_df) and test_fusion_output == 1
