@@ -1,33 +1,32 @@
-import string
-
+from openpyxl.styles import Border, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
 from utils import misc
 
+# prepare formatting
+THIN = Side(border_style="thin", color="000000")
+THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+
 
 CONFIG = {
     "col_width": [
-        ("B", 12),
+        ("B", 18),
         ("C", 22),
         ("D", 22),
         ("E", 20),
-        ("G", 16),
         ("H", 16),
-        ("I", 18),
-        ("J", 18),
-        ("K", 18),
-        ("L", 18),
+        ("I", 12),
+        ("J", 14),
         ("M", 18),
-        ("N", 18),
-        ("O", 18),
     ],
     "freeze_panes": "F1",
     "expected_columns": [
         "Event domain",
-        "Impacted transcript region",
         "Gene",
+        "RefSeq IDs",
+        "Impacted transcript region",
         "GRCh38 coordinates",
         "Chromosomal bands",
         "Type",
@@ -41,8 +40,10 @@ CONFIG = {
         "Split reads",
         "Gene mode of action",
         "Variant class",
-        "Actionability",
-        "Comments",
+        "OG_Fusion",
+        "OG_IntDup",
+        "OG_IntDel",
+        "Disruptive",
     ],
     "alternative_columns": [
         [
@@ -56,6 +57,7 @@ CONFIG = {
             ),
         ]
     ],
+    "row_height": [(1, 120)],
 }
 
 
@@ -80,27 +82,37 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
     variant_class_column_letter = misc.get_column_letter_using_column_name(
         data, "Variant class"
     )
+    variant_class_column_index = misc.convert_letter_column_to_index(
+        variant_class_column_letter
+    )
 
-    lookup_groups = misc.get_lookup_groups(data)
+    first_letter_lookup_groups = variant_class_column_index + 4
 
     cells_to_color = []
 
-    # build the cells to color data
-    for i, index_group in enumerate(lookup_groups):
-        for index in index_group:
-            for j in range(1, nb_structural_variants + 2):
-                if i % 2 == 0:
-                    pattern = PatternFill(
-                        patternType="solid", start_color="c4d9ef"
-                    )
-                else:
-                    pattern = PatternFill(
-                        patternType="solid", start_color="B8E7E0"
-                    )
+    lookup_start, lookup_end = (
+        misc.convert_letter_column_to_index(first_letter_lookup_groups),
+        misc.convert_letter_column_to_index(last_column_letter),
+    )
 
-                cells_to_color.append(
-                    (f"{string.ascii_uppercase[index]}{j}", pattern)
-                )
+    # there are 12 look up groups
+    number_genes = (lookup_end - lookup_start + 1) / 12
+    group_number = 1
+
+    # build the cells to color data
+    for i, index in enumerate(range(lookup_start, lookup_end + 1)):
+        while i >= number_genes * group_number:
+            group_number += 1
+
+        if group_number % 2 == 0:
+            pattern = PatternFill(patternType="solid", start_color="c4d9ef")
+        else:
+            pattern = PatternFill(patternType="solid", start_color="B8E7E0")
+
+        for j in range(1, nb_structural_variants + 2):
+            cells_to_color.append(
+                (f"{misc.convert_index_to_letters(index)}{j}", pattern)
+            )
 
     config_with_dynamic_values = {
         "cells_to_write": {
@@ -115,17 +127,25 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         },
         "cells_to_colour": [
             (
-                f"{variant_class_column_letter}{i}",
+                f"{misc.convert_index_to_letters(i)}{j}",
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
-            for i in range(1, nb_structural_variants + 2)
+            for i in range(
+                variant_class_column_index - 1, variant_class_column_index + 4
+            )
+            for j in range(1, nb_structural_variants + 2)
         ]
         + cells_to_color,
         "to_bold": [
-            f"{string.ascii_uppercase[i]}1"
+            f"{misc.convert_index_to_letters(i)}1"
             for i in range(
-                misc.convert_letter_column_to_index(last_column_letter)
+                misc.convert_letter_column_to_index(last_column_letter) + 1
             )
+        ],
+        "borders": {"cell_rows": [(f"A1:{last_column_letter}1", THIN_BORDER)]},
+        "text_orientation": [
+            (f"{misc.convert_index_to_letters(i)}1", 90)
+            for i in range(lookup_start, lookup_end + 1)
         ],
         "dropdowns": [
             {

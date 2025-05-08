@@ -74,11 +74,6 @@ def process_reported_variants_germline(
     # add the clinvar info by merging the clinvar dataframe
     df = df.merge(clinvar_info, on="ClinVar ID", how="left")
 
-    # split the col to get gnomAD
-    df[["GE", "gnomAD"]] = df[
-        "Population germline allele frequency (GE | gnomAD)"
-    ].str.split("|", expand=True)
-
     df.loc[:, "Tumour VAF"] = ""
 
     lookup_panelapp_data = (
@@ -121,7 +116,7 @@ def process_reported_variants_germline(
             "GRCh38 coordinates;ref/alt allele",
             "CDS change and protein change",
             "Genotype",
-            "gnomAD",
+            "Population germline allele frequency (GE | gnomAD)",
             "Gene mode of action",
             "clnsigconf",
             "Tumour VAF",
@@ -169,13 +164,16 @@ def process_reported_variants_somatic(
     df["p_dot"] = df["p_dot"].str.slice(1)
 
     df["MTBP c."] = df["Gene"] + ":" + df["c_dot"]
-    df["MTBP p."] = df["p_dot"].apply(misc.convert_3_letter_protein_to_1)
+    df["MTBP p."] = (
+        df["Gene"]
+        + ":"
+        + df["p_dot"]
+        .apply(misc.convert_3_letter_protein_to_1)
+        .str.replace("p.", "")
+    )
     df.fillna({"MTBP p.": ""}, inplace=True)
 
-    df["HS tissue lookup"] = (
-        df["Gene"] + ":" + df["MTBP p."].str.replace("p.", "")
-    )
-    df["HS mutation lookup"] = df["HS tissue lookup"].apply(
+    df["HS mutation lookup"] = df["MTBP p."].apply(
         lambda x: re.sub(r"[A-Z]+$", "", x)
     )
 
@@ -198,7 +196,7 @@ def process_reported_variants_somatic(
         ),
         (
             "HS_Tissue",
-            "HS tissue lookup",
+            "MTBP p.",
             hotspots_df["HS_Tissue"],
             "Gene_Mut",
             "Tissue",
@@ -255,11 +253,13 @@ def process_reported_variants_somatic(
             "Gene",
             "GRCh38 coordinates;ref/alt allele",
             "Cyto",
+            "RefSeq IDs",
             "CDS change and protein change",
             "Predicted consequences",
+            "Error flag",
+            "Population germline allele frequency (GE | gnomAD)",
             "VAF",
             "LOH",
-            "Error flag",
             "Alt allele/total read depth",
             "Gene mode of action",
             "Variant class",
@@ -374,8 +374,9 @@ def process_reported_SV(
     selected_col = (
         [
             "Event domain",
-            "Impacted transcript region",
             "Gene",
+            "RefSeq IDs",
+            "Impacted transcript region",
             "GRCh38 coordinates",
             "Type",
             "Copy Number",
@@ -405,7 +406,9 @@ def process_reported_SV(
     return sv_df[selected_col]
 
 
-def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
+def process_fusion_SV(
+    df: pd.DataFrame, lookup_refgene: tuple, cyto_df: dict
+) -> pd.DataFrame:
     """Process the fusions from the structural variants excel
 
     Parameters
@@ -414,6 +417,8 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
         Dataframe containing the data from the structural variant excel
     lookup_refgene : tuple
         Tuple of data allowing lookup in the refgene dataframes
+    cyto_df : dict
+        Dict containing dataframe of data per sheet for cytological bands
 
     Returns
     -------
@@ -423,6 +428,9 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     """
 
     df_SV = df[~df["Type"].str.lower().str.contains("loss|loh|gain")]
+
+    if df_SV.empty:
+        return None, 0
 
     # split fusion columns
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
@@ -455,20 +463,32 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     df_SV.replace({"Size": "nan"}, {"Size": ""}, inplace=True)
 
     # get gene counts and look up for each gene
-    df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
-    max_num_gene = df_SV["gene_count"].max() + 1
+    max_num_gene = df_SV["Gene"].str.count(r"\;").max() + 1
 
-    # split gene col and create look up col for them
-    if max_num_gene == 1:
-        # populate the structural variant dataframe with data from the refgene
-        # excel file
-        for (
-            new_column,
-            mapping_column_target_df,
-            reference_df,
-            mapping_column_ref_df,
-            col_to_look_up,
-        ) in lookup_refgene:
+    gene_col = []
+
+    for i in range(max_num_gene):
+        gene_col.append(f"Gene_{i+1}")
+
+    df_SV[gene_col] = df_SV["Gene"].str.split(";", expand=True)
+
+    lookup_cols = []
+    cyto_cols = []
+
+    lookup_refgene = lookup_refgene + (
+        ("Cyto", "Gene", cyto_df["Sheet1"], "Gene", "Cyto"),
+    )
+
+    for (
+        new_column,
+        mapping_column_target_df,
+        reference_df,
+        mapping_column_ref_df,
+        col_to_look_up,
+    ) in lookup_refgene:
+        for gene_col_name in gene_col:
+            column_to_write = f"{gene_col_name} | {new_column}"
+            mapping_column_target_df = gene_col_name
             # link the mapping column to the column of data in the ref df
             reference_dict = dict(
                 zip(
@@ -476,44 +496,23 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
                     reference_df[col_to_look_up],
                 )
             )
-            df_SV[new_column] = df_SV[mapping_column_target_df].map(
+            df_SV[column_to_write] = df_SV[mapping_column_target_df].map(
                 reference_dict
             )
-            df_SV[new_column] = df_SV[new_column].fillna("-")
-    else:
-        gene_col = []
+            df_SV.fillna({column_to_write: "-"}, inplace=True)
 
-        for i in range(max_num_gene):
-            gene_col.append(f"Gene_{i+1}")
-
-        df_SV[gene_col] = df_SV["Gene"].str.split(";", expand=True)
-
-        for g in range(max_num_gene):
-            for (
-                new_column,
-                mapping_column_target_df,
-                reference_df,
-                mapping_column_ref_df,
-                col_to_look_up,
-            ) in lookup_refgene:
-                # link the mapping column to the column of data in the ref df
-                reference_dict = dict(
-                    zip(
-                        reference_df[mapping_column_ref_df],
-                        reference_df[col_to_look_up],
-                    )
-                )
-                df_SV[new_column] = df_SV[mapping_column_target_df].map(
-                    reference_dict
-                )
-                df_SV.fillna({f"{new_column}_{g+1}": "-"}, inplace=True)
+            # store the cyto columns apart from the other lookup groups to
+            # reorder
+            if "Cyto" in new_column:
+                cyto_cols.append(column_to_write)
+            else:
+                lookup_cols.append(column_to_write)
 
     df_SV.loc[:, "Variant class"] = ""
-    df_SV.loc[:, "Actionability"] = ""
-    df_SV.loc[:, "Comments"] = ""
-
-    to_lookup = ("COSMIC", "Paed", "Sarc", "Neuro", "Ovary", "Haem")
-    lookup_col = [col for col in df_SV if col.startswith(to_lookup)]
+    df_SV.loc[:, "OG_Fusion"] = ""
+    df_SV.loc[:, "OG_IntDup"] = ""
+    df_SV.loc[:, "OG_IntDel"] = ""
+    df_SV.loc[:, "Disruptive"] = ""
 
     expected_columns = sv.CONFIG["expected_columns"]
     alternatives = sv.CONFIG["alternative_columns"]
@@ -532,10 +531,12 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     ]
 
     if fusion_count == 1:
-        selected_col = subset_column + lookup_col
+        selected_col = subset_column + lookup_cols
 
     else:
-        selected_col = subset_column.insert(6, fusion_col) + lookup_col
+        subset_column.insert(14, cyto_cols)
+        subset_column.insert(6, fusion_col)
+        selected_col = subset_column + lookup_cols
 
     return df_SV[selected_col], fusion_count
 
@@ -679,5 +680,37 @@ def lookup_data_from_variants(
             reference_dict
         )
         refgene_df[new_column] = refgene_df[new_column].fillna("-")
+
+    df_fusion = kwargs["fusion"]
+
+    gene_col = []
+
+    for i in range(df_fusion["Gene"].str.count(r"\;").max() + 1):
+        gene_col.append(f"Gene_{i+1}")
+
+    df_fusion[gene_col] = df_fusion["Gene"].str.split(";", expand=True)
+
+    # dynamic number of columns to be generated out of fusion partners
+    for (
+        new_column,
+        mapping_column_target_df,
+        reference_df,
+        col_to_look_up,
+    ) in [("SV_{}", "Gene", df_fusion, "Type")]:
+        for gene in gene_col:
+            column_to_write = new_column.format(gene.lower())
+            # link the mapping column to the column of data in the ref df
+            reference_dict = dict(
+                zip(
+                    reference_df[gene],
+                    reference_df[col_to_look_up],
+                )
+            )
+            refgene_df[column_to_write] = refgene_df[
+                mapping_column_target_df
+            ].map(reference_dict)
+            refgene_df[column_to_write] = refgene_df[column_to_write].fillna(
+                "-"
+            )
 
     return refgene_df

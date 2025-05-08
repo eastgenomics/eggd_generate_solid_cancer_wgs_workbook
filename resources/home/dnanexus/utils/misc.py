@@ -200,13 +200,11 @@ def convert_letter_column_to_index(letters: str) -> int:
     """
 
     if len(letters) == 1:
-        return string.ascii_uppercase.index(letters) + 1
+        return string.ascii_uppercase.index(letters)
     elif len(letters) == 2:
         return (
-            (string.ascii_uppercase.index(letters[0]) + 1) * 26
-            + string.ascii_uppercase.index(letters[1])
-            + 1
-        )
+            string.ascii_uppercase.index(letters[0]) + 1
+        ) * 26 + string.ascii_uppercase.index(letters[1])
     else:
         raise ValueError(
             f"Cannot handle more than 2 letter letter column: {letters}"
@@ -243,31 +241,6 @@ def convert_index_to_letters(index: int) -> str:
         additional_letter = ""
 
     return f"{additional_letter}{string.ascii_uppercase[index]}"
-
-
-def get_lookup_groups(df: pd.DataFrame) -> list:
-    """Get the position of the lookup groups i.e. position of the columns
-    corresponding to the columns used for lookups
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Dataframe in which to look for column names corresponding to lookup
-        columns
-
-    Returns
-    -------
-    list
-        List of tuple for the start and end of each lookup group
-    """
-
-    lookup_groups_position = []
-
-    for i, column in enumerate(df.columns):
-        if column == "COSMIC":
-            lookup_groups_position.append([j for j in range(i, i + 6)])
-
-    return lookup_groups_position
 
 
 def convert_3_letter_protein_to_1(string_element: str) -> str:
@@ -316,3 +289,24 @@ def convert_3_letter_protein_to_1(string_element: str) -> str:
         )
 
     return string_element
+
+
+def letter_operation(letter: str, operation: str) -> str:
+    """Get the next letter using a math operation i.e. A + 1 = B
+
+    Parameters
+    ----------
+    letter : str
+        Letter to perform the operation on
+    operation : str
+        String representing the operation i.e. +1 or -2
+
+    Returns
+    -------
+    str
+        Letter obtained after the operation
+    """
+
+    return convert_index_to_letters(
+        string.ascii_uppercase.index(letter) + int(operation)
+    )

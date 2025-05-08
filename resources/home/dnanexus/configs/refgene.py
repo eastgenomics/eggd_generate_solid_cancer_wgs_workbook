@@ -10,41 +10,6 @@ THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
 
 CONFIG = {
-    "cells_to_write": {
-        (1, i): value
-        for i, value in enumerate(
-            [
-                "Gene",
-                "Comments",
-                "Alteration",
-                "Entities",
-                "Haem_Alteration",
-                "Haem_Entites",
-                "Haem_Comments",
-                "Haem_Reference",
-                "Paed_Alteration",
-                "Paed_Entites",
-                "Paed_Comments",
-                "Ovarian_Alteration",
-                "Ovarian_Entites",
-                "Ovarian_Comments",
-                "Ovarian_Reference",
-                "Sarcoma_Alteration",
-                "Sarcoma_Entites",
-                "Sarcoma_Comments",
-                "Sarcoma_Reference",
-                "Neuro_Alteration",
-                "Neuro_Entities",
-                "Neuro_Comments",
-                "Neuro_Reference",
-                "SNV",
-                "CN",
-                "SV_A",
-                "SV_B",
-            ],
-            1,
-        )
-    },
     "cells_to_colour": [
         (
             f"{col}1",
@@ -166,6 +131,9 @@ def add_dynamic_values(df: pd.DataFrame) -> dict:
 
     config_with_dynamic_values = {
         "cells_to_write": {
+            (1, i): column for i, column in enumerate(df.columns, 1)
+        }
+        | {
             # remove the col and row index from the writing?
             (r_idx - 1, c_idx - 1): value
             for r_idx, row in enumerate(dataframe_to_rows(df), 1)

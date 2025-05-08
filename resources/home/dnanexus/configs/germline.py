@@ -23,7 +23,7 @@ CONFIG = {
         (4, 7): "ClinVar",
         (4, 8): "Tumour VAF",
         (4, 9): "Panelapp Adult v2.2",
-        (4, 10): "Panelapp Chilhood v4.0",
+        (4, 10): "Panelapp Childhood v4.0",
     },
     "to_bold": [
         "A1",
