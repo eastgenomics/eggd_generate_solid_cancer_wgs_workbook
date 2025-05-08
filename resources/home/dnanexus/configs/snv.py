@@ -128,7 +128,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 f"{misc.convert_index_to_letters(i)}{j}",
                 PatternFill(patternType="solid", start_color="00FFFF"),
             )
-            for i in range(24, 38)
+            for i in range(24, 36)
             for j in range(1, nb_somatic_variants + 2)
         ]
         + [
