@@ -185,6 +185,7 @@ def fusion_data():
             ],
             "GRCh38 coordinates": ["coor1", "coor2", "coor3"],
             "Chromosomal bands": ["cyto1", "cyto2", "cyto3"],
+            "RefSeq IDs": ["refseq_id1", "refseq_id2", "refseq_id3"],
             (
                 "Population germline allele frequency (GESG | GECG for "
                 "somatic SVs or AF | AUC for germline CNVs)"
@@ -594,20 +595,21 @@ class TestProcessReportedSV:
 
 class TestProcessFusion:
     @pytest.mark.parametrize("test_input", [{}, {"Data": ["data1"]}])
-    def test_no_data(self, test_input):
-        test_inputs = [pd.DataFrame(test_input), ()]
+    def test_no_data(self, test_input, cyto):
+        test_inputs = [pd.DataFrame(test_input), (), cyto]
         assert excel_parsing.process_fusion_SV(*test_inputs) is None
 
-    def test_single_row(self, fusion_data):
+    def test_single_row(self, fusion_data, cyto):
         test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
-            fusion_data.iloc[[1], :], ()
+            fusion_data.iloc[[1], :], (), cyto
         )
 
         expected_df = pd.DataFrame(
             {
                 "Event domain": ["domain2"],
-                "Impacted transcript region": ["region2"],
                 "Gene": ["gene2;gene3"],
+                "RefSeq IDs": ["refseq_id2"],
+                "Impacted transcript region": ["region2"],
                 "GRCh38 coordinates": ["coor2"],
                 "Chromosomal bands": ["cyto2"],
                 "Type": ["type1"],
@@ -619,25 +621,30 @@ class TestProcessFusion:
                 ): ["freq2"],
                 "Paired reads": ["7/133"],
                 "Split reads": [""],
+                "Gene_1 | Cyto": ["-"],
+                "Gene_2 | Cyto": ["cyto2"],
                 "Gene mode of action": ["mode2"],
                 "Variant class": [""],
-                "Actionability": [""],
-                "Comments": [""],
+                "OG_Fusion": [""],
+                "OG_IntDup": [""],
+                "OG_IntDel": [""],
+                "Disruptive": [""],
             }
         )
 
         assert test_df_output.equals(expected_df) and test_fusion_output == 1
 
-    def test_multiple_rows(self, fusion_data):
+    def test_multiple_rows(self, fusion_data, cyto):
         test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
-            fusion_data, ()
+            fusion_data, (), cyto
         )
 
         expected_df = pd.DataFrame(
             {
                 "Event domain": ["domain2", "domain3"],
-                "Impacted transcript region": ["region2", "region3"],
                 "Gene": ["gene2;gene3", "gene4;gene5;gene6"],
+                "RefSeq IDs": ["refseq_id2", "refseq_id3"],
+                "Impacted transcript region": ["region2", "region3"],
                 "GRCh38 coordinates": ["coor2", "coor3"],
                 "Chromosomal bands": ["cyto2", "cyto3"],
                 "Type": ["type1", "type3"],
@@ -650,10 +657,15 @@ class TestProcessFusion:
                 ): ["freq2", "freq3"],
                 "Paired reads": ["7/133", "1/69"],
                 "Split reads": ["", "18/95"],
+                "Gene_1 | Cyto": ["-", "cyto3"],
+                "Gene_2 | Cyto": ["cyto2", "-"],
+                "Gene_3 | Cyto": ["-", "-"],
                 "Gene mode of action": ["mode2", "mode3"],
                 "Variant class": ["", ""],
-                "Actionability": ["", ""],
-                "Comments": ["", ""],
+                "OG_Fusion": ["", ""],
+                "OG_IntDup": ["", ""],
+                "OG_IntDel": ["", ""],
+                "Disruptive": ["", ""],
             }
         )
 
