@@ -267,7 +267,9 @@ class TestProcessReportedVariantsGermline:
                 "GRCh38 coordinates;ref/alt allele": ["coor1"],
                 "CDS change and protein change": ["c.1"],
                 "Genotype": ["0/1"],
-                "gnomAD": ["freq1"],
+                "Population germline allele frequency (GE | gnomAD)": [
+                    "ge1|freq1"
+                ],
                 "Gene mode of action": ["deletion1"],
                 "clnsigconf": ["sig1"],
                 "Tumour VAF": [""],
@@ -299,7 +301,10 @@ class TestProcessReportedVariantsGermline:
                 "GRCh38 coordinates;ref/alt allele": ["coor1", "coor3"],
                 "CDS change and protein change": ["c.1", "c.3"],
                 "Genotype": ["0/1", "1|1"],
-                "gnomAD": ["freq1", "freq2"],
+                "Population germline allele frequency (GE | gnomAD)": [
+                    "ge1|freq1",
+                    "ge2|freq2",
+                ],
                 "Gene mode of action": ["deletion1", "deletion2"],
                 "clnsigconf": ["sig1", "sig2"],
                 "Tumour VAF": ["", ""],
