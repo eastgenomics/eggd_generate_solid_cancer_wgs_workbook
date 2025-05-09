@@ -456,16 +456,18 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
         raise AssertionError(
             "There should be at least one fusion for this row"
         )
-    elif fusion_count == 1:
-        df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(";", expand=True)
-    else:
-        fusion_col = []
 
-        for i in range(fusion_count):
-            fusion_col.append(f"Fusion_{i+1}")
+    fusion_col = ["Type"]
 
-        fusion_col.insert(0, "Type")
-        df_SV[fusion_col] = df_SV.Type.str.split(";", expand=True)
+    for i in range(fusion_count):
+        fusion_col.append(f"Fusion_{i+1}")
+
+    # create intermediate dataframe to concatenate the fusion information with
+    # the main dataframe
+    inter_df = pd.DataFrame({}, columns=fusion_col)
+    inter_df[fusion_col] = df_SV.Type.str.split(";", expand=True)
+    df_SV.drop("Type", inplace=True, axis=1)
+    df_SV = pd.concat([df_SV, inter_df], axis=1)
 
     # remove prefixes for single reads and paired reads and store in separate
     # columns
@@ -486,10 +488,14 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
     df_SV["gene_count"] = df_SV["Gene"].str.count(r"\;")
     max_num_gene = df_SV["gene_count"].max() + 1
 
-    # split gene col and create look up col for them
-    if max_num_gene == 1:
-        # populate the structural variant dataframe with data from the refgene
-        # excel file
+    gene_col = []
+
+    for i in range(max_num_gene):
+        gene_col.append(f"Gene_{i+1}")
+
+    df_SV[gene_col] = df_SV["Gene"].str.split(";", expand=True)
+
+    for g in range(max_num_gene):
         for (
             new_column,
             mapping_column_target_df,
@@ -507,34 +513,7 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
             df_SV[new_column] = df_SV[mapping_column_target_df].map(
                 reference_dict
             )
-            df_SV[new_column] = df_SV[new_column].fillna("-")
-    else:
-        gene_col = []
-
-        for i in range(max_num_gene):
-            gene_col.append(f"Gene_{i+1}")
-
-        df_SV[gene_col] = df_SV["Gene"].str.split(";", expand=True)
-
-        for g in range(max_num_gene):
-            for (
-                new_column,
-                mapping_column_target_df,
-                reference_df,
-                mapping_column_ref_df,
-                col_to_look_up,
-            ) in lookup_refgene:
-                # link the mapping column to the column of data in the ref df
-                reference_dict = dict(
-                    zip(
-                        reference_df[mapping_column_ref_df],
-                        reference_df[col_to_look_up],
-                    )
-                )
-                df_SV[new_column] = df_SV[mapping_column_target_df].map(
-                    reference_dict
-                )
-                df_SV.fillna({f"{new_column}_{g+1}": "-"}, inplace=True)
+            df_SV.fillna({f"{new_column}_{g+1}": "-"}, inplace=True)
 
     df_SV.loc[:, "Variant class"] = ""
     df_SV.loc[:, "Actionability"] = ""
@@ -559,12 +538,10 @@ def process_fusion_SV(df: pd.DataFrame, lookup_refgene: tuple) -> pd.DataFrame:
         for column in expected_columns
     ]
 
-    if fusion_count == 1:
-        selected_col = subset_column + lookup_col
+    for col in fusion_col[::-1]:
+        subset_column.insert(5, col)
 
-    else:
-        subset_column.insert(6, fusion_col)
-        selected_col = subset_column + lookup_col
+    selected_col = subset_column + lookup_col
 
     return df_SV[selected_col], fusion_count
 
