@@ -149,6 +149,7 @@ def sv_variant_data():
             "Impacted transcript region": ["region1", "region2", "region3"],
             "Gene": ["gene1", "gene2", "gene3"],
             "GRCh38 coordinates": ["coor1", "coor2", "coor3"],
+            "RefSeq IDs": ["refseq_id1", "refseq_id2", "refseq_id3"],
             "Type": ["GAIN(1)", "GAIN(3)", "LOSS(2)"],
             "Size": [10, 20, 30],
             "Chromosomal bands": ["cyto1;cyto2", "cyto3;cyto4", "cyto5;cyto6"],
@@ -476,8 +477,9 @@ class TestProcessReportedSV:
         expected_output = pd.DataFrame(
             {
                 "Event domain": ["domain1"],
-                "Impacted transcript region": ["region1"],
                 "Gene": ["gene1"],
+                "RefSeq IDs": ["refseq_id1"],
+                "Impacted transcript region": ["region1"],
                 "GRCh38 coordinates": ["coor1"],
                 "Type": ["GAIN"],
                 "Copy Number": [1],
@@ -516,8 +518,9 @@ class TestProcessReportedSV:
         expected_output = pd.DataFrame(
             {
                 "Event domain": ["domain3"],
-                "Impacted transcript region": ["region3"],
                 "Gene": ["gene3"],
+                "RefSeq IDs": ["refseq_id3"],
+                "Impacted transcript region": ["region3"],
                 "GRCh38 coordinates": ["coor3"],
                 "Type": ["LOSS"],
                 "Copy Number": [2],
@@ -557,8 +560,9 @@ class TestProcessReportedSV:
         expected_output = pd.DataFrame(
             {
                 "Event domain": ["domain1", "domain2"],
-                "Impacted transcript region": ["region1", "region2"],
                 "Gene": ["gene1", "gene2"],
+                "RefSeq IDs": ["refseq_id1", "refseq_id2"],
+                "Impacted transcript region": ["region1", "region2"],
                 "GRCh38 coordinates": ["coor1", "coor2"],
                 "Type": ["GAIN", "GAIN"],
                 "Copy Number": [1, 3],
