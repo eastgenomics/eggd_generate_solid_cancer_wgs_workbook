@@ -461,16 +461,18 @@ def process_fusion_SV(
         raise AssertionError(
             "There should be at least one fusion for this row"
         )
-    elif fusion_count == 1:
-        df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(";", expand=True)
-    else:
-        fusion_col = []
 
-        for i in range(fusion_count):
-            fusion_col.append(f"Fusion_{i+1}")
+    fusion_col = ["Type"]
 
-        fusion_col.insert(0, "Type")
-        df_SV[fusion_col] = df_SV.Type.str.split(";", expand=True)
+    for i in range(fusion_count):
+        fusion_col.append(f"Fusion_{i+1}")
+
+    # create intermediate dataframe to concatenate the fusion information with
+    # the main dataframe
+    inter_df = pd.DataFrame({}, columns=fusion_col)
+    inter_df[fusion_col] = df_SV.Type.str.split(";", expand=True)
+    df_SV.drop("Type", inplace=True, axis=1)
+    df_SV = pd.concat([df_SV, inter_df], axis=1)
 
     # remove prefixes for single reads and paired reads and store in separate
     # columns
