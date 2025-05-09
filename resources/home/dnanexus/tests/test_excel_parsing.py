@@ -183,8 +183,8 @@ def fusion_data():
                 "somatic SVs or AF | AUC for germline CNVs)"
             ): ["freq1", "freq2", "freq3"],
             "Gene mode of action": ["mode1", "mode2", "mode3"],
-            "Gene": ["gene1", "gene2;gene3", "gene4;gene5"],
-            "Type": ["GAIN(1)", "type1;type2", "type3;type4"],
+            "Gene": ["gene1", "gene2;gene3", "gene4;gene5;gene6"],
+            "Type": ["GAIN(1)", "type1;type2", "type3;type4;type5"],
             "Confidence/support": [
                 "PR-0/219;SR-16/216",
                 "PR-7/133",
@@ -587,7 +587,7 @@ class TestProcessFusion:
                 "GRCh38 coordinates": ["coor2"],
                 "Chromosomal bands": ["cyto2"],
                 "Type": ["type1"],
-                "Fusion": ["type2"],
+                "Fusion_1": ["type2"],
                 "Size": ["200,000"],
                 (
                     "Population germline allele frequency (GESG | GECG for "
@@ -603,3 +603,34 @@ class TestProcessFusion:
         )
 
         assert test_df_output.equals(expected_df) and test_fusion_output == 1
+
+    def test_multiple_rows(self, fusion_data):
+        test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
+            fusion_data, ()
+        )
+
+        expected_df = pd.DataFrame(
+            {
+                "Event domain": ["domain2", "domain3"],
+                "Impacted transcript region": ["region2", "region3"],
+                "Gene": ["gene2;gene3", "gene4;gene5;gene6"],
+                "GRCh38 coordinates": ["coor2", "coor3"],
+                "Chromosomal bands": ["cyto2", "cyto3"],
+                "Type": ["type1", "type3"],
+                "Fusion_1": ["type2", "type4"],
+                "Fusion_2": [None, "type5"],
+                "Size": ["200,000", "300,000"],
+                (
+                    "Population germline allele frequency (GESG | GECG for "
+                    "somatic SVs or AF | AUC for germline CNVs)"
+                ): ["freq2", "freq3"],
+                "Paired reads": ["7/133", "1/69"],
+                "Split reads": ["", "18/95"],
+                "Gene mode of action": ["mode2", "mode3"],
+                "Variant class": ["", ""],
+                "Actionability": ["", ""],
+                "Comments": ["", ""],
+            }
+        )
+
+        assert test_df_output.equals(expected_df) and test_fusion_output == 2
