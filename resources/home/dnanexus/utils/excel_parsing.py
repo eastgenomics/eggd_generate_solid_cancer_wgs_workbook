@@ -539,7 +539,7 @@ def process_fusion_SV(
     df_SV.loc[:, "OG_Fusion"] = ""
     df_SV.loc[:, "OG_IntDup"] = ""
     df_SV.loc[:, "OG_IntDel"] = ""
-    df_SV.columns.loc[:, "Disruptive"] = ""
+    df_SV.loc[:, "Disruptive"] = ""
 
     expected_columns = sv.CONFIG["expected_columns"]
     alternatives = sv.CONFIG["alternative_columns"]
@@ -557,13 +557,14 @@ def process_fusion_SV(
         for column in expected_columns
     ]
 
-    if fusion_count == 1:
-        selected_col = subset_column + lookup_cols
+    if cyto_cols:
+        for col in cyto_cols[::-1]:
+            subset_column.insert(10, col)
 
-    else:
-        subset_column.insert(14, cyto_cols)
-        subset_column.insert(6, fusion_col)
-        selected_col = subset_column + lookup_cols
+    for col in fusion_col[::-1]:
+        subset_column.insert(6, col)
+
+    selected_col = subset_column + lookup_cols
 
     return df_SV[selected_col], fusion_count
 
