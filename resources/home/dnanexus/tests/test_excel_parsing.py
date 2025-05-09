@@ -65,6 +65,7 @@ def somatic_variant_data():
                 "coor2",
                 "coor3",
             ],
+            "RefSeq IDs": ["refseq_id1", "refseq_id2", "refseq_id3"],
             "Gene": ["gene1", "gene2", "gene3"],
             "CDS change and protein change": [
                 "c.1;p.Leu40Arg",
@@ -75,6 +76,11 @@ def somatic_variant_data():
                 "consequence1",
                 "consequence2",
                 "consequence3;consequence4",
+            ],
+            "Population germline allele frequency (GE | gnomAD)": [
+                "0.1 | 0.2",
+                "0.2 | -",
+                "- | -",
             ],
             "Alt allele/total read depth": ["depth1", "depth2", "depth3"],
             "Gene mode of action": ["mode1", "mode2", "mode3"],
@@ -347,11 +353,15 @@ class TestProcessReportedVariantsSomatic:
                 "Gene": ["gene1"],
                 "GRCh38 coordinates": ["coor1"],
                 "Cyto": ["cyto1"],
+                "RefSeq IDs": ["refseq_id1"],
                 "CDS change and protein change": ["c.1;p.Leu40Arg"],
                 "Predicted consequences": ["consequence1"],
+                "Error flag": [""],
+                "Population germline allele frequency (GE | gnomAD)": [
+                    "0.1 | 0.2"
+                ],
                 "VAF": [0.3],
                 "LOH": ["0.1"],
-                "Error flag": [""],
                 "Alt allele/total read depth": ["depth1"],
                 "Gene mode of action": ["mode1"],
                 "Variant class": [""],
@@ -378,13 +388,13 @@ class TestProcessReportedVariantsSomatic:
                 "Haem Driver": [""],
                 "Haem Entities": [""],
                 "MTBP c.": ["gene1:c.1"],
-                "MTBP p.": ["p.L40R"],
+                "MTBP p.": ["gene1:L40R"],
             }
         )
 
         assert test_output.equals(expected_output)
 
-    def process_multiple_rows(self, somatic_variant_data, hotspots, cyto):
+    def test_process_multiple_rows(self, somatic_variant_data, hotspots, cyto):
         test_output = excel_parsing.process_reported_variants_somatic(
             somatic_variant_data, (), hotspots, cyto
         )
@@ -394,42 +404,47 @@ class TestProcessReportedVariantsSomatic:
                 "Domain": ["domain1", "domain3"],
                 "Gene": ["gene1", "gene3"],
                 "GRCh38 coordinates": ["coor1", "coor3"],
-                "Cyto": ["cyto1", "cyto3"],
+                "Cyto": ["cyto1", "cyto2"],
+                "RefSeq IDs": ["refseq_id1", "refseq_id3"],
                 "CDS change and protein change": [
                     "c.1;p.Leu40Arg",
                     "c.3;p.Leu2135Val",
                 ],
                 "Predicted consequences": ["consequence1", "consequence3"],
+                "Error flag": ["", "consequence4"],
+                "Population germline allele frequency (GE | gnomAD)": [
+                    "0.1 | 0.2",
+                    "- | -",
+                ],
                 "VAF": [0.3, 0.5],
                 "LOH": ["0.1", ""],
-                "Error flag": ["", "consequence4"],
                 "Alt allele/total read depth": ["depth1", "depth3"],
                 "Gene mode of action": ["mode1", "mode3"],
-                "Variant class": [""],
-                "TSG_NMD": [""],
-                "TSG_LOH": [""],
-                "Splice fs?": [""],
-                "SpliceAI": [""],
-                "REVEL": [""],
-                "OG_3' Ter": [""],
-                "Recurrence somatic database": [""],
+                "Variant class": ["", ""],
+                "TSG_NMD": ["", ""],
+                "TSG_LOH": ["", ""],
+                "Splice fs?": ["", ""],
+                "SpliceAI": ["", ""],
+                "REVEL": ["", ""],
+                "OG_3' Ter": ["", ""],
+                "Recurrence somatic database": ["", ""],
                 "HS_Total": ["total1", "total2"],
                 "HS_Mut": ["mutation1", "mutation2"],
                 "HS_Tissue": ["tissue1", "tissue2"],
-                "COSMIC Driver": [""],
-                "COSMIC Entities": [""],
-                "Paed Driver": [""],
-                "Paed Entities": [""],
-                "Sarc Driver": [""],
-                "Sarc Entities": [""],
-                "Neuro Driver": [""],
-                "Neuro Entities": [""],
-                "Ovary Driver": [""],
-                "Ovary Entities": [""],
-                "Haem Driver": [""],
-                "Haem Entities": [""],
+                "COSMIC Driver": ["", ""],
+                "COSMIC Entities": ["", ""],
+                "Paed Driver": ["", ""],
+                "Paed Entities": ["", ""],
+                "Sarc Driver": ["", ""],
+                "Sarc Entities": ["", ""],
+                "Neuro Driver": ["", ""],
+                "Neuro Entities": ["", ""],
+                "Ovary Driver": ["", ""],
+                "Ovary Entities": ["", ""],
+                "Haem Driver": ["", ""],
+                "Haem Entities": ["", ""],
                 "MTBP c.": ["gene1:c.1", "gene3:c.3"],
-                "MTBP p.": ["p.L40R", "p.L2135V"],
+                "MTBP p.": ["gene1:L40R", "gene3:L2135V"],
             }
         )
 
