@@ -574,9 +574,9 @@ class TestProcessFusion:
         test_inputs = [pd.DataFrame(test_input), ()]
         assert excel_parsing.process_fusion_SV(*test_inputs) is None
 
-    def test_single_row(self, fusion_data, refgene_data):
+    def test_single_row(self, fusion_data):
         test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
-            fusion_data.iloc[[1], :], refgene_data
+            fusion_data.iloc[[1], :], ()
         )
 
         expected_df = pd.DataFrame(
@@ -599,38 +599,14 @@ class TestProcessFusion:
                 "Variant class": [""],
                 "Actionability": [""],
                 "Comments": [""],
-                "Gene_1 COSMIC Driver": [""],
-                "Gene_2 COSMIC Driver": [""],
-                "Gene_1 COSMIC Entities": [""],
-                "Gene_2 COSMIC Entities": [""],
-                "Gene_1 Paed Driver": [""],
-                "Gene_2 Paed Driver": [""],
-                "Gene_1 Paed Entities": [""],
-                "Gene_2 Paed Entities": [""],
-                "Gene_1 Sarc Driver": [""],
-                "Gene_2 Sarc Driver": [""],
-                "Gene_1 Sarc Entities": [""],
-                "Gene_2 Sarc Entities": [""],
-                "Gene_1 Neuro Driver": [""],
-                "Gene_2 Neuro Driver": [""],
-                "Gene_1 Neuro Entities": [""],
-                "Gene_2 Neuro Entities": [""],
-                "Gene_1 Ovary Driver": [""],
-                "Gene_2 Ovary Driver": [""],
-                "Gene_1 Ovary Entities": [""],
-                "Gene_2 Ovary Entities": [""],
-                "Gene_1 Haem Driver": [""],
-                "Gene_2 Haem Driver": [""],
-                "Gene_1 Haem Entities": [""],
-                "Gene_2 Haem Entities": [""],
             }
         )
 
         assert test_df_output.equals(expected_df) and test_fusion_output == 1
 
-    def test_multiple_rows(self, fusion_data, refgene_data):
+    def test_multiple_rows(self, fusion_data):
         test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
-            fusion_data, refgene_data
+            fusion_data, ()
         )
 
         expected_df = pd.DataFrame(
