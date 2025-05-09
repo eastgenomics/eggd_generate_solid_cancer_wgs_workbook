@@ -29,8 +29,6 @@ CONFIG = {
         "Impacted transcript region",
         "GRCh38 coordinates",
         "Chromosomal bands",
-        "Type",
-        "Fusion",
         "Size",
         (
             "Population germline allele frequency (GESG | GECG for somatic "
