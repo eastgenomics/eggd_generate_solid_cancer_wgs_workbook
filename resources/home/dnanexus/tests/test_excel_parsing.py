@@ -209,21 +209,23 @@ def fusion_data():
 
 @pytest.fixture()
 def refgene_data():
-    refgene_df = {
-        "Gene": ["gene1", "gene2", "gene3"],
-        "Alteration": ["alt1", "alt2", ""],
-        "Entities": ["ent1", "ent2", ""],
-        "Paed_Alteration": ["paed_alt1", "", "paed_alt2"],
-        "Paed_Entities": ["paed_ent1", "", "paed_alt2"],
-        "Sarcoma_Alteration": ["", "sarc_alt1", "sarc_alt2"],
-        "Sarcoma_Entities": ["", "sarc_ent1", "sarc_alt2"],
-        "Neuro_Alteration": ["", "", "neuro_alt1"],
-        "Neuro_Entities": ["", "", "neuro_ent1"],
-        "Ovarian_Alteration": ["", "", ""],
-        "Ovarian_Entities": ["", "", ""],
-        "Haem_Alteration": ["haem_alt1", "haem_alt2", "haem_alt3"],
-        "Haem_Entities": ["haem_ent1", "haem_ent2", "haem_ent3"],
-    }
+    refgene_df = pd.DataFrame(
+        {
+            "Gene": ["gene1", "gene2", "gene3"],
+            "Alteration": ["alt1", "alt2", ""],
+            "Entities": ["ent1", "ent2", ""],
+            "Paed_Alteration": ["paed_alt1", "", "paed_alt2"],
+            "Paed_Entities": ["paed_ent1", "", "paed_alt2"],
+            "Sarcoma_Alteration": ["", "sarc_alt1", "sarc_alt2"],
+            "Sarcoma_Entities": ["", "sarc_ent1", "sarc_alt2"],
+            "Neuro_Alteration": ["", "", "neuro_alt1"],
+            "Neuro_Entities": ["", "", "neuro_ent1"],
+            "Ovarian_Alteration": ["", "", ""],
+            "Ovarian_Entities": ["", "", ""],
+            "Haem_Alteration": ["haem_alt1", "haem_alt2", "haem_alt3"],
+            "Haem_Entities": ["haem_ent1", "haem_ent2", "haem_ent3"],
+        }
+    )
 
     yield refgene_df
     del refgene_df
@@ -809,6 +811,51 @@ class TestProcessRefgene:
                     np.nan,
                     np.nan,
                 ],
+            }
+        )
+
+        assert test_output.equals(expected_output)
+
+
+class TestLookupDataFromVariants:
+    def test_process_data(self, refgene_data):
+        test_output = excel_parsing.lookup_data_from_variants(
+            refgene_data,
+            **{
+                "somatic": pd.DataFrame(
+                    {
+                        "Gene": ["gene1", "gene4"],
+                        "CDS change and protein change": ["data1", "data4"],
+                    }
+                ),
+                "gain": pd.DataFrame(
+                    {"Gene": ["gene3", "gene4"], "Copy Number": [3, 4]}
+                ),
+                "fusion": pd.DataFrame(
+                    {"Gene": ["gene1;gene2"], "Type": ["type1"]}
+                ),
+            }
+        )
+
+        expected_output = pd.DataFrame(
+            {
+                "Gene": ["gene1", "gene2", "gene3"],
+                "Alteration": ["alt1", "alt2", ""],
+                "Entities": ["ent1", "ent2", ""],
+                "Paed_Alteration": ["paed_alt1", "", "paed_alt2"],
+                "Paed_Entities": ["paed_ent1", "", "paed_alt2"],
+                "Sarcoma_Alteration": ["", "sarc_alt1", "sarc_alt2"],
+                "Sarcoma_Entities": ["", "sarc_ent1", "sarc_alt2"],
+                "Neuro_Alteration": ["", "", "neuro_alt1"],
+                "Neuro_Entities": ["", "", "neuro_ent1"],
+                "Ovarian_Alteration": ["", "", ""],
+                "Ovarian_Entities": ["", "", ""],
+                "Haem_Alteration": ["haem_alt1", "haem_alt2", "haem_alt3"],
+                "Haem_Entities": ["haem_ent1", "haem_ent2", "haem_ent3"],
+                "SNV": ["data1", "-", "-"],
+                "CN": ["-", "-", 3],
+                "SV_gene_1": ["type1", "-", "-"],
+                "SV_gene_2": ["-", "type1", "-"],
             }
         )
 
