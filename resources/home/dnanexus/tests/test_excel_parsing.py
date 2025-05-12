@@ -231,42 +231,6 @@ def refgene_data():
     del refgene_df
 
 
-@pytest.fixture()
-def lookup_tuple():
-    refgene_df = {
-        "Gene": ["gene1", "gene2", "gene3"],
-        "Alteration": ["alt1", "alt2", ""],
-        "Entities": ["ent1", "ent2", ""],
-        "Paed_Alteration": ["paed_alt1", "", "paed_alt2"],
-        "Paed_Entities": ["paed_ent1", "", "paed_alt2"],
-        "Sarcoma_Alteration": ["", "sarc_alt1", "sarc_alt2"],
-        "Sarcoma_Entities": ["", "sarc_ent1", "sarc_alt2"],
-        "Neuro_Alteration": ["", "", "neuro_alt1"],
-        "Neuro_Entities": ["", "", "neuro_ent1"],
-        "Ovarian_Alteration": ["", "", ""],
-        "Ovarian_Entities": ["", "", ""],
-        "Haem_Alteration": ["haem_alt1", "haem_alt2", "haem_alt3"],
-        "Haem_Entities": ["haem_ent1", "haem_ent2", "haem_ent3"],
-    }
-
-    lookup_tuple = (
-        ("COSMIC Driver", "Gene", refgene_df, "Gene", "Alteration"),
-        ("COSMIC Entities", "Gene", refgene_df, "Gene", "Entities"),
-        ("Paed Driver", "Gene", refgene_df, "Gene", "Paed_Alteration"),
-        ("Paed Entities", "Gene", refgene_df, "Gene", "Paed_Entities"),
-        ("Sarc Driver", "Gene", refgene_df, "Gene", "Sarcoma_Alteration"),
-        ("Sarc Entities", "Gene", refgene_df, "Gene", "Sarcoma_Entites"),
-        ("Neuro Driver", "Gene", refgene_df, "Gene", "Neuro_Alteration"),
-        ("Neuro Entities", "Gene", refgene_df, "Gene", "Neuro_Entities"),
-        ("Ovary Driver", "Gene", refgene_df, "Gene", "Ovarian_Alteration"),
-        ("Ovary Entities", "Gene", refgene_df, "Gene", "Ovarian_Entities"),
-        ("Haem Driver", "Gene", refgene_df, "Gene", "Haem_Alteration"),
-        ("Haem Entities", "Gene", refgene_df, "Gene", "Haem_Entities"),
-    )
-    yield lookup_tuple
-    del lookup_tuple
-
-
 class TestProcessReportedVariantsGermline:
     @pytest.mark.parametrize(
         "test_input", [{}, {"Origin": ["somatic"], "Data": ["data1"]}]
