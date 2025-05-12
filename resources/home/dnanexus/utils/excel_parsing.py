@@ -457,11 +457,6 @@ def process_fusion_SV(
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
     fusion_count = df_SV["fusion_count"].max()
 
-    if fusion_count == 0:
-        raise AssertionError(
-            "There should be at least one fusion for this row"
-        )
-
     fusion_col = ["Type"]
 
     for i in range(fusion_count):
