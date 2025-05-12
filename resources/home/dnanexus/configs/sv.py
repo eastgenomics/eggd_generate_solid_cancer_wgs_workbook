@@ -89,7 +89,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
     cells_to_color = []
 
     lookup_start, lookup_end = (
-        misc.convert_letter_column_to_index(first_letter_lookup_groups),
+        first_letter_lookup_groups,
         misc.convert_letter_column_to_index(last_column_letter),
     )
 
