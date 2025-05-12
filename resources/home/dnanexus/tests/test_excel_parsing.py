@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -208,6 +209,28 @@ def fusion_data():
 
 @pytest.fixture()
 def refgene_data():
+    refgene_df = {
+        "Gene": ["gene1", "gene2", "gene3"],
+        "Alteration": ["alt1", "alt2", ""],
+        "Entities": ["ent1", "ent2", ""],
+        "Paed_Alteration": ["paed_alt1", "", "paed_alt2"],
+        "Paed_Entities": ["paed_ent1", "", "paed_alt2"],
+        "Sarcoma_Alteration": ["", "sarc_alt1", "sarc_alt2"],
+        "Sarcoma_Entities": ["", "sarc_ent1", "sarc_alt2"],
+        "Neuro_Alteration": ["", "", "neuro_alt1"],
+        "Neuro_Entities": ["", "", "neuro_ent1"],
+        "Ovarian_Alteration": ["", "", ""],
+        "Ovarian_Entities": ["", "", ""],
+        "Haem_Alteration": ["haem_alt1", "haem_alt2", "haem_alt3"],
+        "Haem_Entities": ["haem_ent1", "haem_ent2", "haem_ent3"],
+    }
+
+    yield refgene_df
+    del refgene_df
+
+
+@pytest.fixture()
+def lookup_tuple():
     refgene_df = {
         "Gene": ["gene1", "gene2", "gene3"],
         "Alteration": ["alt1", "alt2", ""],
@@ -670,3 +693,123 @@ class TestProcessFusion:
         )
 
         assert test_df_output.equals(expected_df) and test_fusion_output == 2
+
+
+class TestProcessRefgene:
+    def test_process_data(self):
+        test_output = excel_parsing.process_refgene(
+            {
+                "cosmic": pd.DataFrame(
+                    {
+                        "Gene": ["gene1", "gene3"],
+                        "Role in Cancer": ["somatic_data1", "somatic_data4"],
+                        "Driver_SV": ["somatic_data2", "somatic_data5"],
+                        "Entities": ["somatic_data3", "somatic_data6"],
+                    }
+                ),
+                "haem": pd.DataFrame(
+                    {
+                        "Gene": ["gene2"],
+                        "Driver": ["haem_data1"],
+                        "Entities": ["haem_data2"],
+                        "Comments": ["haem_data3"],
+                        "Reference": ["haem_data4"],
+                    }
+                ),
+                "paed": pd.DataFrame(
+                    {
+                        "Gene": ["gene1"],
+                        "Driver": ["paed_data1"],
+                        "Entities": ["paed_data2"],
+                        "Comments": ["paed_data3"],
+                    }
+                ),
+                "ovarian": pd.DataFrame(
+                    {
+                        "Gene": ["gene3"],
+                        "Driver": ["ovarian_data1"],
+                        "Entities": ["ovarian_data2"],
+                        "Comments": ["ovarian_data3"],
+                        "Reference": ["ovarian_data4"],
+                    }
+                ),
+                "sarc": pd.DataFrame(
+                    {
+                        "Gene": ["gene4"],
+                        "Driver": ["sarc_data1"],
+                        "Entities": ["sarc_data2"],
+                        "Comments": ["sarc_data3"],
+                        "Reference": ["sarc_data4"],
+                    }
+                ),
+                "neuro": pd.DataFrame(
+                    {
+                        "Gene": ["gene2", "gene1"],
+                        "Driver": ["neuro_data1", "neuro_data5"],
+                        "Entities": ["neuro_data2", "neuro_data6"],
+                        "Comments": ["neuro_data3", "neuro_data7"],
+                        "Reference": ["neuro_data4", "neuro_data8"],
+                    }
+                ),
+            }
+        )
+
+        expected_output = pd.DataFrame(
+            {
+                "Gene": ["gene1", "gene2", "gene3", "gene4"],
+                "Comments": ["somatic_data1", np.nan, "somatic_data4", np.nan],
+                "Alteration": [
+                    "somatic_data2",
+                    np.nan,
+                    "somatic_data5",
+                    np.nan,
+                ],
+                "Entities": ["somatic_data3", np.nan, "somatic_data6", np.nan],
+                "Haem_Alteration": [np.nan, "haem_data1", np.nan, np.nan],
+                "Haem_Entities": [np.nan, "haem_data2", np.nan, np.nan],
+                "Haem_Comments": [np.nan, "haem_data3", np.nan, np.nan],
+                "Haem_Reference": [np.nan, "haem_data4", np.nan, np.nan],
+                "Paed_Alteration": ["paed_data1", np.nan, np.nan, np.nan],
+                "Paed_Entities": ["paed_data2", np.nan, np.nan, np.nan],
+                "Paed_Comments": ["paed_data3", np.nan, np.nan, np.nan],
+                "Ovarian_Alteration": [
+                    np.nan,
+                    np.nan,
+                    "ovarian_data1",
+                    np.nan,
+                ],
+                "Ovarian_Entities": [np.nan, np.nan, "ovarian_data2", np.nan],
+                "Ovarian_Comments": [np.nan, np.nan, "ovarian_data3", np.nan],
+                "Ovarian_Reference": [np.nan, np.nan, "ovarian_data4", np.nan],
+                "Sarcoma_Alteration": [np.nan, np.nan, np.nan, "sarc_data1"],
+                "Sarcoma_Entites": [np.nan, np.nan, np.nan, "sarc_data2"],
+                "Sarcoma_Comments": [np.nan, np.nan, np.nan, "sarc_data3"],
+                "Sarcoma_Reference": [np.nan, np.nan, np.nan, "sarc_data4"],
+                "Neuro_Alteration": [
+                    "neuro_data5",
+                    "neuro_data1",
+                    np.nan,
+                    np.nan,
+                ],
+                "Neuro_Entities": [
+                    "neuro_data6",
+                    "neuro_data2",
+                    np.nan,
+                    np.nan,
+                ],
+                "Neuro_Comments": [
+                    "neuro_data7",
+                    "neuro_data3",
+                    np.nan,
+                    np.nan,
+                ],
+                "Neuro_Reference": [
+                    "neuro_data8",
+                    "neuro_data4",
+                    np.nan,
+                    np.nan,
+                ],
+            }
+        )
+
+        assert test_output.equals(expected_output)
