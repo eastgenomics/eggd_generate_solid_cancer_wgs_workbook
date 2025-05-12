@@ -289,24 +289,3 @@ def convert_3_letter_protein_to_1(string_element: str) -> str:
         )
 
     return string_element
-
-
-def letter_operation(letter: str, operation: str) -> str:
-    """Get the next letter using a math operation i.e. A + 1 = B
-
-    Parameters
-    ----------
-    letter : str
-        Letter to perform the operation on
-    operation : str
-        String representing the operation i.e. +1 or -2
-
-    Returns
-    -------
-    str
-        Letter obtained after the operation
-    """
-
-    return convert_index_to_letters(
-        string.ascii_uppercase.index(letter) + int(operation)
-    )
