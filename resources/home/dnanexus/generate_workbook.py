@@ -187,12 +187,18 @@ def main(**kwargs):
 
     print("Writing sheets...")
 
-    sample_id = misc.get_sample_id_from_file_names(
-        Path(inputs["supplementary_html"]["id"]).name,
-        Path(inputs["reported_variants"]["id"]).name,
-        Path(inputs["reported_structural_variants"]["id"]).name,
+    # get the common prefix from the input files
+    sample_id = (
+        os.path.commonprefix(
+            Path(inputs["supplementary_html"]["id"]).name,
+            Path(inputs["reported_variants"]["id"]).name,
+            Path(inputs["reported_structural_variants"]["id"]).name,
+        )
+        .rstrip("-")
+        .rstrip("_")
     )
 
+    # create folder in order to grab the file in the bash main script
     os.mkdir("output")
 
     with pd.ExcelWriter(
