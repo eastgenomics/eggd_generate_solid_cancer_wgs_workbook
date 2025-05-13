@@ -28,12 +28,6 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
     elif file_type == "xls":
         df = pd.read_excel(file, sheet_name=None)
 
-    # convert the clinvar id column as a string and remove the trailing .0 that
-    # the automatic conversion that pandas applies added
-    if df is pd.DataFrame and "ClinVar ID" in df.columns:
-        df["ClinVar ID"] = df["ClinVar ID"].astype(str)
-        df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
-
     return df
 
 
@@ -57,10 +51,18 @@ def process_reported_variants_germline(
         Dataframe containing clinical significance info for germline variants
     """
 
+    if "Origin" not in df:
+        return None
+
     df = df[df["Origin"].str.lower() == "germline"]
 
     if df.empty:
         return None
+
+    # convert the clinvar id column as a string and remove the trailing .0 that
+    # the automatic conversion that pandas applies added
+    df.loc[:, "ClinVar ID"] = df["ClinVar ID"].astype(str)
+    df.loc[:, "ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
 
     df.reset_index(drop=True, inplace=True)
 
@@ -155,8 +157,15 @@ def process_reported_variants_somatic(
         Dataframe with additional formatting for c. and p. annotation
     """
 
+    if "Origin" not in df:
+        return None
+
     # select only somatic rows
     df = df[df["Origin"].str.lower().str.contains("somatic")]
+
+    if df.empty:
+        return None
+
     df.reset_index(drop=True, inplace=True)
     df[["c_dot", "p_dot"]] = df["CDS change and protein change"].str.split(
         r"(?=;p)", n=1, expand=True
@@ -322,7 +331,14 @@ def process_reported_SV(
         Dataframe for variants with the given SV type
     """
 
-    sv_df = df[df["Type"].str.lower().str.contains(type_sv)]
+    if "Type" not in df.columns:
+        return None
+
+    sv_df = df[df["Type"].str.lower().str.match(type_sv)]
+
+    if sv_df.empty:
+        return None
+
     sv_df.reset_index(drop=True, inplace=True)
 
     # populate the structural variant dataframe with data from the refgene
@@ -427,25 +443,31 @@ def process_fusion_SV(
         - Max number of fusion
     """
 
+    if "Type" not in df.columns:
+        return None
+
     df_SV = df[~df["Type"].str.lower().str.contains("loss|loh|gain")]
 
     if df_SV.empty:
         return None, 0
 
+    df_SV.reset_index(drop=True, inplace=True)
+
     # split fusion columns
     df_SV["fusion_count"] = df_SV["Type"].str.count(r"\;")
     fusion_count = df_SV["fusion_count"].max()
 
-    if fusion_count == 1:
-        df_SV[["Type", "Fusion"]] = df_SV.Type.str.split(";", expand=True)
-    else:
-        fusion_col = []
+    fusion_col = ["Type"]
 
-        for i in range(fusion_count):
-            fusion_col.append(f"Fusion_{i+1}")
+    for i in range(fusion_count):
+        fusion_col.append(f"Fusion_{i+1}")
 
-        fusion_col.insert(0, "Type")
-        df_SV[fusion_col] = df_SV.Type.str.split(";", expand=True)
+    # create intermediate dataframe to concatenate the fusion information with
+    # the main dataframe
+    inter_df = pd.DataFrame({}, columns=fusion_col)
+    inter_df[fusion_col] = df_SV.Type.str.split(";", expand=True)
+    df_SV.drop("Type", inplace=True, axis=1)
+    df_SV = pd.concat([df_SV, inter_df], axis=1)
 
     # remove prefixes for single reads and paired reads and store in separate
     # columns
@@ -530,13 +552,14 @@ def process_fusion_SV(
         for column in expected_columns
     ]
 
-    if fusion_count == 1:
-        selected_col = subset_column + lookup_cols
+    if cyto_cols:
+        for col in cyto_cols[::-1]:
+            subset_column.insert(10, col)
 
-    else:
-        subset_column.insert(14, cyto_cols)
-        subset_column.insert(6, fusion_col)
-        selected_col = subset_column + lookup_cols
+    for col in fusion_col[::-1]:
+        subset_column.insert(6, col)
+
+    selected_col = subset_column + lookup_cols
 
     return df_SV[selected_col], fusion_count
 

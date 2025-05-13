@@ -29,12 +29,10 @@ CONFIG = {
         "Impacted transcript region",
         "GRCh38 coordinates",
         "Chromosomal bands",
-        "Type",
-        "Fusion",
         "Size",
         (
             "Population germline allele frequency (GESG | GECG for somatic "
-            "SVs or AF | AUC for germline CNVs)",
+            "SVs or AF | AUC for germline CNVs)"
         ),
         "Paired reads",
         "Split reads",
@@ -49,7 +47,7 @@ CONFIG = {
         [
             (
                 "Population germline allele frequency (GESG | GECG for "
-                "somatic SVs or AF | AUC for germline CNVs)",
+                "somatic SVs or AF | AUC for germline CNVs)"
             ),
             (
                 "Population germline allele frequency (AF | AUC for germline "
@@ -91,7 +89,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
     cells_to_color = []
 
     lookup_start, lookup_end = (
-        misc.convert_letter_column_to_index(first_letter_lookup_groups),
+        first_letter_lookup_groups,
         misc.convert_letter_column_to_index(last_column_letter),
     )
 
