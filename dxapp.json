@@ -1,6 +1,6 @@
 {
-    "name": "eggd_generate_sc_wgs_workbook",
-    "title": "eggd_generate_sc_wgs_workbook",
+    "name": "eggd_generate_solid_cancer_wgs_workbook",
+    "title": "eggd_generate_solid_cancer_wgs_workbook",
     "version": "2.0.0",
     "summary": "Generates a workbook for solid cancer WGS data analysis",
     "dxapi": "1.0.0",
@@ -18,6 +18,20 @@
             "class": "file",
             "optional": false,
             "help": "Excel file obtained from the Solid cancer team"
+        },
+        {
+            "name": "panelapp",
+            "label": "panelapp",
+            "class": "file",
+            "optional": false,
+            "help": "Panelapp reference excel file obtained from the Solid cancer team"
+        },
+        {
+            "name": "cytological_bands",
+            "label": "cytological_bands",
+            "class": "file",
+            "optional": false,
+            "help": "Excel file obtained from the Solid cancer team containing cytological reference data"
         },
         {
             "name": "clinvar",
