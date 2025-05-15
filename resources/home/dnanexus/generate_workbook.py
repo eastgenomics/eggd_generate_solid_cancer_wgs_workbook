@@ -1,4 +1,6 @@
 import argparse
+import os
+from pathlib import Path
 
 import pandas as pd
 
@@ -120,7 +122,7 @@ def main(**kwargs):
             "gain": gain_df,
             "loss": loss_df,
             "fusion": fusion_df,
-        }
+        },
     )
 
     dynamic_values_per_sheet = {
@@ -181,11 +183,30 @@ def main(**kwargs):
             "html_images": html_images,
         },
         {"sheet_name": "Refgene", "dynamic_data": dynamic_values_per_sheet},
+        {"sheet_name": "Bioinformatics"},
     ]
 
     print("Writing sheets...")
 
-    with pd.ExcelWriter("output.xlsx", engine="openpyxl") as output_excel:
+    # get the common prefix from the input files
+    sample_id = (
+        os.path.commonprefix(
+            [
+                Path(inputs["supplementary_html"]["id"]).name,
+                Path(inputs["reported_variants"]["id"]).name,
+                Path(inputs["reported_structural_variants"]["id"]).name,
+            ]
+        )
+        .rstrip("-")
+        .rstrip("_")
+    )
+
+    # # create folder in order to grab the file in the bash main script
+    Path("output").mkdir(exist_ok=True)
+
+    with pd.ExcelWriter(
+        f"output/{sample_id}.xlsx", engine="openpyxl"
+    ) as output_excel:
         for sheet_data in sheets:
             excel_writing.write_sheet(output_excel, **sheet_data)
 
@@ -204,19 +225,28 @@ if __name__ == "__main__":
         "-r",
         "--reference_gene_groups",
         required=True,
-        help="Excel file obtained from the Solid cancer team with reference information for COSMIC, and several type of cancer",
+        help=(
+            "Excel file obtained from the Solid cancer team with reference "
+            "information for COSMIC, and several type of cancer"
+        ),
     )
     parser.add_argument(
         "-p",
         "--panelapp",
         required=True,
-        help="Excel file obtained from the Solid cancer team with reference information for Panelapp",
+        help=(
+            "Excel file obtained from the Solid cancer team with reference "
+            "information for Panelapp"
+        ),
     )
     parser.add_argument(
         "-cb",
         "--cytological_bands",
         required=True,
-        help="Excel file obtained from the Solid cancer team with reference information for cytological bands",
+        help=(
+            "Excel file obtained from the Solid cancer team with reference "
+            "information for cytological bands"
+        ),
     )
     parser.add_argument(
         "-c", "--clinvar", required=True, help="Clinvar asset VCF file"

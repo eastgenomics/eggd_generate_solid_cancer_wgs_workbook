@@ -1,0 +1,37 @@
+import os
+from datetime import datetime, timezone, timedelta
+
+from openpyxl.styles import Border, Side
+
+THIN = Side(border_style="thin", color="000000")
+THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+LOWER_BORDER = Border(bottom=THIN)
+
+CONFIG = {
+    "cells_to_write": {
+        (1, 1): "Project id",
+        (2, 1): (
+            os.environ["DX_PROJECT_CONTEXT_ID"]
+            if "DX_PROJECT_CONTEXT_ID" in os.environ
+            else "Id not retrievable"
+        ),
+        (4, 1): "Job id",
+        (5, 1): (
+            os.environ["DX_JOB_ID"]
+            if "DX_JOB_ID" in os.environ
+            else "Id not retrievable"
+        ),
+        (1, 3): "Job datetime",
+        (2, 3): datetime.now()
+        .replace(tzinfo=timezone(timedelta(hours=1)))
+        .strftime("%a %d %b %Y, %H:%M"),
+    },
+    "to_bold": ["A1", "A4", "C1"],
+    "borders": {
+        "single_cells": [
+            ("A1", LOWER_BORDER),
+            ("A4", LOWER_BORDER),
+            ("C1", LOWER_BORDER),
+        ]
+    },
+}

@@ -84,7 +84,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         variant_class_column_letter
     )
 
-    first_letter_lookup_groups = variant_class_column_index + 4
+    first_letter_lookup_groups = variant_class_column_index + 5
 
     cells_to_color = []
 
@@ -94,7 +94,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
     )
 
     # there are 12 look up groups
-    number_genes = (lookup_end - lookup_start + 1) / 12
+    number_genes = (lookup_end - 1 - lookup_start) / 12
     group_number = 1
 
     # build the cells to color data
@@ -129,7 +129,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 PatternFill(patternType="solid", start_color="FFDBBB"),
             )
             for i in range(
-                variant_class_column_index - 1, variant_class_column_index + 4
+                variant_class_column_index, variant_class_column_index + 5
             )
             for j in range(1, nb_structural_variants + 2)
         ]
