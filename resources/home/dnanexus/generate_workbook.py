@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from configs import tables, germline, snv, gain, loss, refgene, sv, summary
-from utils import excel_parsing, excel_writing, html, vcf, misc
+from utils import excel_parsing, excel_writing, html, vcf
 
 
 def main(**kwargs):
@@ -183,6 +183,7 @@ def main(**kwargs):
             "html_images": html_images,
         },
         {"sheet_name": "Refgene", "dynamic_data": dynamic_values_per_sheet},
+        {"sheet_name": "Bioinformatics"},
     ]
 
     print("Writing sheets...")
@@ -190,16 +191,18 @@ def main(**kwargs):
     # get the common prefix from the input files
     sample_id = (
         os.path.commonprefix(
-            Path(inputs["supplementary_html"]["id"]).name,
-            Path(inputs["reported_variants"]["id"]).name,
-            Path(inputs["reported_structural_variants"]["id"]).name,
+            [
+                Path(inputs["supplementary_html"]["id"]).name,
+                Path(inputs["reported_variants"]["id"]).name,
+                Path(inputs["reported_structural_variants"]["id"]).name,
+            ]
         )
         .rstrip("-")
         .rstrip("_")
     )
 
-    # create folder in order to grab the file in the bash main script
-    os.mkdir("output")
+    # # create folder in order to grab the file in the bash main script
+    Path("output").mkdir(exist_ok=True)
 
     with pd.ExcelWriter(
         f"output/{sample_id}.xlsx", engine="openpyxl"
