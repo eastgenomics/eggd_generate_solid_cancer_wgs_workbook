@@ -214,7 +214,7 @@ CONFIG = {
                     for row in range(start, end)
                 ): (
                     '"Predicts therapeutic response,'
-                    "Prognostic"
+                    "Prognostic,"
                     "Defines diagnosis group,"
                     "Eligibility for trial,"
                     'Other"'
