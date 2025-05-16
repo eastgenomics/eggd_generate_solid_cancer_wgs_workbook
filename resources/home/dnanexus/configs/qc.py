@@ -94,67 +94,54 @@ CONFIG = {
         (15, 2): "Assessed purity",
         (15, 3): "SNV TMB",
     },
-    "to_bold": [
-        "A1",
-        "A4",
-        "A7",
-        "A10",
-        "A15",
-        "B4",
-        "B7",
-        "B10",
-        "B15",
-        "C4",
-        "C7",
-        "C10",
-        "C15",
-        "D4",
-        "D7",
-        "D10",
-        "E4",
-        "E7",
-        "E10",
-        "F4",
-        "F7",
-        "F10",
-        "G4",
-        "G7",
-        "H4",
-    ],
+    "to_align": [
+        f"{col}{row}" for col in list("ABCDEFGH") for row in range(4, 6)
+    ]
+    + [f"{col}{row}" for col in list("ABCDEFG") for row in range(7, 9)]
+    + [f"{col}{row}" for col in list("ABCDEF") for row in range(10, 13)]
+    + [f"{col}15" for col in list("ABC")],
+    "to_bold": [f"{col}4" for col in list("ABCDEFGH")]
+    + [f"{col}7" for col in list("ABCDEFG")]
+    + [f"{col}10" for col in list("ABCDEF")]
+    + [f"{col}15" for col in list("ABC")],
     "col_width": [
-        ("A", 22),
-        ("B", 22),
-        ("C", 22),
-        ("D", 22),
-        ("E", 22),
-        ("F", 22),
-        ("G", 22),
-        ("H", 22),
-        ("I", 22),
-        ("J", 22),
+        ("A", 12),
+        ("B", 12),
+        ("C", 12),
+        ("D", 12),
+        ("E", 12),
+        ("F", 12),
+        ("G", 12),
+        ("H", 12),
+        ("I", 12),
+        ("J", 12),
     ],
+    "row_height": [(4, 30), (5, 30), (7, 30), (10, 30)],
+    "wrap_text": [
+        f"{col}{row}" for col in list("ABCDEFGH") for row in range(4, 6)
+    ]
+    + [f"{col}7" for col in list("ABCDEFG")]
+    + [f"{col}10" for col in list("ABCDEF")],
     "cells_to_colour": [
-        ("A4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("B4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("C4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("D4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("E4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("F4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("G4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("H4", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("A7", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("B7", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("C7", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("D7", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("E7", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("F7", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("G7", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("A10", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("B10", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("C10", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("D10", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("E10", PatternFill(patternType="solid", start_color="ADD8E6")),
-        ("F10", PatternFill(patternType="solid", start_color="ADD8E6")),
+        (
+            f"{col}4",
+            PatternFill(patternType="solid", start_color="F2F2F2"),
+        )
+        for col in list("ABCDEFGH")
+    ]
+    + [
+        (
+            f"{col}7",
+            PatternFill(patternType="solid", start_color="F2F2F2"),
+        )
+        for col in list("ABCDEFG")
+    ]
+    + [
+        (
+            f"{col}10",
+            PatternFill(patternType="solid", start_color="F2F2F2"),
+        )
+        for col in list("ABCDEF")
     ],
     "borders": {
         "single_cells": [
@@ -176,15 +163,38 @@ CONFIG = {
         {
             "cells": {
                 ("A16",): (
-                    '"None,<30% tumour purity,SNVs low VAF (<6%),TINC (<5%),'
-                    'Somatic CNV, Germline CNV"'
+                    '"None,'
+                    "<30% tumour purity,"
+                    "SNVs low VAF (<6%),"
+                    "TINC (<5%),"
+                    "TINC (>5%),"
+                    "Tumour potentially degraded,"
+                    "Tumour likely degraded,"
+                    'Poor quality germline CNV calls"'
                 ),
             },
             "title": "QC alerts",
-        }
+        },
+        {
+            "cells": {
+                ("B16",): ('"High (>70%),Medium (30-70%),Low (<30%)"'),
+            },
+            "title": "Assessed purity",
+        },
+        {
+            "cells": {
+                ("C16",): (
+                    '"Not hypermutated (<10 mut/Mb),'
+                    "Paed hypermutated (2-10 mut/Mb),"
+                    "Hypermutated (>10 mut/Mb),"
+                    'Ultra-hypermutaed (>100 mut/Mb)"'
+                ),
+            },
+            "title": "SNV TMB",
+        },
     ],
     "images": [
-        {"cell": "B18", "img_index": 8, "size": (600, 800)},
-        {"cell": "H18", "img_index": 10, "size": (600, 800)},
+        {"cell": "E15", "img_index": 8, "size": (350, 500)},
+        {"cell": "K15", "img_index": 10, "size": (350, 500)},
     ],
 }
