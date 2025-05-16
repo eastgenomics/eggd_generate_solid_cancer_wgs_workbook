@@ -25,7 +25,7 @@ CONFIG = {
         "start_column": 3,
         "end_column": 6,
     },
-    "to_align": ["C1"],
+    "alignment_info": [("C1", {"horizontal": "center", "wrapText": True})],
     "to_bold": ["A1", "A8", "A12", "C1"],
     "col_width": [
         ("A", 32),

@@ -94,12 +94,22 @@ CONFIG = {
         (15, 2): "Assessed purity",
         (15, 3): "SNV TMB",
     },
-    "to_align": [
-        f"{col}{row}" for col in list("ABCDEFGH") for row in range(4, 6)
+    "alignment_info": [
+        (f"{col}{row}", {"horizontal": "center", "wrapText": True})
+        for col in list("ABCDEFGH")
+        for row in range(4, 6)
     ]
-    + [f"{col}{row}" for col in list("ABCDEFG") for row in range(7, 9)]
-    + [f"{col}{row}" for col in list("ABCDEF") for row in range(10, 13)]
-    + [f"{col}15" for col in list("ABC")],
+    + [
+        (f"{col}{row}", {"horizontal": "center", "wrapText": True})
+        for col in list("ABCDEFG")
+        for row in range(7, 9)
+    ]
+    + [
+        (f"{col}{row}", {"horizontal": "center", "wrapText": True})
+        for col in list("ABCDEF")
+        for row in range(10, 13)
+    ]
+    + [(f"{col}15", {"horizontal": "center"}) for col in list("ABC")],
     "to_bold": [f"{col}4" for col in list("ABCDEFGH")]
     + [f"{col}7" for col in list("ABCDEFG")]
     + [f"{col}10" for col in list("ABCDEF")]
@@ -117,11 +127,6 @@ CONFIG = {
         ("J", 12),
     ],
     "row_height": [(4, 30), (5, 30), (7, 30), (10, 30)],
-    "wrap_text": [
-        f"{col}{row}" for col in list("ABCDEFGH") for row in range(4, 6)
-    ]
-    + [f"{col}7" for col in list("ABCDEFG")]
-    + [f"{col}10" for col in list("ABCDEF")],
     "cells_to_colour": [
         (
             f"{col}4",
