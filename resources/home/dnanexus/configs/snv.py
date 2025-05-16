@@ -75,7 +75,7 @@ CONFIG = {
     "auto_filter": "E:AL",
     "freeze_panes": "G1",
     "text_orientation": [
-        (f"{misc.convert_index_to_letters(i)}1", 90) for i in range(13, 38)
+        (f"{misc.convert_index_to_letters(i)}1", 90) for i in range(1, 38)
     ],
 }
 
@@ -151,7 +151,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 "title": "Variant class",
             },
         ],
-        "data_bar": f"I2:I{nb_somatic_variants + 1}",
+        "data_bar": f"J2:J{nb_somatic_variants + 1}",
     }
 
     return config_with_dynamic_values
