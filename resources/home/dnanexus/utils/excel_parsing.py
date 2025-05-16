@@ -61,8 +61,8 @@ def process_reported_variants_germline(
 
     # convert the clinvar id column as a string and remove the trailing .0 that
     # the automatic conversion that pandas applies added
-    df.loc[:, "ClinVar ID"] = df["ClinVar ID"].astype(str)
-    df.loc[:, "ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
+    df["ClinVar ID"] = df["ClinVar ID"].astype("string")
+    df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
 
     df.reset_index(drop=True, inplace=True)
 
