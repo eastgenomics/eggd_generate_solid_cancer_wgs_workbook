@@ -117,6 +117,7 @@ def process_reported_variants_germline(
             "Gene",
             "GRCh38 coordinates;ref/alt allele",
             "CDS change and protein change",
+            "Predicted consequences",
             "Genotype",
             "Population germline allele frequency (GE | gnomAD)",
             "Gene mode of action",
