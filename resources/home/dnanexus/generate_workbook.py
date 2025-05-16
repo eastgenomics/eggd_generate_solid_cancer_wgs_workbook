@@ -172,11 +172,11 @@ def main(**kwargs):
         },
         {"sheet_name": "Plot", "html_images": html_images},
         {"sheet_name": "Signatures", "html_images": html_images},
-        {"sheet_name": "Germline", "dynamic_data": dynamic_values_per_sheet},
         {"sheet_name": "SNV", "dynamic_data": dynamic_values_per_sheet},
         {"sheet_name": "Gain", "dynamic_data": dynamic_values_per_sheet},
         {"sheet_name": "Loss", "dynamic_data": dynamic_values_per_sheet},
         {"sheet_name": "SV", "dynamic_data": dynamic_values_per_sheet},
+        {"sheet_name": "Germline", "dynamic_data": dynamic_values_per_sheet},
         {
             "sheet_name": "Summary",
             "dynamic_data": dynamic_values_per_sheet,
