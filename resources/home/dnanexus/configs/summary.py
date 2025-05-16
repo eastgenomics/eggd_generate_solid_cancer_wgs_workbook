@@ -97,7 +97,7 @@ CONFIG = {
     }
     ####
     # somatic fusion gene lookup
-    | {(row, 1): f"=C{row+42}" for row in range(42, 47)}
+    | {(row, 1): f"=B{row+42}" for row in range(42, 47)}
     # somatic fusion coordinates
     | {
         (row, 2): f'=SUBSTITUTE(E{row+42},";",CHAR(10))'
@@ -115,10 +115,10 @@ CONFIG = {
     }
     ####
     # germline snv gene lookup
-    | {(row, 1): f"=A{row+41}" for row in range(50, 54)}
+    | {(row, 1): f"=A{row+42}" for row in range(50, 54)}
     ####
     # germline cnv gene lookup
-    | {(row, 1): f"=A{row+41}" for row in range(57, 61)},
+    | {(row, 1): f"=A{row+42}" for row in range(57, 61)},
     "to_bold": [
         # table names to be bolded
         "A1",
@@ -152,22 +152,6 @@ CONFIG = {
             PatternFill(patternType="solid", start_color="ADD8E6"),
         )
         for row in [24, 36, 49, 56]
-        for column in list("ABCDEFGH")
-    ]
-    + [
-        (
-            f"{column}{row}",
-            PatternFill(patternType="solid", start_color="f2746b"),
-        )
-        for row in range(37, 42)
-        for column in list("ABCDEFGH")
-    ]
-    + [
-        (
-            f"{column}{row}",
-            PatternFill(patternType="solid", start_color="7beda3"),
-        )
-        for row in range(42, 47)
         for column in list("ABCDEFGH")
     ],
     "borders": {
