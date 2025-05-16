@@ -17,13 +17,14 @@ CONFIG = {
         (4, 1): "Gene",
         (4, 2): "GRCh38 Coordinates",
         (4, 3): "Variant",
-        (4, 4): "Genotype",
-        (4, 5): "gnomAD",
-        (4, 6): "Role in Cancer",
-        (4, 7): "ClinVar",
-        (4, 8): "Tumour VAF",
-        (4, 9): "Panelapp Adult v2.2",
-        (4, 10): "Panelapp Childhood v4.0",
+        (4, 4): "Consequence",
+        (4, 5): "Genotype",
+        (4, 6): "gnomAD",
+        (4, 7): "Role in Cancer",
+        (4, 8): "ClinVar",
+        (4, 9): "Tumour VAF",
+        (4, 10): "Panelapp Adult v2.2",
+        (4, 11): "Panelapp Childhood v4.0",
     },
     "to_bold": [
         "A1",
@@ -37,22 +38,26 @@ CONFIG = {
         "H4",
         "I4",
         "J4",
+        "K4",
     ],
     "col_width": [
         ("A", 20),
-        ("B", 18),
-        ("C", 22),
-        ("D", 14),
-        ("F", 22),
+        ("B", 20),
+        ("C", 16),
+        ("D", 18),
+        ("E", 12),
+        ("F", 18),
         ("G", 18),
-        ("H", 12),
-        ("I", 44),
-        ("J", 44),
+        ("H", 25),
+        ("I", 20),
+        ("J", 40),
+        ("K", 40),
     ],
     "cells_to_colour": [
-        (f"{column}4", PatternFill(patternType="solid", start_color="ADD8E6"))
-        for column in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+        (f"{column}4", PatternFill(patternType="solid", start_color="F2F2F2"))
+        for column in list("ABCDEFGHIJK")
     ],
+    "row_height": [(4, 40)],
 }
 
 
@@ -76,7 +81,41 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         # merge 2 dicts with parsed data and hard coded values
         "cells_to_write": {
             (r_idx + 2, c_idx - 1): value
-            for r_idx, row in enumerate(dataframe_to_rows(data), 1)
+            for r_idx, row in enumerate(
+                dataframe_to_rows(pd.DataFrame(data.iloc[:, [0]])), 1
+            )
+            for c_idx, value in enumerate(row, 1)
+            if c_idx != 1 and r_idx != 1
+        }
+        | {
+            (r_idx + 2, c_idx): value.replace(";", "\n")
+            for r_idx, row in enumerate(
+                dataframe_to_rows(pd.DataFrame(data.iloc[:, 1:4])), 1
+            )
+            for c_idx, value in enumerate(row, 1)
+            if c_idx != 1 and r_idx != 1
+        }
+        | {
+            (r_idx + 2, c_idx + 3): value
+            for r_idx, row in enumerate(
+                dataframe_to_rows(pd.DataFrame(data.iloc[:, 4:8])), 1
+            )
+            for c_idx, value in enumerate(row, 1)
+            if c_idx != 1 and r_idx != 1
+        }
+        | {
+            (r_idx + 2, c_idx + 7): value.replace(";", "\n")
+            for r_idx, row in enumerate(
+                dataframe_to_rows(pd.DataFrame(data.iloc[:, [8]])), 1
+            )
+            for c_idx, value in enumerate(row, 1)
+            if c_idx != 1 and r_idx != 1
+        }
+        | {
+            (r_idx + 2, c_idx + 8): value
+            for r_idx, row in enumerate(
+                dataframe_to_rows(pd.DataFrame(data.iloc[:, 9:])), 1
+            )
             for c_idx, value in enumerate(row, 1)
             if c_idx != 1 and r_idx != 1
         }
@@ -85,13 +124,24 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             (nb_germline_variants + 7, 1): "None",
         },
         "to_bold": [f"A{nb_germline_variants + 6}"],
-        "to_align": [f"I{i}" for i in range(4, nb_germline_variants + 5)]
-        + [f"J{i}" for i in range(4, nb_germline_variants + 5)],
-        "row_height": [(i, 40) for i in range(5, nb_germline_variants + 6)],
+        "alignment_info": [
+            (f"J{i}", {"horizontal": "center"})
+            for i in range(4, nb_germline_variants + 5)
+        ]
+        + [
+            (f"K{i}", {"horizontal": "center"})
+            for i in range(4, nb_germline_variants + 5)
+        ]
+        + [
+            (f"{col}{row}", {"horizontal": "center", "wrapText": True})
+            for col in list("BCDH")
+            for row in range(5, nb_germline_variants + 6)
+        ],
+        "row_height": [(i, 40) for i in range(5, nb_germline_variants + 5)],
         "borders": {
             "single_cells": [(f"A{nb_germline_variants + 6}", LOWER_BORDER)],
             "cell_rows": [
-                (f"A{i}:J{i}", THIN_BORDER)
+                (f"A{i}:K{i}", THIN_BORDER)
                 for i in range(4, nb_germline_variants + 5)
             ],
         },
