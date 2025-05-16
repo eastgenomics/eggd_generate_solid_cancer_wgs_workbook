@@ -13,10 +13,14 @@ CONFIG = {
         (1, 5): "=SOC!A9",
         (35, 1): "Pertinent chromosomal CNVs",
         (35, 3): "Pertinent signatures",
+        (35, 5): "Total SNVs",
+        (36, 5): "=QC!D8",
+        (35, 6): "TMB",
+        (36, 6): "=QC!G8",
         (36, 1): "v2 (March 2015)",
         (36, 3): "None",
     },
-    "to_bold": ["A1", "A35", "C35"],
+    "to_bold": ["A1", "A35", "C35", "E35", "F35"],
     "col_width": (
         ("A", 18),
         ("B", 22),
@@ -28,6 +32,8 @@ CONFIG = {
         "single_cells": [
             ("A35", LOWER_BORDER),
             ("C35", LOWER_BORDER),
+            ("E35", LOWER_BORDER),
+            ("F35", LOWER_BORDER),
         ],
     },
     "images": [
