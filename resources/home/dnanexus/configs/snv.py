@@ -73,6 +73,36 @@ CONFIG = {
         ("N", 14),
     ]
     + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(21, 38)],
+    "cells_to_colour": [
+        # letters N to U
+        (
+            f"{string.ascii_uppercase[i]}1",
+            PatternFill(patternType="solid", start_color="F2F2F2"),
+        )
+        for i in range(13, 21)
+    ]
+    + [
+        (
+            f"{letter}1",
+            PatternFill(patternType="solid", start_color="fdeada"),
+        )
+        for letter in ["V", "W", "X"]
+    ]
+    + [
+        # letters Y to AJ
+        (
+            f"{misc.convert_index_to_letters(i)}1",
+            PatternFill(patternType="solid", start_color="dbeef4"),
+        )
+        for i in range(24, 36)
+    ]
+    + [
+        (
+            f"{col}1",
+            PatternFill(patternType="solid", start_color="dabcff"),
+        )
+        for col in ["AK", "AL"]
+    ],
     "borders": {
         "cell_rows": [
             ("A1:AL1", THIN_BORDER),
@@ -121,36 +151,6 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             for c_idx, value in enumerate(row, 1)
             if c_idx != 1 and r_idx != 1
         },
-        "cells_to_colour": [
-            # letters N to U
-            (
-                f"{string.ascii_uppercase[i]}1",
-                PatternFill(patternType="solid", start_color="F2F2F2"),
-            )
-            for i in range(13, 21)
-        ]
-        + [
-            (
-                f"{letter}1",
-                PatternFill(patternType="solid", start_color="fdeada"),
-            )
-            for letter in ["V", "W", "X"]
-        ]
-        + [
-            # letters Y to AJ
-            (
-                f"{misc.convert_index_to_letters(i)}1",
-                PatternFill(patternType="solid", start_color="dbeef4"),
-            )
-            for i in range(24, 36)
-        ]
-        + [
-            (
-                f"{col}1",
-                PatternFill(patternType="solid", start_color="dabcff"),
-            )
-            for col in ["AK", "AL"]
-        ],
         "dropdowns": [
             {
                 "cells": {
@@ -169,7 +169,6 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 (f"Y1:Y{nb_somatic_variants+1}", LEFT_BORDER),
                 (f"AA1:AA{nb_somatic_variants+1}", LEFT_BORDER),
                 (f"AC1:AC{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AE1:AE{nb_somatic_variants+1}", LEFT_BORDER),
                 (f"AE1:AE{nb_somatic_variants+1}", LEFT_BORDER),
                 (f"AG1:AG{nb_somatic_variants+1}", LEFT_BORDER),
                 (f"AI1:AI{nb_somatic_variants+1}", LEFT_BORDER),
