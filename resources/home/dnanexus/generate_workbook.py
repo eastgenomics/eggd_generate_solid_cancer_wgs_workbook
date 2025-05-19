@@ -109,10 +109,12 @@ def main(**kwargs):
         "TSG_Hom",
         "SNV_LOH",
     )
-    fusion_df, fusion_count = excel_parsing.process_fusion_SV(
-        inputs["reported_structural_variants"]["data"],
-        lookup_refgene_data,
-        inputs["cytological_bands"]["data"],
+    fusion_df, fusion_count, alternative_columns = (
+        excel_parsing.process_fusion_SV(
+            inputs["reported_structural_variants"]["data"],
+            lookup_refgene_data,
+            inputs["cytological_bands"]["data"],
+        )
     )
 
     refgene_df = excel_parsing.lookup_data_from_variants(
@@ -130,7 +132,7 @@ def main(**kwargs):
         "SNV": snv.add_dynamic_values(somatic_df),
         "Gain": gain.add_dynamic_values(gain_df),
         "Loss": loss.add_dynamic_values(loss_df),
-        "SV": sv.add_dynamic_values(fusion_df),
+        "SV": sv.add_dynamic_values(fusion_df, alternative_columns),
         "Summary": summary.add_dynamic_values(
             fusion_df,
             fusion_count,
