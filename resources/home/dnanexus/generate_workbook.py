@@ -69,8 +69,8 @@ def main(**kwargs):
     # - using the 3rd element as a reference df
     # - and getting the data from the column named by the 5th element
     lookup_refgene_data = (
-        ("COSMIC Driver", "Gene", refgene_df, "Gene", "Alteration"),
-        ("COSMIC Entities", "Gene", refgene_df, "Gene", "Entities"),
+        ("COSMIC Driver", "Gene", refgene_df, "Gene", "COSMIC_Alteration"),
+        ("COSMIC Entities", "Gene", refgene_df, "Gene", "COSMIC_Entities"),
         ("Paed Driver", "Gene", refgene_df, "Gene", "Paed_Alteration"),
         ("Paed Entities", "Gene", refgene_df, "Gene", "Paed_Entities"),
         ("Sarc Driver", "Gene", refgene_df, "Gene", "Sarcoma_Alteration"),

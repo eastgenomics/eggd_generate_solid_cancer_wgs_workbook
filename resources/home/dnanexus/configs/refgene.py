@@ -8,62 +8,36 @@ from utils import misc
 THIN = Side(border_style="thin", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
+LEFT_BORDER = Border(left=THIN)
+
 
 CONFIG = {
     "cells_to_colour": [
         (
-            f"{col}1",
-            PatternFill(patternType="solid", start_color="fcba03"),
+            f"{misc.convert_index_to_letters(i)}1",
+            PatternFill(patternType="solid", start_color="dbeef4"),
         )
-        for col in ["B", "C", "D"]
-    ]
-    + [
-        (
-            f"{col}1",
-            PatternFill(patternType="solid", start_color="db5a14"),
-        )
-        for col in ["E", "F", "G", "H"]
-    ]
-    + [
-        (
-            f"{col}1",
-            PatternFill(patternType="solid", start_color="2c8500"),
-        )
-        for col in ["I", "J", "K"]
-    ]
-    + [
-        (
-            f"{col}1",
-            PatternFill(patternType="solid", start_color="008581"),
-        )
-        for col in ["L", "M", "N", "O"]
-    ]
-    + [
-        (
-            f"{col}1",
-            PatternFill(patternType="solid", start_color="024dc7"),
-        )
-        for col in ["P", "Q", "R", "S"]
-    ]
-    + [
-        (
-            f"{col}1",
-            PatternFill(patternType="solid", start_color="ad2323"),
-        )
-        for col in ["T", "U", "V", "W"]
+        for i in range(18 + 1)
     ]
     + [
         (
             f"{col}1",
             PatternFill(patternType="solid", start_color="b686da"),
         )
-        for col in ["X", "Y", "Z", "AA"]
+        for col in ["T", "U", "V", "W"]
     ],
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 27)],
-    "auto_filter": "A:AA",
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 23)],
+    "auto_filter": "A:W",
     "borders": {
         "cell_rows": [
             ("A1:AA1", THIN_BORDER),
+            ("B1:B1500", LEFT_BORDER),
+            ("E1:E1500", LEFT_BORDER),
+            ("H1:H1500", LEFT_BORDER),
+            ("K1:K1500", LEFT_BORDER),
+            ("N1:N1500", LEFT_BORDER),
+            ("Q1:Q1500", LEFT_BORDER),
+            ("T1:T1500", LEFT_BORDER),
         ],
     },
 }
@@ -73,15 +47,14 @@ SHEETS2COLUMNS = {
     "somatic_db": {
         "Gene": "Gene",
         "Role in Cancer": "Comments",
-        "Driver_SV": "Alteration",
-        "Entities": "Entities",
+        "Driver_SV": "COSMIC_Alteration",
+        "Entities": "COSMIC_Entities",
     },
     "haem": {
         "Gene": "Gene",
         "Driver": "Haem_Alteration",
         "Entities": "Haem_Entities",
         "Comments": "Haem_Comments",
-        "Reference": "Haem_Reference",
     },
     "paed": {
         "Gene": "Gene",
@@ -94,21 +67,18 @@ SHEETS2COLUMNS = {
         "Driver": "Ovarian_Alteration",
         "Entities": "Ovarian_Entities",
         "Comments": "Ovarian_Comments",
-        "Reference": "Ovarian_Reference",
     },
     "sarc": {
         "Gene": "Gene",
         "Driver": "Sarcoma_Alteration",
         "Entities": "Sarcoma_Entites",
         "Comments": "Sarcoma_Comments",
-        "Reference": "Sarcoma_Reference",
     },
     "neuro": {
         "Gene": "Gene",
         "Driver": "Neuro_Alteration",
         "Entities": "Neuro_Entities",
         "Comments": "Neuro_Comments",
-        "Reference": "Neuro_Reference",
     },
 }
 
