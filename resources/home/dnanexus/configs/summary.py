@@ -116,11 +116,13 @@ CONFIG = {
     # germline snv gene lookup
     | {(row, 1): f"=A{row+42}" for row in range(50, 54)}
     # germline snv coordinates lookup
-    | {(row, 1): f"=B{row+42}" for row in range(50, 54)}
+    | {(row, 2): f"=B{row+42}" for row in range(50, 54)}
     # germline snv variant lookup
-    | {(row, 1): f"=C{row+42}" for row in range(50, 54)}
+    | {(row, 3): f"=C{row+42}" for row in range(50, 54)}
     # germline snv consequence lookup
-    | {(row, 1): f"=D{row+42}" for row in range(50, 54)}
+    | {(row, 4): f"=D{row+42}" for row in range(50, 54)}
+    # germline snv tumour vaf lookup
+    | {(row, 6): f"=I{row+42}" for row in range(50, 54)}
     ####
     # germline cnv gene lookup
     | {(row, 1): f"=A{row+42}" for row in range(57, 61)},
@@ -173,12 +175,54 @@ CONFIG = {
         {"cell": "A4", "img_index": 2, "size": (350, 700)},
         {"cell": "G4", "img_index": 1, "size": (350, 350)},
     ],
-    "wrap_text": [
-        f"{col}{row}" for col in list("ABCDE") for row in range(25, 34)
+    "alignment_info": [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(24, 34)
     ]
-    + [f"{col}{row}" for col in list("ABCDE") for row in range(37, 47)]
-    + [f"{col}{row}" for col in list("ABCDE") for row in range(50, 54)]
-    + [f"{col}{row}" for col in list("ABCDE") for row in range(57, 61)],
+    + [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(36, 47)
+    ]
+    + [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(49, 54)
+    ]
+    + [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(56, 61)
+    ],
     "row_height": [
         (row, 30)
         for start, end in [(25, 34), (37, 47), (50, 54), (57, 61)]
