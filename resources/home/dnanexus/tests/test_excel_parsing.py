@@ -24,6 +24,11 @@ def germline_variant_data():
                 "",
                 "ge2|freq2",
             ],
+            "Predicted consequences": [
+                "consequence1",
+                "consequence2",
+                "consequence3",
+            ],
             "CDS change and protein change": ["c.1", "c.2", "c.3"],
             "Genotype": ["0/1", "0|0", "1|1"],
             "Gene mode of action": ["deletion1", "missense1", "deletion2"],
@@ -263,6 +268,7 @@ class TestProcessReportedVariantsGermline:
                 "Gene": ["gene1"],
                 "GRCh38 coordinates;ref/alt allele": ["coor1"],
                 "CDS change and protein change": ["c.1"],
+                "Predicted consequences": ["consequence1"],
                 "Genotype": ["0/1"],
                 "Population germline allele frequency (GE | gnomAD)": [
                     "ge1|freq1"
@@ -297,6 +303,7 @@ class TestProcessReportedVariantsGermline:
                 "Gene": ["gene1", "gene3"],
                 "GRCh38 coordinates;ref/alt allele": ["coor1", "coor3"],
                 "CDS change and protein change": ["c.1", "c.3"],
+                "Predicted consequences": ["consequence1", "consequence3"],
                 "Genotype": ["0/1", "1|1"],
                 "Population germline allele frequency (GE | gnomAD)": [
                     "ge1|freq1",
@@ -589,8 +596,8 @@ class TestProcessFusion:
         assert excel_parsing.process_fusion_SV(*test_inputs) is None
 
     def test_single_row(self, fusion_data, cyto):
-        test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
-            fusion_data.iloc[[1], :], (), cyto
+        test_df_output, test_fusion_output, test_alternative_columns = (
+            excel_parsing.process_fusion_SV(fusion_data.iloc[[1], :], (), cyto)
         )
 
         expected_df = pd.DataFrame(
@@ -600,7 +607,6 @@ class TestProcessFusion:
                 "RefSeq IDs": ["refseq_id2"],
                 "Impacted transcript region": ["region2"],
                 "GRCh38 coordinates": ["coor2"],
-                "Chromosomal bands": ["cyto2"],
                 "Type": ["type1"],
                 "Fusion_1": ["type2"],
                 "Size": ["200,000"],
@@ -610,8 +616,8 @@ class TestProcessFusion:
                 ): ["freq2"],
                 "Paired reads": ["7/133"],
                 "Split reads": [""],
-                "Gene_1 | Cyto": ["-"],
-                "Gene_2 | Cyto": ["cyto2"],
+                "Cyto\nGene_1": ["-"],
+                "Cyto\nGene_2": ["cyto2"],
                 "Gene mode of action": ["mode2"],
                 "Variant class": [""],
                 "OG_Fusion": [""],
@@ -621,11 +627,15 @@ class TestProcessFusion:
             }
         )
 
-        assert test_df_output.equals(expected_df) and test_fusion_output == 1
+        assert (
+            test_df_output.equals(expected_df)
+            and test_fusion_output == 1
+            and test_alternative_columns == {}
+        )
 
     def test_multiple_rows(self, fusion_data, cyto):
-        test_df_output, test_fusion_output = excel_parsing.process_fusion_SV(
-            fusion_data, (), cyto
+        test_df_output, test_fusion_output, test_alternative_columns = (
+            excel_parsing.process_fusion_SV(fusion_data, (), cyto)
         )
 
         expected_df = pd.DataFrame(
@@ -635,7 +645,6 @@ class TestProcessFusion:
                 "RefSeq IDs": ["refseq_id2", "refseq_id3"],
                 "Impacted transcript region": ["region2", "region3"],
                 "GRCh38 coordinates": ["coor2", "coor3"],
-                "Chromosomal bands": ["cyto2", "cyto3"],
                 "Type": ["type1", "type3"],
                 "Fusion_1": ["type2", "type4"],
                 "Fusion_2": [None, "type5"],
@@ -646,9 +655,9 @@ class TestProcessFusion:
                 ): ["freq2", "freq3"],
                 "Paired reads": ["7/133", "1/69"],
                 "Split reads": ["", "18/95"],
-                "Gene_1 | Cyto": ["-", "cyto3"],
-                "Gene_2 | Cyto": ["cyto2", "-"],
-                "Gene_3 | Cyto": ["-", "-"],
+                "Cyto\nGene_1": ["-", "cyto3"],
+                "Cyto\nGene_2": ["cyto2", "-"],
+                "Cyto\nGene_3": ["-", "-"],
                 "Gene mode of action": ["mode2", "mode3"],
                 "Variant class": ["", ""],
                 "OG_Fusion": ["", ""],
@@ -658,7 +667,11 @@ class TestProcessFusion:
             }
         )
 
-        assert test_df_output.equals(expected_df) and test_fusion_output == 2
+        assert (
+            test_df_output.equals(expected_df)
+            and test_fusion_output == 2
+            and test_alternative_columns == {}
+        )
 
 
 class TestProcessRefgene:
@@ -679,7 +692,6 @@ class TestProcessRefgene:
                         "Driver": ["haem_data1"],
                         "Entities": ["haem_data2"],
                         "Comments": ["haem_data3"],
-                        "Reference": ["haem_data4"],
                     }
                 ),
                 "paed": pd.DataFrame(
@@ -696,7 +708,6 @@ class TestProcessRefgene:
                         "Driver": ["ovarian_data1"],
                         "Entities": ["ovarian_data2"],
                         "Comments": ["ovarian_data3"],
-                        "Reference": ["ovarian_data4"],
                     }
                 ),
                 "sarc": pd.DataFrame(
@@ -705,7 +716,6 @@ class TestProcessRefgene:
                         "Driver": ["sarc_data1"],
                         "Entities": ["sarc_data2"],
                         "Comments": ["sarc_data3"],
-                        "Reference": ["sarc_data4"],
                     }
                 ),
                 "neuro": pd.DataFrame(
@@ -714,7 +724,6 @@ class TestProcessRefgene:
                         "Driver": ["neuro_data1", "neuro_data5"],
                         "Entities": ["neuro_data2", "neuro_data6"],
                         "Comments": ["neuro_data3", "neuro_data7"],
-                        "Reference": ["neuro_data4", "neuro_data8"],
                     }
                 ),
             }
@@ -724,17 +733,21 @@ class TestProcessRefgene:
             {
                 "Gene": ["gene1", "gene2", "gene3", "gene4"],
                 "Comments": ["somatic_data1", np.nan, "somatic_data4", np.nan],
-                "Alteration": [
+                "COSMIC_Alteration": [
                     "somatic_data2",
                     np.nan,
                     "somatic_data5",
                     np.nan,
                 ],
-                "Entities": ["somatic_data3", np.nan, "somatic_data6", np.nan],
+                "COSMIC_Entities": [
+                    "somatic_data3",
+                    np.nan,
+                    "somatic_data6",
+                    np.nan,
+                ],
                 "Haem_Alteration": [np.nan, "haem_data1", np.nan, np.nan],
                 "Haem_Entities": [np.nan, "haem_data2", np.nan, np.nan],
                 "Haem_Comments": [np.nan, "haem_data3", np.nan, np.nan],
-                "Haem_Reference": [np.nan, "haem_data4", np.nan, np.nan],
                 "Paed_Alteration": ["paed_data1", np.nan, np.nan, np.nan],
                 "Paed_Entities": ["paed_data2", np.nan, np.nan, np.nan],
                 "Paed_Comments": ["paed_data3", np.nan, np.nan, np.nan],
@@ -746,11 +759,9 @@ class TestProcessRefgene:
                 ],
                 "Ovarian_Entities": [np.nan, np.nan, "ovarian_data2", np.nan],
                 "Ovarian_Comments": [np.nan, np.nan, "ovarian_data3", np.nan],
-                "Ovarian_Reference": [np.nan, np.nan, "ovarian_data4", np.nan],
                 "Sarcoma_Alteration": [np.nan, np.nan, np.nan, "sarc_data1"],
                 "Sarcoma_Entites": [np.nan, np.nan, np.nan, "sarc_data2"],
                 "Sarcoma_Comments": [np.nan, np.nan, np.nan, "sarc_data3"],
-                "Sarcoma_Reference": [np.nan, np.nan, np.nan, "sarc_data4"],
                 "Neuro_Alteration": [
                     "neuro_data5",
                     "neuro_data1",
@@ -766,12 +777,6 @@ class TestProcessRefgene:
                 "Neuro_Comments": [
                     "neuro_data7",
                     "neuro_data3",
-                    np.nan,
-                    np.nan,
-                ],
-                "Neuro_Reference": [
-                    "neuro_data8",
-                    "neuro_data4",
                     np.nan,
                     np.nan,
                 ],

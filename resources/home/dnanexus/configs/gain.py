@@ -1,5 +1,3 @@
-import string
-
 from openpyxl.styles import Border, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -10,6 +8,7 @@ from utils import misc
 
 THIN = Side(border_style="thin", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+LEFT_BORDER = Border(left=THIN)
 
 
 CONFIG = {
@@ -33,7 +32,7 @@ CONFIG = {
                 "Focality",
                 "Full transcript",
                 "COSMIC Driver",
-                "COSMIC Alterations",
+                "COSMIC Entities",
                 "Paed Driver",
                 "Paed Entities",
                 "Sarc Driver",
@@ -50,24 +49,55 @@ CONFIG = {
     },
     "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 27)],
     "col_width": [
+        ("A", 10),
         ("B", 12),
         ("C", 16),
         ("D", 16),
         ("E", 22),
+        ("F", 6),
+        ("G", 5),
         ("H", 14),
         ("I", 10),
         ("J", 10),
+        ("K", 22),
+        ("M", 6),
+        ("N", 6),
+        ("O", 6),
     ],
     "borders": {
         "cell_rows": [
             ("A1:AA1", THIN_BORDER),
         ],
     },
+    "cells_to_colour": [
+        (
+            f"{col}1",
+            PatternFill(patternType="solid", start_color="F2F2F2"),
+        )
+        for col in ["L", "M", "N", "O"]
+    ]
+    + [
+        (
+            # letters P to AA
+            f"{misc.convert_index_to_letters(i)}1",
+            PatternFill(patternType="solid", start_color="fdeada"),
+        )
+        for i in range(15, 27)
+    ],
     "row_height": [(1, 80)],
     "auto_filter": "A:AA",
-    "freeze_panes": "F1",
-    "text_orientation": [
-        (f"{misc.convert_index_to_letters(i)}1", 90) for i in range(11, 38)
+    "freeze_panes": "H1",
+    "alignment_info": [
+        (
+            f"{misc.convert_index_to_letters(i)}1",
+            {
+                "horizontal": "left",
+                "vertical": "bottom",
+                "wrapText": True,
+                "text_rotation": 90,
+            },
+        )
+        for i in range(0, 27)
     ],
 }
 
@@ -97,24 +127,10 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             for c_idx, value in enumerate(row, 1)
             if c_idx != 1 and r_idx != 1
         },
-        "cells_to_colour": [
-            (
-                f"{col}{i}",
-                PatternFill(patternType="solid", start_color="FFDBBB"),
-            )
-            for col in ["L", "M", "N", "O"]
-            for i in range(1, nb_sv_variants + 2)
-        ]
-        + [
-            (
-                # letters P to AA
-                f"{misc.convert_index_to_letters(i)}{j}",
-                PatternFill(patternType="solid", start_color="c4d9ef"),
-            )
-            for i in range(15, 27)
-            for j in range(1, nb_sv_variants + 2)
+        "alignment_info": [
+            (f"G{i}", {"horizontal": "center"})
+            for i in range(2, nb_sv_variants + 2)
         ],
-        "to_align": [f"G{i}" for i in range(2, nb_sv_variants + 2)],
         "dropdowns": [
             {
                 "cells": {
@@ -127,6 +143,17 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 "title": "Variant class",
             },
         ],
+        "borders": {
+            "cell_rows": [
+                (f"P1:P{nb_sv_variants+1}", LEFT_BORDER),
+                (f"R1:R{nb_sv_variants+1}", LEFT_BORDER),
+                (f"T1:T{nb_sv_variants+1}", LEFT_BORDER),
+                (f"V1:V{nb_sv_variants+1}", LEFT_BORDER),
+                (f"X1:X{nb_sv_variants+1}", LEFT_BORDER),
+                (f"Z1:Z{nb_sv_variants+1}", LEFT_BORDER),
+                (f"AB1:AB{nb_sv_variants+1}", LEFT_BORDER),
+            ],
+        },
     }
 
     return config_with_dynamic_values

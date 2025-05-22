@@ -68,8 +68,8 @@ def write_sheet(
         # merge columns that have longer text
         sheet.merge_cells(**sheet_config["to_merge"])
 
-    if sheet_config.get("to_align"):
-        align_cells(sheet, sheet_config["to_align"])
+    if sheet_config.get("alignment_info"):
+        apply_alignment_data(sheet, sheet_config["alignment_info"])
 
     if sheet_config.get("to_bold"):
         bold_cells(sheet, sheet_config["to_bold"])
@@ -101,12 +101,6 @@ def write_sheet(
 
     if sheet_config.get("data_bar"):
         add_databar_rule(sheet, sheet_config["data_bar"])
-
-    if sheet_config.get("text_orientation"):
-        rotate_text(sheet, sheet_config["text_orientation"])
-
-    if sheet_config.get("wrap_text"):
-        wrap_text(sheet, sheet_config["wrap_text"])
 
     return sheet
 
@@ -180,19 +174,19 @@ def write_cell_content(
         sheet.cell(cell_x, cell_y).value = value_to_write
 
 
-def align_cells(sheet: Worksheet, config_data: list):
-    """For given list of cells, align the cells
+def apply_alignment_data(sheet: Worksheet, config_data: list):
+    """For given list of cells, align or wrap cells
 
     Parameters
     ----------
     sheet : Worksheet
-        Worksheet in which to align the cells
+        Worksheet in which to align or wrap cells
     config_data : list
         List of cells to align
     """
 
-    for cell in config_data:
-        sheet[cell].alignment = Alignment(wrapText=True, horizontal="center")
+    for cell, alignment in config_data:
+        sheet[cell].alignment = Alignment(**alignment)
 
 
 def bold_cells(sheet: Worksheet, config_data: list):
@@ -348,36 +342,3 @@ def add_databar_rule(sheet: Worksheet, range_cell: str):
             color="FF3361",
         ),
     )
-
-
-def rotate_text(sheet: Worksheet, config_data: list):
-    """Given a list of cells, orient them to the associated rotation
-    (in degrees)
-
-    Parameters
-    ----------
-    sheet : Worksheet
-        Worksheet in which to rotate the cell's text
-    config_data : list
-        List of cells and their rotation
-    """
-
-    for cell, text_rotation in config_data:
-        sheet[cell].alignment = Alignment(text_rotation=text_rotation)
-
-
-def wrap_text(sheet: Worksheet, config_data: list):
-    """Given a list of cells, wrap the text in the cell and align the text
-
-    Parameters
-    ----------
-    sheet : Worksheet
-        Worksheet in which to wrap the cell's text
-    config_data : list
-        List of cells
-    """
-
-    for cell in config_data:
-        sheet[cell].alignment = Alignment(
-            wrapText=True, horizontal="center", vertical="center"
-        )

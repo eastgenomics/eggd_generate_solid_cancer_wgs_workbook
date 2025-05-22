@@ -10,12 +10,12 @@ CONFIG = {
         (1, 3): "=SOC!A5",
         (2, 3): "=SOC!A6",
         (1, 5): "=SOC!A9",
-        (38, 1): "Pertinent chromosomal CNVs",
-        (39, 1): "None",
+        (34, 1): "Pertinent chromosomal CNVs",
+        (35, 1): "None",
     },
     "to_bold": [
         "A1",
-        "A38",
+        "A34",
     ],
     "col_width": [
         ("A", 18),
@@ -26,11 +26,11 @@ CONFIG = {
     ],
     "borders": {
         "single_cells": [
-            ("A38", LOWER_BORDER),
+            ("A34", LOWER_BORDER),
         ],
     },
     "images": [
-        {"cell": "A4", "img_index": 2, "size": (600, 1000)},
+        {"cell": "A4", "img_index": 2, "size": (550, 950)},
         {"cell": "K4", "img_index": 1, "size": (500, 500)},
     ],
 }
