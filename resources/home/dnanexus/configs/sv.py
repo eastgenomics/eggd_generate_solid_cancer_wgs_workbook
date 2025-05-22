@@ -96,12 +96,19 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
         misc.convert_letter_column_to_index(last_column_letter),
     )
 
-    # there are 12 look up groups
-    number_genes = (last_column_index - 1 - lookup_start) / 12
+    total_number_genes = last_column_index - 1 - lookup_start
 
-    assert (
-        number_genes.is_integer()
-    ), "Number of genes for the fusion sheet is not an integer"
+    # there are 12 look up groups
+    if total_number_genes % 12:
+        raise ValueError(
+            (
+                "Uneven number of genes per lookup group: "
+                f"{total_number_genes} / 12 = {total_number_genes/12} per "
+                "group"
+            )
+        )
+
+    number_genes = total_number_genes // 12
 
     number_genes = int(number_genes)
     lookup_end = last_column_index - number_genes
