@@ -41,15 +41,15 @@ CONFIG = {
         "K4",
     ],
     "col_width": [
-        ("A", 20),
+        ("A", 12),
         ("B", 20),
         ("C", 16),
         ("D", 18),
         ("E", 12),
         ("F", 18),
-        ("G", 18),
+        ("G", 24),
         ("H", 25),
-        ("I", 20),
+        ("I", 16),
         ("J", 40),
         ("K", 40),
     ],
@@ -81,41 +81,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         # merge 2 dicts with parsed data and hard coded values
         "cells_to_write": {
             (r_idx + 2, c_idx - 1): value
-            for r_idx, row in enumerate(
-                dataframe_to_rows(pd.DataFrame(data.iloc[:, [0]])), 1
-            )
-            for c_idx, value in enumerate(row, 1)
-            if c_idx != 1 and r_idx != 1
-        }
-        | {
-            (r_idx + 2, c_idx): value.replace(";", "\n")
-            for r_idx, row in enumerate(
-                dataframe_to_rows(pd.DataFrame(data.iloc[:, 1:4])), 1
-            )
-            for c_idx, value in enumerate(row, 1)
-            if c_idx != 1 and r_idx != 1
-        }
-        | {
-            (r_idx + 2, c_idx + 3): value
-            for r_idx, row in enumerate(
-                dataframe_to_rows(pd.DataFrame(data.iloc[:, 4:8])), 1
-            )
-            for c_idx, value in enumerate(row, 1)
-            if c_idx != 1 and r_idx != 1
-        }
-        | {
-            (r_idx + 2, c_idx + 7): value.replace(";", "\n")
-            for r_idx, row in enumerate(
-                dataframe_to_rows(pd.DataFrame(data.iloc[:, [8]])), 1
-            )
-            for c_idx, value in enumerate(row, 1)
-            if c_idx != 1 and r_idx != 1
-        }
-        | {
-            (r_idx + 2, c_idx + 8): value
-            for r_idx, row in enumerate(
-                dataframe_to_rows(pd.DataFrame(data.iloc[:, 9:])), 1
-            )
+            for r_idx, row in enumerate(dataframe_to_rows(data), 1)
             for c_idx, value in enumerate(row, 1)
             if c_idx != 1 and r_idx != 1
         }
@@ -125,17 +91,16 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         },
         "to_bold": [f"A{nb_germline_variants + 6}"],
         "alignment_info": [
-            (f"J{i}", {"horizontal": "center"})
-            for i in range(4, nb_germline_variants + 5)
-        ]
-        + [
-            (f"K{i}", {"horizontal": "center"})
-            for i in range(4, nb_germline_variants + 5)
-        ]
-        + [
-            (f"{col}{row}", {"horizontal": "center", "wrapText": True})
-            for col in list("BCDH")
-            for row in range(5, nb_germline_variants + 6)
+            (
+                f"{col}{row}",
+                {
+                    "vertical": "center",
+                    "horizontal": "center",
+                    "wrapText": True,
+                },
+            )
+            for col in list("ABCDEFGHIJK")
+            for row in range(4, nb_germline_variants + 6)
         ],
         "row_height": [(i, 40) for i in range(5, nb_germline_variants + 5)],
         "borders": {

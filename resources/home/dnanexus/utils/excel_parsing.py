@@ -112,6 +112,14 @@ def process_reported_variants_germline(
         df[new_column] = df[mapping_column_target_df].map(reference_dict)
         df[new_column] = df[new_column].fillna("-")
 
+    for column in [
+        "GRCh38 coordinates;ref/alt allele",
+        "CDS change and protein change",
+        "Predicted consequences",
+        "Tumour VAF",
+    ]:
+        df[column] = df[column].apply(lambda x: x.replace(";", "\n"))
+
     df = df[
         [
             "Gene",
