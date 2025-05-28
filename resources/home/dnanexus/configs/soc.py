@@ -16,9 +16,8 @@ CONFIG = {
         (4, 1): "Phone number",
         (5, 1): "MRN",
         (6, 1): "NHS Number",
-        (8, 1): "Histology",
+        (8, 1): "Histological diagnosis",
         (12, 1): "Comments",
-        (16, 1): "WGS in-house gene panel applied",
     },
     "to_merge": {
         "start_row": 1,
@@ -26,8 +25,8 @@ CONFIG = {
         "start_column": 3,
         "end_column": 6,
     },
-    "to_align": ["C1"],
-    "to_bold": ["A1", "A8", "A12", "A16", "C1"],
+    "alignment_info": [("C1", {"horizontal": "center", "wrapText": True})],
+    "to_bold": ["A1", "A8", "A12", "C1"],
     "col_width": [
         ("A", 32),
         ("C", 16),
@@ -46,7 +45,6 @@ CONFIG = {
             ("A1", LOWER_BORDER),
             ("A8", LOWER_BORDER),
             ("A12", LOWER_BORDER),
-            ("A16", LOWER_BORDER),
         ],
     },
 }

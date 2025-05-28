@@ -10,6 +10,7 @@ from utils import misc
 THIN = Side(border_style="thin", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
+LEFT_BORDER = Border(left=THIN)
 
 CONFIG = {
     "cells_to_write": {
@@ -41,7 +42,7 @@ CONFIG = {
                 "HS_Mut",
                 "HS_Tissue",
                 "COSMIC Driver",
-                "COSMIC Alterations",
+                "COSMIC Entities",
                 "Paed Driver",
                 "Paed Entities",
                 "Sarc Driver",
@@ -60,23 +61,68 @@ CONFIG = {
     },
     "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 38)],
     "col_width": [
+        ("A", 5),
         ("B", 12),
         ("C", 20),
         ("D", 14),
         ("E", 20),
         ("F", 22),
+        ("G", 22),
+        ("K", 8),
+        ("M", 18),
+        ("N", 14),
+    ]
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(21, 38)],
+    "cells_to_colour": [
+        # letters N to U
+        (
+            f"{string.ascii_uppercase[i]}1",
+            PatternFill(patternType="solid", start_color="F2F2F2"),
+        )
+        for i in range(13, 21)
+    ]
+    + [
+        (
+            f"{letter}1",
+            PatternFill(patternType="solid", start_color="fdeada"),
+        )
+        for letter in ["V", "W", "X"]
+    ]
+    + [
+        # letters Y to AJ
+        (
+            f"{misc.convert_index_to_letters(i)}1",
+            PatternFill(patternType="solid", start_color="dbeef4"),
+        )
+        for i in range(24, 36)
+    ]
+    + [
+        (
+            f"{col}1",
+            PatternFill(patternType="solid", start_color="dabcff"),
+        )
+        for col in ["AK", "AL"]
     ],
     "borders": {
         "cell_rows": [
             ("A1:AL1", THIN_BORDER),
         ],
     },
-    "row_height": [(1, 80)],
-    "auto_filter": "E:AL",
-    "freeze_panes": "G1",
-    "text_orientation": [
-        (f"{misc.convert_index_to_letters(i)}1", 90) for i in range(13, 38)
+    "alignment_info": [
+        (
+            f"{misc.convert_index_to_letters(i)}1",
+            {
+                "horizontal": "left",
+                "vertical": "bottom",
+                "wrapText": True,
+                "text_rotation": 90,
+            },
+        )
+        for i in range(0, 38)
     ],
+    "row_height": [(1, 80)],
+    "auto_filter": "A:AL",
+    "freeze_panes": "G1",
 }
 
 
@@ -105,40 +151,6 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             for c_idx, value in enumerate(row, 1)
             if c_idx != 1 and r_idx != 1
         },
-        "cells_to_colour": [
-            # letters N to U
-            (
-                f"{string.ascii_uppercase[i]}{j}",
-                PatternFill(patternType="solid", start_color="FFDBBB"),
-            )
-            for i in range(13, 21)
-            for j in range(1, nb_somatic_variants + 2)
-        ]
-        + [
-            (
-                f"{letter}{j}",
-                PatternFill(patternType="solid", start_color="c4d9ef"),
-            )
-            for letter in ["V", "W", "X"]
-            for j in range(1, nb_somatic_variants + 2)
-        ]
-        + [
-            # letters Y to AJ
-            (
-                f"{misc.convert_index_to_letters(i)}{j}",
-                PatternFill(patternType="solid", start_color="00FFFF"),
-            )
-            for i in range(24, 36)
-            for j in range(1, nb_somatic_variants + 2)
-        ]
-        + [
-            (
-                f"{col}{i}",
-                PatternFill(patternType="solid", start_color="dabcff"),
-            )
-            for col in ["AK", "AL"]
-            for i in range(1, nb_somatic_variants + 2)
-        ],
         "dropdowns": [
             {
                 "cells": {
@@ -151,7 +163,18 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 "title": "Variant class",
             },
         ],
-        "data_bar": f"I2:I{nb_somatic_variants + 1}",
+        "data_bar": f"J2:J{nb_somatic_variants + 1}",
+        "borders": {
+            "cell_rows": [
+                (f"Y1:Y{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AA1:AA{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AC1:AC{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AE1:AE{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AG1:AG{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AI1:AI{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AK1:AK{nb_somatic_variants+1}", LEFT_BORDER),
+            ],
+        },
     }
 
     return config_with_dynamic_values

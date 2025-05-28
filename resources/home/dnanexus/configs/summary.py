@@ -6,8 +6,10 @@ from utils import misc
 
 # prepare formatting
 THIN = Side(border_style="thin", color="000000")
+THICK = Side(border_style="thick", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
+THICK_LOWER_BORDER = Border(bottom=THICK, left=THIN, right=THIN, top=THIN)
 
 CONFIG = {
     "cells_to_write": {
@@ -22,7 +24,7 @@ CONFIG = {
         (24, 2): "GRCh38 Coordinates",
         (24, 3): "Variant",
         (24, 4): "Consequence",
-        (24, 5): "Zygosity",
+        (24, 5): "VAF",
         (24, 6): "Variant Class",
         (24, 7): "Actionability",
         (24, 8): "Comments",
@@ -41,8 +43,10 @@ CONFIG = {
         (49, 3): "Variant",
         (49, 4): "Consequence",
         (49, 5): "Zygosity",
-        (49, 6): "Variant Class",
-        (49, 7): "Actionability",
+        (49, 6): "Tumour VAF",
+        (49, 7): "Variant Class",
+        (49, 8): "Actionability",
+        (49, 9): "Comments",
         (55, 1): "Germline CNV",
         (56, 1): "Gene",
         (56, 2): "GRCh38 Coordinates",
@@ -97,7 +101,7 @@ CONFIG = {
     }
     ####
     # somatic fusion gene lookup
-    | {(row, 1): f"=C{row+42}" for row in range(42, 47)}
+    | {(row, 1): f"=B{row+42}" for row in range(42, 47)}
     # somatic fusion coordinates
     | {
         (row, 2): f'=SUBSTITUTE(E{row+42},";",CHAR(10))'
@@ -108,17 +112,20 @@ CONFIG = {
         (row, 3): f"=CONCATENATE(I{row+42},CHAR(10),J{row+42})"
         for row in range(42, 47)
     }
-    # somatic fusion variant type
-    | {
-        (row, 4): f'=CONCATENATE(F{row+42}," (",G{row+42},")")'
-        for row in range(42, 47)
-    }
     ####
     # germline snv gene lookup
-    | {(row, 1): f"=A{row+41}" for row in range(50, 54)}
+    | {(row, 1): f"=A{row+42}" for row in range(50, 54)}
+    # germline snv coordinates lookup
+    | {(row, 2): f"=B{row+42}" for row in range(50, 54)}
+    # germline snv variant lookup
+    | {(row, 3): f"=C{row+42}" for row in range(50, 54)}
+    # germline snv consequence lookup
+    | {(row, 4): f"=D{row+42}" for row in range(50, 54)}
+    # germline snv tumour vaf lookup
+    | {(row, 6): f"=I{row+42}" for row in range(50, 54)}
     ####
     # germline cnv gene lookup
-    | {(row, 1): f"=A{row+41}" for row in range(57, 61)},
+    | {(row, 1): f"=A{row+42}" for row in range(57, 61)},
     "to_bold": [
         # table names to be bolded
         "A1",
@@ -135,57 +142,87 @@ CONFIG = {
     # table headers to be bolded
     + [f"{col}24" for col in list("ABCDEFGH")]
     + [f"{col}36" for col in list("ABCDEFGH")]
-    + [f"{col}49" for col in list("ABCDEFGH")]
+    + [f"{col}49" for col in list("ABCDEFGHI")]
     + [f"{col}56" for col in list("ABCDEFGH")],
     "col_width": [
         ("A", 26),
         ("B", 20),
         ("C", 22),
         ("D", 24),
+        ("E", 24),
         ("F", 24),
         ("G", 24),
         ("H", 24),
+        ("I", 24),
     ],
     "cells_to_colour": [
         (
             f"{column}{row}",
-            PatternFill(patternType="solid", start_color="ADD8E6"),
+            PatternFill(patternType="solid", start_color="F2F2F2"),
         )
         for row in [24, 36, 49, 56]
         for column in list("ABCDEFGH")
     ]
-    + [
-        (
-            f"{column}{row}",
-            PatternFill(patternType="solid", start_color="f2746b"),
-        )
-        for row in range(37, 42)
-        for column in list("ABCDEFGH")
-    ]
-    + [
-        (
-            f"{column}{row}",
-            PatternFill(patternType="solid", start_color="7beda3"),
-        )
-        for row in range(42, 47)
-        for column in list("ABCDEFGH")
-    ],
+    + [("I49", PatternFill(patternType="solid", start_color="F2F2F2"))],
     "borders": {
         "cell_rows": [(f"A{row}:H{row}", THIN_BORDER) for row in range(24, 34)]
         + [(f"A{row}:H{row}", THIN_BORDER) for row in range(36, 47)]
-        + [(f"A{row}:H{row}", THIN_BORDER) for row in range(49, 54)]
-        + [(f"A{row}:H{row}", THIN_BORDER) for row in range(56, 61)],
+        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(49, 54)]
+        + [(f"A{row}:H{row}", THIN_BORDER) for row in range(56, 61)]
+        + [("A41:H41", THICK_LOWER_BORDER)],
     },
     "images": [
         {"cell": "A4", "img_index": 2, "size": (350, 700)},
         {"cell": "G4", "img_index": 1, "size": (350, 350)},
     ],
-    "wrap_text": [
-        f"{col}{row}" for col in list("ABCDE") for row in range(25, 34)
+    "alignment_info": [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(24, 34)
     ]
-    + [f"{col}{row}" for col in list("ABCDE") for row in range(37, 47)]
-    + [f"{col}{row}" for col in list("ABCDE") for row in range(50, 54)]
-    + [f"{col}{row}" for col in list("ABCDE") for row in range(57, 61)],
+    + [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(36, 47)
+    ]
+    + [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(49, 54)
+    ]
+    + [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("ABCDEFGHI")
+        for row in range(56, 61)
+    ],
     "row_height": [
         (row, 30)
         for start, end in [(25, 34), (37, 47), (50, 54), (57, 61)]
@@ -196,7 +233,7 @@ CONFIG = {
             "cells": {
                 (
                     f"F{row}"
-                    for start, end in [(25, 34), (37, 47), (50, 54), (57, 61)]
+                    for start, end in [(25, 34), (37, 47)]
                     for row in range(start, end)
                 ): (
                     '"Oncogenic, Likely oncogenic,'
@@ -204,13 +241,13 @@ CONFIG = {
                     'Likely artefact"'
                 ),
             },
-            "title": "Variant class",
+            "title": "Variant class somatic",
         },
         {
             "cells": {
                 (
                     f"G{row}"
-                    for start, end in [(25, 34), (37, 47), (50, 54), (57, 61)]
+                    for start, end in [(25, 34), (37, 47), (57, 61)]
                     for row in range(start, end)
                 ): (
                     '"Predicts therapeutic response,'
@@ -221,6 +258,52 @@ CONFIG = {
                 ),
             },
             "title": "Actionability",
+        },
+        {
+            "cells": {
+                (
+                    f"E{row}"
+                    for start, end in [(50, 54), (57, 61)]
+                    for row in range(start, end)
+                ): ('"Heterozygous,Homozygous,Hemizygous"'),
+            },
+            "title": "Zygosity",
+        },
+        {
+            "cells": {
+                (
+                    f"G{row}"
+                    for start, end in [(50, 54)]
+                    for row in range(start, end)
+                ): ('"Pathogenic,Likely pathogenic,Uncertain"'),
+            },
+            "title": "Variant class germline",
+        },
+        {
+            "cells": {
+                (
+                    f"H{row}"
+                    for start, end in [(50, 54)]
+                    for row in range(start, end)
+                ): (
+                    '"Predicts therapeutic response,'
+                    "Prognostic,"
+                    "Defines diagnosis group,"
+                    "Eligibility for trial,"
+                    'Other"'
+                ),
+            },
+            "title": "Actionability",
+        },
+        {
+            "cells": {
+                (
+                    f"F{row}"
+                    for start, end in [(57, 61)]
+                    for row in range(start, end)
+                ): ('"Pathogenic,Likely pathogenic,Uncertain"')
+            },
+            "title": "Variant class germline",
         },
     ],
 }

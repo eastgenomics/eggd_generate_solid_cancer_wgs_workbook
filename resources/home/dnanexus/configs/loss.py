@@ -9,6 +9,7 @@ from utils import misc
 
 THIN = Side(border_style="thin", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+LEFT_BORDER = Border(left=THIN)
 
 
 CONFIG = {
@@ -31,7 +32,7 @@ CONFIG = {
                 "TSG_Hom",
                 "SNV_LOH",
                 "COSMIC Driver",
-                "COSMIC Alterations",
+                "COSMIC Entities",
                 "Paed Driver",
                 "Paed Entities",
                 "Sarc Driver",
@@ -48,13 +49,34 @@ CONFIG = {
     },
     "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 26)],
     "col_width": [
+        ("A", 10),
         ("B", 12),
         ("C", 16),
         ("D", 16),
         ("E", 22),
+        ("F", 6),
+        ("G", 5),
         ("H", 14),
         ("I", 10),
         ("J", 10),
+        ("K", 22),
+        ("M", 6),
+        ("N", 6),
+    ],
+    "cells_to_colour": [
+        (
+            f"{col}1",
+            PatternFill(patternType="solid", start_color="F2F2F2"),
+        )
+        for col in ["L", "M", "N"]
+    ]
+    + [
+        (
+            # letters O to Z
+            f"{string.ascii_uppercase[i]}1",
+            PatternFill(patternType="solid", start_color="fdeada"),
+        )
+        for i in range(14, 26)
     ],
     "borders": {
         "cell_rows": [
@@ -63,9 +85,18 @@ CONFIG = {
     },
     "row_height": [(1, 80)],
     "auto_filter": "A:Z",
-    "freeze_panes": "F1",
-    "text_orientation": [
-        (f"{misc.convert_index_to_letters(i)}1", 90) for i in range(11, 26)
+    "freeze_panes": "H1",
+    "alignment_info": [
+        (
+            f"{misc.convert_index_to_letters(i)}1",
+            {
+                "horizontal": "left",
+                "vertical": "bottom",
+                "wrapText": True,
+                "text_rotation": 90,
+            },
+        )
+        for i in range(0, 26)
     ],
 }
 
@@ -95,24 +126,10 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             for c_idx, value in enumerate(row, 1)
             if c_idx != 1 and r_idx != 1
         },
-        "cells_to_colour": [
-            (
-                f"{col}{i}",
-                PatternFill(patternType="solid", start_color="FFDBBB"),
-            )
-            for col in ["L", "M", "N"]
-            for i in range(1, nb_sv_variants + 2)
-        ]
-        + [
-            (
-                # letters O to Z
-                f"{string.ascii_uppercase[i]}{j}",
-                PatternFill(patternType="solid", start_color="c4d9ef"),
-            )
-            for i in range(14, 26)
-            for j in range(1, nb_sv_variants + 2)
+        "alignment_info": [
+            (f"G{i}", {"horizontal": "center"})
+            for i in range(2, nb_sv_variants + 2)
         ],
-        "to_align": [f"G{i}" for i in range(2, nb_sv_variants + 2)],
         "dropdowns": [
             {
                 "cells": {
@@ -125,6 +142,18 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
                 "title": "Variant class",
             },
         ],
+        "borders": {
+            "cell_rows": [
+                (f"O1:O{nb_sv_variants+1}", LEFT_BORDER),
+                (f"Q1:Q{nb_sv_variants+1}", LEFT_BORDER),
+                (f"S1:S{nb_sv_variants+1}", LEFT_BORDER),
+                (f"U1:U{nb_sv_variants+1}", LEFT_BORDER),
+                (f"W1:W{nb_sv_variants+1}", LEFT_BORDER),
+                (f"Y1:Y{nb_sv_variants+1}", LEFT_BORDER),
+                (f"Z1:Z{nb_sv_variants+1}", LEFT_BORDER),
+                (f"AA1:AA{nb_sv_variants+1}", LEFT_BORDER),
+            ],
+        },
     }
 
     return config_with_dynamic_values

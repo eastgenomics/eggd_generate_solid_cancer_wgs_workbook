@@ -61,8 +61,8 @@ def process_reported_variants_germline(
 
     # convert the clinvar id column as a string and remove the trailing .0 that
     # the automatic conversion that pandas applies added
-    df.loc[:, "ClinVar ID"] = df["ClinVar ID"].astype(str)
-    df.loc[:, "ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
+    df["ClinVar ID"] = df["ClinVar ID"].astype("string")
+    df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
 
     df.reset_index(drop=True, inplace=True)
 
@@ -112,11 +112,20 @@ def process_reported_variants_germline(
         df[new_column] = df[mapping_column_target_df].map(reference_dict)
         df[new_column] = df[new_column].fillna("-")
 
+    for column in [
+        "GRCh38 coordinates;ref/alt allele",
+        "CDS change and protein change",
+        "Predicted consequences",
+        "Tumour VAF",
+    ]:
+        df[column] = df[column].apply(lambda x: x.replace(";", "\n"))
+
     df = df[
         [
             "Gene",
             "GRCh38 coordinates;ref/alt allele",
             "CDS change and protein change",
+            "Predicted consequences",
             "Genotype",
             "Population germline allele frequency (GE | gnomAD)",
             "Gene mode of action",
@@ -509,7 +518,7 @@ def process_fusion_SV(
         col_to_look_up,
     ) in lookup_refgene:
         for gene_col_name in gene_col:
-            column_to_write = f"{gene_col_name} | {new_column}"
+            column_to_write = f"{new_column}\n{gene_col_name}"
             mapping_column_target_df = gene_col_name
             # link the mapping column to the column of data in the ref df
             reference_dict = dict(
@@ -554,14 +563,14 @@ def process_fusion_SV(
 
     if cyto_cols:
         for col in cyto_cols[::-1]:
-            subset_column.insert(10, col)
+            subset_column.insert(9, col)
 
     for col in fusion_col[::-1]:
-        subset_column.insert(6, col)
+        subset_column.insert(5, col)
 
     selected_col = subset_column + lookup_cols
 
-    return df_SV[selected_col], fusion_count
+    return df_SV[selected_col], fusion_count, alternative_columns
 
 
 def process_refgene(dfs: dict) -> dict:
