@@ -116,7 +116,7 @@ CONFIG = {
     + [f"{col}15" for col in list("ABC")],
     "col_width": [
         ("A", 12),
-        ("B", 12),
+        ("B", 16),
         ("C", 12),
         ("D", 12),
         ("E", 12),
@@ -192,7 +192,7 @@ CONFIG = {
                     '"Not hypermutated (<10 mut/Mb),'
                     "Paed hypermutated (2-10 mut/Mb),"
                     "Hypermutated (>10 mut/Mb),"
-                    'Ultra-hypermutaed (>100 mut/Mb)"'
+                    'Ultra-hypermutated (>100 mut/Mb)"'
                 ),
             },
             "title": "SNV TMB",
