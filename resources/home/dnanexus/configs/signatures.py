@@ -11,7 +11,7 @@ CONFIG = {
         (1, 3): "=SOC!A5",
         (2, 3): "=SOC!A6",
         (1, 5): "=SOC!A9",
-        (35, 1): "Pertinent chromosomal CNVs",
+        (35, 1): "Signature version",
         (35, 3): "Pertinent signatures",
         (35, 5): "Total SNVs",
         (36, 5): "=QC!D8",
