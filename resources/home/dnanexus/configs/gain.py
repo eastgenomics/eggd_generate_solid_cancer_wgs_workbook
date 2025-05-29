@@ -63,7 +63,8 @@ CONFIG = {
         ("M", 6),
         ("N", 6),
         ("O", 6),
-    ],
+    ]
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(14, 27)],
     "borders": {
         "cell_rows": [
             ("A1:AA1", THIN_BORDER),
