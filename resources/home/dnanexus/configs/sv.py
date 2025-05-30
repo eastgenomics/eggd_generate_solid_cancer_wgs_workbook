@@ -133,10 +133,10 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
             (1, i): column for i, column in enumerate(data.columns, 1)
         }
         | {
-            # remove the col and row index from the writing?
             (r_idx - 1, c_idx - 1): value
             for r_idx, row in enumerate(dataframe_to_rows(data), 1)
             for c_idx, value in enumerate(row, 1)
+            # remove the col and row index from the writing
             if c_idx != 1 and r_idx != 1
         },
         "cells_to_colour": [
