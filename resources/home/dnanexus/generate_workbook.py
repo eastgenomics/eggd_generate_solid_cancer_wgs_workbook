@@ -212,7 +212,7 @@ def main(**kwargs):
         for sheet_data in sheets:
             excel_writing.write_sheet(output_excel, **sheet_data)
 
-    print("Done!")
+    print(f"Done! Wrote output/{sample_id}.xlsx")
 
 
 if __name__ == "__main__":
