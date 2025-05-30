@@ -116,7 +116,7 @@ def add_dynamic_values(df: pd.DataFrame) -> dict:
         "to_bold": [
             f"{misc.convert_index_to_letters(i)}1"
             for i in range(
-                misc.convert_letter_column_to_index(last_column_letter)
+                misc.convert_letter_column_to_index(last_column_letter) + 1
             )
         ],
         "auto_filter": f"A:{last_column_letter}",
