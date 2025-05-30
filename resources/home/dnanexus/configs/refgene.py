@@ -30,7 +30,7 @@ CONFIG = {
     "auto_filter": "A:W",
     "borders": {
         "cell_rows": [
-            ("A1:AA1", THIN_BORDER),
+            ("A1:W1", THIN_BORDER),
             ("B1:B1500", LEFT_BORDER),
             ("E1:E1500", LEFT_BORDER),
             ("H1:H1500", LEFT_BORDER),
