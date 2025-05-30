@@ -19,8 +19,6 @@ CONFIG = {
         )
         for i in range(18 + 1)
     ],
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 23)],
-    "auto_filter": "A:W",
     "borders": {
         "cell_rows": [
             ("B1:B1500", LEFT_BORDER),
@@ -115,6 +113,13 @@ def add_dynamic_values(df: pd.DataFrame) -> dict:
                 len(df.columns),
             )
         ],
+        "to_bold": [
+            f"{misc.convert_index_to_letters(i)}1"
+            for i in range(
+                misc.convert_letter_column_to_index(last_column_letter)
+            )
+        ],
+        "auto_filter": f"A:{last_column_letter}",
         "borders": {
             "cell_rows": [(f"A1:{last_column_letter}1", THIN_BORDER)],
         },
