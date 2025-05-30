@@ -18,19 +18,11 @@ CONFIG = {
             PatternFill(patternType="solid", start_color="dbeef4"),
         )
         for i in range(18 + 1)
-    ]
-    + [
-        (
-            f"{col}1",
-            PatternFill(patternType="solid", start_color="b686da"),
-        )
-        for col in ["T", "U", "V", "W"]
     ],
     "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 23)],
     "auto_filter": "A:W",
     "borders": {
         "cell_rows": [
-            ("A1:W1", THIN_BORDER),
             ("B1:B1500", LEFT_BORDER),
             ("E1:E1500", LEFT_BORDER),
             ("H1:H1500", LEFT_BORDER),
@@ -99,6 +91,9 @@ def add_dynamic_values(df: pd.DataFrame) -> dict:
         Dict containing data that needs to be merged to the CONFIG variable
     """
 
+    sv_column_letter = misc.get_column_letter_using_column_name(df, "SNV")
+    last_column_letter = misc.get_column_letter_using_column_name(df)
+
     config_with_dynamic_values = {
         "cells_to_write": {
             (1, i): column for i, column in enumerate(df.columns, 1)
@@ -109,6 +104,19 @@ def add_dynamic_values(df: pd.DataFrame) -> dict:
             for r_idx, row in enumerate(dataframe_to_rows(df), 1)
             for c_idx, value in enumerate(row, 1)
             if c_idx != 1 and r_idx != 1
+        },
+        "cells_to_colour": [
+            (
+                f"{misc.convert_index_to_letters(i)}1",
+                PatternFill(patternType="solid", start_color="b686da"),
+            )
+            for i in range(
+                misc.convert_letter_column_to_index(sv_column_letter),
+                len(df.columns),
+            )
+        ],
+        "borders": {
+            "cell_rows": [(f"A1:{last_column_letter}1", THIN_BORDER)],
         },
     }
 
