@@ -34,4 +34,7 @@ CONFIG = {
             ("C1", LOWER_BORDER),
         ]
     },
+    "col_width": [
+        ("A", 36),
+    ],
 }

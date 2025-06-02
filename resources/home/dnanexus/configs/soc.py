@@ -36,8 +36,8 @@ CONFIG = {
     ],
     "borders": {
         "single_cells": [
-            # generate list of letter and numbers from C-F and 1-8
-            # i.e. C1, C2, C3 ..
+            # generate list of letter and numbers from C-F with 1 i.e. C1, D1,
+            # E1, F1
             (f"{string.ascii_uppercase[i]}1", THIN_BORDER)
             for i in range(2, 6)
         ]
