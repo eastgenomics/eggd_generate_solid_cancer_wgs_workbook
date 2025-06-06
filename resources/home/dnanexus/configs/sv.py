@@ -72,8 +72,8 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
         Dict containing data that needs to be merged to the CONFIG variable
     """
 
-    if data.empty:
-        return None
+    if data is None:
+        return {}
 
     nb_structural_variants = data.shape[0]
 

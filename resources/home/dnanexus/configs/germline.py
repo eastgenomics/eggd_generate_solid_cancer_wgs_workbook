@@ -62,8 +62,8 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         Dict with the parsed data and processed to have the correct position
     """
 
-    if data.empty:
-        return None
+    if data is None:
+        return {}
 
     nb_germline_variants = data.shape[0]
 
