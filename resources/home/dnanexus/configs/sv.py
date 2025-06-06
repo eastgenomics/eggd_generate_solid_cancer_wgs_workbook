@@ -73,7 +73,7 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
     """
 
     if data is None:
-        return None
+        return {}
 
     nb_structural_variants = data.shape[0]
 

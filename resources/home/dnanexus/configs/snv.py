@@ -142,7 +142,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
     """
 
     if data is None:
-        return None
+        return {}
 
     nb_somatic_variants = data.shape[0]
 
