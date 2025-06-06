@@ -312,10 +312,10 @@ CONFIG = {
 def add_dynamic_values(
     SV_df: pd.DataFrame,
     fusion_count: int,
-    SNV_df_columns: list,
-    gain_df_columns: list,
-    SV_df_columns: list,
-    germline_df_columns: list,
+    SNV_df_columns: list = None,
+    gain_df_columns: list = None,
+    SV_df_columns: list = None,
+    germline_df_columns: list = None,
 ) -> dict:
     """Add dynamic values for the Summary sheet
 
@@ -365,23 +365,26 @@ def add_dynamic_values(
     if fusion_count == 0:
         sv_pair.pop(4)
 
+    all_df_columns = [
+        {
+            (row, col_index): col_name
+            for col_index, col_name in enumerate(df_columns, 1)
+        }
+        for df_columns, row in [
+            (SNV_df_columns, 63),
+            (gain_df_columns, 75),
+            (SV_df_columns, 83),
+            (germline_df_columns, 91),
+        ]
+        if df_columns is not None
+    ]
+
     config_with_dynamic_values = {
         "cells_to_write": {
-            (63, col_index): col_name
-            for col_index, col_name in enumerate(SNV_df_columns, 1)
+            key: value
+            for data_dict in all_df_columns
+            for key, value in data_dict.items()
         }
-        | {
-            (75, col_index): col_name
-            for col_index, col_name in enumerate(gain_df_columns, 1)
-        }
-        | {
-            (83, col_index): col_name
-            for col_index, col_name in enumerate(SV_df_columns, 1)
-        }
-        | {
-            (91, col_index): col_name
-            for col_index, col_name in enumerate(germline_df_columns, 1)
-        },
     }
 
     return config_with_dynamic_values
