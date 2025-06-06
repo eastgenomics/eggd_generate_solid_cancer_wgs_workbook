@@ -141,7 +141,7 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         Dict containing data that needs to be merged to the CONFIG variable
     """
 
-    if data.empty:
+    if data is None:
         return None
 
     nb_somatic_variants = data.shape[0]
