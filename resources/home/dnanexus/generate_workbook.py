@@ -127,6 +127,16 @@ def main(**kwargs):
         },
     )
 
+    df_columns = {
+        arg_name: list(df.columns) if df is not None else None
+        for arg_name, df in {
+            "SNV_df_columns": somatic_df,
+            "gain_df_columns": gain_df,
+            "SV_df_columns": fusion_df,
+            "germline_df_columns": germline_df,
+        }.items()
+    }
+
     dynamic_values_per_sheet = {
         "Germline": germline.add_dynamic_values(germline_df),
         "SNV": snv.add_dynamic_values(somatic_df),
@@ -134,12 +144,7 @@ def main(**kwargs):
         "Loss": loss.add_dynamic_values(loss_df),
         "SV": sv.add_dynamic_values(fusion_df, alternative_columns),
         "Summary": summary.add_dynamic_values(
-            fusion_df,
-            fusion_count,
-            list(somatic_df.columns),
-            list(gain_df.columns),
-            list(fusion_df.columns),
-            list(germline_df.columns),
+            fusion_df, fusion_count, **df_columns
         ),
         "Refgene": refgene.add_dynamic_values(refgene_df),
     }
