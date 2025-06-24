@@ -99,19 +99,19 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
         misc.convert_letter_column_to_index(last_column_letter),
     )
 
-    total_number_genes = last_column_index - 1 - lookup_start
+    total_number_genes = last_column_index - lookup_start + 1
 
     # there are 12 look up groups
-    if total_number_genes % 12:
+    if total_number_genes % 13:
         raise ValueError(
             (
                 "Uneven number of genes per lookup group: "
-                f"{total_number_genes} / 12 = {total_number_genes/12} per "
+                f"{total_number_genes} / 13 = {total_number_genes/13} per "
                 "group"
             )
         )
 
-    number_genes = total_number_genes // 12
+    number_genes = total_number_genes // 13
 
     number_genes = int(number_genes)
     lookup_end = last_column_index - number_genes
