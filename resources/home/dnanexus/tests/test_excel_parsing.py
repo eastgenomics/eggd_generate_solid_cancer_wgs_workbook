@@ -42,13 +42,13 @@ def germline_variant_data():
 @pytest.fixture()
 def panelapp_dfs():
     panelapp_dfs = {
-        "Adult v2.2": pd.DataFrame(
+        "Adult_v2.2": pd.DataFrame(
             {
                 "Gene Symbol": ["gene1", "gene3"],
                 "Formatted mode": ["mode1", "mode3"],
             }
         ),
-        "Childhood v4.0": pd.DataFrame(
+        "Childhood_v4.0": pd.DataFrame(
             {
                 "Gene Symbol": ["gene1", "gene3"],
                 "Formatted mode": ["mode2", "mode4"],
@@ -135,7 +135,7 @@ def hotspots():
 @pytest.fixture()
 def cyto():
     cyto = {
-        "Sheet1": pd.DataFrame(
+        "Cyto": pd.DataFrame(
             {
                 "Gene": ["gene1", "gene3", "gene4"],
                 "Cyto": ["cyto1", "cyto2", "cyto3"],

@@ -67,8 +67,11 @@ def process_reported_variants_germline(
     df.reset_index(drop=True, inplace=True)
 
     clinvar_ids_to_find = [
-        value for value in df.loc[:, "ClinVar ID"].to_numpy()
+        value
+        for value in df.loc[:, "ClinVar ID"].to_numpy()
+        if type(value) is str
     ]
+
     clinvar_info = vcf.find_clinvar_info(
         clinvar_resource, *clinvar_ids_to_find
     )
@@ -82,14 +85,14 @@ def process_reported_variants_germline(
         (
             "PanelApp Adult_v2.2",
             "Gene",
-            panelapp_dfs["Adult v2.2"],
+            panelapp_dfs["Adult_v2.2"],
             "Gene Symbol",
             "Formatted mode",
         ),
         (
             "PanelApp Childhood_v4.0",
             "Gene",
-            panelapp_dfs["Childhood v4.0"],
+            panelapp_dfs["Childhood_v4.0"],
             "Gene Symbol",
             "Formatted mode",
         ),
@@ -219,7 +222,7 @@ def process_reported_variants_somatic(
             "Gene_Mut",
             "Tissue",
         ),
-        ("Cyto", "Gene", cyto_df["Sheet1"], "Gene", "Cyto"),
+        ("Cyto", "Gene", cyto_df["Cyto"], "Gene", "Cyto"),
     )
 
     for (
@@ -507,7 +510,7 @@ def process_fusion_SV(
     cyto_cols = []
 
     lookup_refgene = lookup_refgene + (
-        ("Cyto", "Gene", cyto_df["Sheet1"], "Gene", "Cyto"),
+        ("Cyto", "Gene", cyto_df["Cyto"], "Gene", "Cyto"),
     )
 
     for (
@@ -683,66 +686,75 @@ def lookup_data_from_variants(
         Refgene data dataframe with data from variant dataframes
     """
 
-    lookup_variant_data = (
-        (
-            "SNV",
-            "Gene",
-            kwargs["somatic"],
-            "Gene",
-            "CDS change and protein change",
-        ),
-        ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number"),
-    )
+    lookup_variant_data = []
 
-    for (
-        new_column,
-        mapping_column_target_df,
-        reference_df,
-        mapping_column_ref_df,
-        col_to_look_up,
-    ) in lookup_variant_data:
-        # link the mapping column to the column of data in the ref df
-        reference_dict = dict(
-            zip(
-                reference_df[mapping_column_ref_df],
-                reference_df[col_to_look_up],
+    if kwargs["somatic"] is not None:
+        lookup_variant_data.append(
+            (
+                "SNV",
+                "Gene",
+                kwargs["somatic"],
+                "Gene",
+                "CDS change and protein change",
             )
         )
-        refgene_df[new_column] = refgene_df[mapping_column_target_df].map(
-            reference_dict
+
+    if kwargs["gain"] is not None:
+        lookup_variant_data.append(
+            ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number")
         )
-        refgene_df[new_column] = refgene_df[new_column].fillna("-")
 
-    df_fusion = kwargs["fusion"]
-
-    gene_col = []
-
-    for i in range(df_fusion["Gene"].str.count(r"\;").max() + 1):
-        gene_col.append(f"Gene_{i+1}")
-
-    df_fusion[gene_col] = df_fusion["Gene"].str.split(";", expand=True)
-
-    # dynamic number of columns to be generated out of fusion partners
-    for (
-        new_column,
-        mapping_column_target_df,
-        reference_df,
-        col_to_look_up,
-    ) in [("SV_{}", "Gene", df_fusion, "Type")]:
-        for gene in gene_col:
-            column_to_write = new_column.format(gene.lower())
+    if lookup_variant_data:
+        for (
+            new_column,
+            mapping_column_target_df,
+            reference_df,
+            mapping_column_ref_df,
+            col_to_look_up,
+        ) in lookup_variant_data:
             # link the mapping column to the column of data in the ref df
             reference_dict = dict(
                 zip(
-                    reference_df[gene],
+                    reference_df[mapping_column_ref_df],
                     reference_df[col_to_look_up],
                 )
             )
-            refgene_df[column_to_write] = refgene_df[
-                mapping_column_target_df
-            ].map(reference_dict)
-            refgene_df[column_to_write] = refgene_df[column_to_write].fillna(
-                "-"
+            refgene_df[new_column] = refgene_df[mapping_column_target_df].map(
+                reference_dict
             )
+            refgene_df[new_column] = refgene_df[new_column].fillna("-")
+
+    if kwargs["fusion"] is not None:
+        df_fusion = kwargs["fusion"]
+
+        gene_col = []
+
+        for i in range(df_fusion["Gene"].str.count(r"\;").max() + 1):
+            gene_col.append(f"Gene_{i+1}")
+
+        df_fusion[gene_col] = df_fusion["Gene"].str.split(";", expand=True)
+
+        # dynamic number of columns to be generated out of fusion partners
+        for (
+            new_column,
+            mapping_column_target_df,
+            reference_df,
+            col_to_look_up,
+        ) in [("SV_{}", "Gene", df_fusion, "Type")]:
+            for gene in gene_col:
+                column_to_write = new_column.format(gene.lower())
+                # link the mapping column to the column of data in the ref df
+                reference_dict = dict(
+                    zip(
+                        reference_df[gene],
+                        reference_df[col_to_look_up],
+                    )
+                )
+                refgene_df[column_to_write] = refgene_df[
+                    mapping_column_target_df
+                ].map(reference_dict)
+                refgene_df[column_to_write] = refgene_df[
+                    column_to_write
+                ].fillna("-")
 
     return refgene_df
