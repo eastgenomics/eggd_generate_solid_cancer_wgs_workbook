@@ -137,6 +137,31 @@ def split_confidence_support(value: str) -> list:
     return returned_value
 
 
+def remove_duplicate_fusion_elements(value: str) -> str:
+    """Remove duplicate fusion elements
+
+    Parameters
+    ----------
+    value : str
+        Cell content
+
+    Returns
+    -------
+    str
+        String without duplicate elements separated by commas
+    """
+
+    values = []
+
+    for semi_colon_split in value.split(";"):
+        if "," in semi_colon_split:
+            values.append("".join(set(semi_colon_split.split(","))))
+        else:
+            values.append(semi_colon_split)
+
+    return ";".join(values)
+
+
 def get_column_letter_using_column_name(
     df: pd.DataFrame, column_name: str = None
 ) -> str:
