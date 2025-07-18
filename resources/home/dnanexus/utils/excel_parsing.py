@@ -496,6 +496,10 @@ def process_fusion_SV(
     df_SV.fillna({"Size": ""}, inplace=True)
     df_SV.replace({"Size": "nan"}, {"Size": ""}, inplace=True)
 
+    df_SV["Fusion_no_duplicate"] = df_SV["Gene"].apply(
+        misc.remove_duplicate_fusion_elements
+    )
+
     # get gene counts and look up for each gene
     max_num_gene = df_SV["Gene"].str.count(r"\;").max() + 1
 
@@ -504,7 +508,7 @@ def process_fusion_SV(
     for i in range(max_num_gene):
         gene_col.append(f"Gene_{i+1}")
 
-    df_SV[gene_col] = df_SV["Gene"].str.split(";", expand=True)
+    df_SV[gene_col] = df_SV["Fusion_no_duplicate"].str.split(";", expand=True)
 
     lookup_cols = []
     cyto_cols = []
