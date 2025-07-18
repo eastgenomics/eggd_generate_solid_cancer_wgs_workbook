@@ -66,11 +66,13 @@ def process_reported_variants_germline(
 
     df.reset_index(drop=True, inplace=True)
 
-    clinvar_ids_to_find = [
-        value
-        for value in df.loc[:, "ClinVar ID"].to_numpy()
-        if type(value) is str
-    ]
+    clinvar_ids_to_find = list(
+        {
+            value
+            for value in df.loc[:, "ClinVar ID"].to_numpy()
+            if type(value) is str
+        }
+    )
 
     clinvar_info = vcf.find_clinvar_info(
         clinvar_resource, *clinvar_ids_to_find
