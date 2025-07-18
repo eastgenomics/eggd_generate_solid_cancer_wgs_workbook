@@ -63,6 +63,7 @@ def process_reported_variants_germline(
     # the automatic conversion that pandas applies added
     df["ClinVar ID"] = df["ClinVar ID"].astype("string")
     df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
+    df["ClinVar ID"] = df["ClinVar ID"].str.replace(r"[^0-9]", "", regex=True)
 
     df.reset_index(drop=True, inplace=True)
 
