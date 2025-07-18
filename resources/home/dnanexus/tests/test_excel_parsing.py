@@ -18,7 +18,7 @@ def germline_variant_data():
                 "coor2",
                 "coor3",
             ],
-            "ClinVar ID": ["id1", "", "id2"],
+            "ClinVar ID": ["1", "", "2"],
             "Population germline allele frequency (GE | gnomAD)": [
                 "ge1|freq1",
                 "",
@@ -254,7 +254,7 @@ class TestProcessReportedVariantsGermline:
     ):
         mock_vcf_data.return_value = pd.DataFrame(
             {
-                "ClinVar ID": ["id1"],
+                "ClinVar ID": ["1"],
                 "clnsigconf": ["sig1"],
             }
         )
@@ -289,7 +289,7 @@ class TestProcessReportedVariantsGermline:
     ):
         mock_vcf_data.return_value = pd.DataFrame(
             {
-                "ClinVar ID": ["id1", "id2"],
+                "ClinVar ID": ["1", "2"],
                 "clnsigconf": ["sig1", "sig2"],
             }
         )
