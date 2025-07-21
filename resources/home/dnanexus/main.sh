@@ -16,6 +16,12 @@ main() {
         -rv in/reported_variants/* \
         -rsv in/reported_structural_variants/*
 
+    mv in/supplementary_html/* output/ 
+    mv in/reported_variants/* output/
+    mv in/reported_structural_variants/* output/
+
+    python3 /home/dnanexus/final_check.py output/
+
     file_id=$(dx upload "output/$(ls output/)" --brief)
     dx-jobutil-add-output workbook $file_id
 }
