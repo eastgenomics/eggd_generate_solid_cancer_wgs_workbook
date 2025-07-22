@@ -115,16 +115,14 @@ CONFIG = {
     + [f"{col}10" for col in list("ABCDEF")]
     + [f"{col}15" for col in list("ABC")],
     "col_width": [
-        ("A", 12),
-        ("B", 16),
+        ("A", 10),
+        ("B", 10),
         ("C", 12),
         ("D", 12),
-        ("E", 12),
+        ("E", 14),
         ("F", 12),
         ("G", 12),
         ("H", 12),
-        ("I", 12),
-        ("J", 12),
     ],
     "row_height": [(4, 30), (5, 30), (7, 30), (10, 30)],
     "cells_to_colour": [
