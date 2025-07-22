@@ -341,8 +341,6 @@ def parse_files(files: list) -> dict:
 
 
 def main(folder):
-    files = []
-
     file_dict = get_sample_id_from_files(
         [Path(file) for file in Path(folder).glob("*")],
         INPUT_PATTERNS,
