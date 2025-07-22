@@ -227,7 +227,7 @@ def compare_gain_cnvs(
 def compare_loss_cnvs(
     output_loss_cnvs: pd.DataFrame, rsv: pd.DataFrame
 ) -> tuple:
-    """Compare the somatic variants from the input csv and the output xlsx
+    """Compare the loss variants from the input csv and the output xlsx
 
     Parameters
     ----------
