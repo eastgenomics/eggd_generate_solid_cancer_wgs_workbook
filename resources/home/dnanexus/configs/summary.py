@@ -106,7 +106,10 @@ CONFIG = {
     }
     ####
     # somatic fusion gene lookup
-    | {(row, 1): f"=B{row+42}" for row in range(42, 47)}
+    | {
+        (row, 1): f'=SUBSTITUTE(B{row+42},";",CHAR(10))'
+        for row in range(42, 47)
+    }
     # somatic fusion coordinates
     | {
         (row, 2): f'=SUBSTITUTE(E{row+42},";",CHAR(10))'
