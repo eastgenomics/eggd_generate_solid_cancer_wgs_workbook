@@ -182,7 +182,7 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
         + [(column_letters[2], 22)]
         # define width for the Fusion columns
         + [
-            (misc.convert_index_to_letters(i), 16)
+            (misc.convert_index_to_letters(i), 20)
             for i, column in enumerate(data.columns)
             if re.match(r"Fusion_[0-9]+", column)
         ],
