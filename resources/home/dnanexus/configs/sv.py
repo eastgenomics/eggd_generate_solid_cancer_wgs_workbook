@@ -1,3 +1,5 @@
+import re
+
 from openpyxl.styles import Border, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -169,13 +171,21 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
             f"{misc.convert_index_to_letters(i)}1"
             for i in range(last_column_index + 1)
         ],
+        # define width for the empty columns that scientists fill in
         "col_width": [
             (misc.convert_index_to_letters(i), 6)
             for i in range(
                 variant_class_column_index + 1, variant_class_column_index + 5
             )
         ]
-        + [(column_letters[2], 22)],
+        # define width for Gene mode of action
+        + [(column_letters[2], 22)]
+        # define width for the Fusion columns
+        + [
+            (misc.convert_index_to_letters(i), 20)
+            for i, column in enumerate(data.columns)
+            if re.match(r"Fusion_[0-9]+", column)
+        ],
         "borders": {
             "cell_rows": [(f"A1:{last_column_letter}1", THIN_BORDER)]
             + border_cells

@@ -1,3 +1,5 @@
+import re
+
 from openpyxl.styles import Border, Side
 from openpyxl.styles.fills import PatternFill
 import pandas as pd
@@ -83,7 +85,10 @@ CONFIG = {
     }
     ####
     # somatic cnv gene lookup
-    | {(row, 1): f"=B{row+39}" for row in range(37, 42)}
+    | {
+        (row, 1): f'=SUBSTITUTE(B{row+39},";",CHAR(10))'
+        for row in range(37, 42)
+    }
     # somatic cnv coordinates
     | {
         (row, 2): f'=SUBSTITUTE(E{row+39},";",CHAR(10))'
@@ -101,15 +106,13 @@ CONFIG = {
     }
     ####
     # somatic fusion gene lookup
-    | {(row, 1): f"=B{row+42}" for row in range(42, 47)}
+    | {
+        (row, 1): f'=SUBSTITUTE(B{row+42},";",CHAR(10))'
+        for row in range(42, 47)
+    }
     # somatic fusion coordinates
     | {
         (row, 2): f'=SUBSTITUTE(E{row+42},";",CHAR(10))'
-        for row in range(42, 47)
-    }
-    # somatic fusion cytological bands
-    | {
-        (row, 3): f"=CONCATENATE(I{row+42},CHAR(10),J{row+42})"
         for row in range(42, 47)
     }
     ####
@@ -145,12 +148,12 @@ CONFIG = {
     + [f"{col}49" for col in list("ABCDEFGHI")]
     + [f"{col}56" for col in list("ABCDEFGH")],
     "col_width": [
-        ("A", 26),
+        ("A", 10),
         ("B", 20),
-        ("C", 22),
-        ("D", 24),
-        ("E", 24),
-        ("F", 24),
+        ("C", 16),
+        ("D", 20),
+        ("E", 15),
+        ("F", 15),
         ("G", 24),
         ("H", 24),
         ("I", 24),
@@ -232,16 +235,17 @@ CONFIG = {
         {
             "cells": {
                 (
-                    f"F{row}"
-                    for start, end in [(25, 34), (37, 47)]
+                    f"D{row}"
+                    for start, end in [(42, 47)]
                     for row in range(start, end)
                 ): (
-                    '"Oncogenic, Likely oncogenic,'
-                    "Uncertain, Likely passenger,"
-                    'Likely artefact"'
+                    '"Translocation,'
+                    "Deletion,"
+                    "Tandem duplication,"
+                    'Inversion"'
                 ),
             },
-            "title": "Variant class somatic",
+            "title": "Actionability",
         },
         {
             "cells": {
@@ -379,12 +383,43 @@ def add_dynamic_values(
         if df_columns is not None
     ]
 
+    # the position of the variant class and cyto columns is going to be dynamic
+    # depending on the number of fusion elements. This attempts to get the
+    # positions of those columns
+    *cytos_column_index, variant_class_column_index = sorted(
+        [
+            index
+            for index, col in enumerate(SV_df_columns)
+            for col_to_find in ["Variant class", "Cyto"]
+            if re.match(col_to_find, col)
+        ]
+    )
+
     config_with_dynamic_values = {
         "cells_to_write": {
             key: value
             for data_dict in all_df_columns
             for key, value in data_dict.items()
         }
+        # dynamic way to concatenate as many cyto bands as possible, i'm sorry
+        | {
+            (row, 3): "=CONCATENATE("
+            + ",CHAR(10),".join(
+                [
+                    f"{misc.convert_index_to_letters(cyto)}{row+42}"
+                    for cyto in cytos_column_index
+                ]
+            )
+            + ")"
+            for row in range(42, 47)
+        }
+        | {
+            (
+                row,
+                6,
+            ): f"={misc.convert_index_to_letters(variant_class_column_index)}{row+42}"
+            for row in range(42, 47)
+        },
     }
 
     return config_with_dynamic_values

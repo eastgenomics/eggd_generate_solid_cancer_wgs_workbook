@@ -62,7 +62,8 @@ CONFIG = {
         ("K", 22),
         ("M", 6),
         ("N", 6),
-    ],
+    ]
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(13, 26)],
     "cells_to_colour": [
         (
             f"{col}1",

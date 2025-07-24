@@ -41,4 +41,9 @@ CONFIG = {
         {"cell": "H4", "img_index": 6, "size": (600, 800)},
         {"cell": "V4", "img_index": 7, "size": (600, 1100)},
     ],
+    "alignment_info": [
+        (f"{col}{row}", {"horizontal": "left"})
+        for col in list("EF")
+        for row in range(35, 37)
+    ],
 }

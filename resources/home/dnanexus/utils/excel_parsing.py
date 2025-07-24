@@ -693,6 +693,7 @@ def lookup_data_from_variants(
         Refgene data dataframe with data from variant dataframes
     """
 
+    lookup_columns = []
     lookup_variant_data = []
 
     if kwargs["somatic"] is not None:
@@ -705,11 +706,13 @@ def lookup_data_from_variants(
                 "CDS change and protein change",
             )
         )
+        lookup_columns.append("SNV")
 
     if kwargs["gain"] is not None:
         lookup_variant_data.append(
             ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number")
         )
+        lookup_columns.append("CN")
 
     if lookup_variant_data:
         for (
@@ -750,6 +753,7 @@ def lookup_data_from_variants(
         ) in [("SV_{}", "Gene", df_fusion, "Type")]:
             for gene in gene_col:
                 column_to_write = new_column.format(gene.lower())
+                lookup_columns.append(column_to_write)
                 # link the mapping column to the column of data in the ref df
                 reference_dict = dict(
                     zip(
@@ -763,5 +767,9 @@ def lookup_data_from_variants(
                 refgene_df[column_to_write] = refgene_df[
                     column_to_write
                 ].fillna("-")
+
+    refgene_df = refgene_df.query(
+        " | ".join([f"{col} != '-'" for col in lookup_columns])
+    )
 
     return refgene_df
