@@ -699,11 +699,26 @@ def lookup_data_from_variants(
         )
         lookup_columns.append("SNV")
 
-    if kwargs["gain"] is not None:
-        lookup_variant_data.append(
-            ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number")
+    cnv_lookup = None
+
+    if kwargs["gain"] is not None and kwargs["loss"] is not None:
+        ref_df = pd.concat(
+            [
+                kwargs["gain"][["Gene", "Copy Number"]],
+                kwargs["loss"][["Gene", "Copy Number"]],
+            ],
         )
+        cnv_lookup = ("CN", "Gene", ref_df, "Gene", "Copy Number")
+
+    elif kwargs["gain"] is not None:
+        cnv_lookup = ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number")
+
+    elif kwargs["loss"] is not None:
+        cnv_lookup = ("CN", "Gene", kwargs["loss"], "Gene", "Copy Number")
+
+    if cnv_lookup:
         lookup_columns.append("CN")
+        lookup_variant_data.append(cnv_lookup)
 
     if lookup_variant_data:
         for (
