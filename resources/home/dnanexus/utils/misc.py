@@ -324,7 +324,8 @@ def lookup_df(
     mapping_column_ref_df: str,
     col_to_look_up: str,
 ) -> pd.Series:
-    """Lookup values from one dataframe to another using common columns
+    """Lookup values from one dataframe to another using common values in a
+    column
 
     Parameters
     ----------
