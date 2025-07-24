@@ -803,7 +803,7 @@ class TestLookupDataFromVariants:
                 "fusion": pd.DataFrame(
                     {"Gene": ["gene1;gene2"], "Type": ["type1"]}
                 ),
-            }
+            },
         )
 
         expected_output = pd.DataFrame(
@@ -822,7 +822,7 @@ class TestLookupDataFromVariants:
                 "Haem_Alteration": ["haem_alt1", "haem_alt2", "haem_alt3"],
                 "Haem_Entities": ["haem_ent1", "haem_ent2", "haem_ent3"],
                 "SNV": ["data1", "-", "-"],
-                "CN": ["-", "-", 3],
+                "CN": ["-", "-", "3"],
                 "SV_gene_1": ["type1", "-", "-"],
                 "SV_gene_2": ["-", "type1", "-"],
             }
