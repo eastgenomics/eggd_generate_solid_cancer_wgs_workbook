@@ -108,15 +108,13 @@ def process_reported_variants_germline(
         mapping_column_ref_df,
         col_to_look_up,
     ) in lookup_panelapp_data:
-        # link the mapping column to the column of data in the ref df
-        reference_dict = dict(
-            zip(
-                reference_df[mapping_column_ref_df],
-                reference_df[col_to_look_up],
-            )
+        df[new_column] = misc.lookup_df(
+            df,
+            mapping_column_target_df,
+            reference_df,
+            mapping_column_ref_df,
+            col_to_look_up,
         )
-        df[new_column] = df[mapping_column_target_df].map(reference_dict)
-        df[new_column] = df[new_column].fillna("-")
 
     for column in [
         "GRCh38 coordinates;ref/alt allele",
@@ -235,15 +233,13 @@ def process_reported_variants_somatic(
         mapping_column_ref_df,
         col_to_look_up,
     ) in lookup_refgene:
-        # link the mapping column to the column of data in the ref df
-        reference_dict = dict(
-            zip(
-                reference_df[mapping_column_ref_df],
-                reference_df[col_to_look_up],
-            )
+        df[new_column] = misc.lookup_df(
+            df,
+            mapping_column_target_df,
+            reference_df,
+            mapping_column_ref_df,
+            col_to_look_up,
         )
-        df[new_column] = df[mapping_column_target_df].map(reference_dict)
-        df[new_column] = df[new_column].fillna("-")
 
     df.loc[:, "Error flag"] = ""
 
@@ -365,15 +361,13 @@ def process_reported_SV(
         mapping_column_ref_df,
         col_to_look_up,
     ) in lookup_refgene:
-        # link the mapping column to the column of data in the ref df
-        reference_dict = dict(
-            zip(
-                reference_df[mapping_column_ref_df],
-                reference_df[col_to_look_up],
-            )
+        sv_df[new_column] = misc.lookup_df(
+            sv_df,
+            mapping_column_target_df,
+            reference_df,
+            mapping_column_ref_df,
+            col_to_look_up,
         )
-        sv_df[new_column] = sv_df[mapping_column_target_df].map(reference_dict)
-        sv_df[new_column] = sv_df[new_column].fillna("-")
 
     sv_df.loc[:, "Variant class"] = ""
 
@@ -527,20 +521,17 @@ def process_fusion_SV(
         mapping_column_ref_df,
         col_to_look_up,
     ) in lookup_refgene:
-        for gene_col_name in gene_col:
-            column_to_write = f"{new_column}\n{gene_col_name}"
-            mapping_column_target_df = gene_col_name
-            # link the mapping column to the column of data in the ref df
-            reference_dict = dict(
-                zip(
-                    reference_df[mapping_column_ref_df],
-                    reference_df[col_to_look_up],
-                )
+        for gene in gene_col:
+            column_to_write = f"{new_column}\n{gene}"
+            mapping_column_target_df = gene
+
+            df_SV[column_to_write] = misc.lookup_df(
+                df_SV,
+                mapping_column_target_df,
+                reference_df,
+                mapping_column_ref_df,
+                col_to_look_up,
             )
-            df_SV[column_to_write] = df_SV[mapping_column_target_df].map(
-                reference_dict
-            )
-            df_SV.fillna({column_to_write: "-"}, inplace=True)
 
             # store the cyto columns apart from the other lookup groups to
             # reorder
@@ -708,11 +699,26 @@ def lookup_data_from_variants(
         )
         lookup_columns.append("SNV")
 
-    if kwargs["gain"] is not None:
-        lookup_variant_data.append(
-            ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number")
+    cnv_lookup = None
+
+    if kwargs["gain"] is not None and kwargs["loss"] is not None:
+        ref_df = pd.concat(
+            [
+                kwargs["gain"][["Gene", "Copy Number"]],
+                kwargs["loss"][["Gene", "Copy Number"]],
+            ],
         )
+        cnv_lookup = ("CN", "Gene", ref_df, "Gene", "Copy Number")
+
+    elif kwargs["gain"] is not None:
+        cnv_lookup = ("CN", "Gene", kwargs["gain"], "Gene", "Copy Number")
+
+    elif kwargs["loss"] is not None:
+        cnv_lookup = ("CN", "Gene", kwargs["loss"], "Gene", "Copy Number")
+
+    if cnv_lookup:
         lookup_columns.append("CN")
+        lookup_variant_data.append(cnv_lookup)
 
     if lookup_variant_data:
         for (
@@ -722,17 +728,13 @@ def lookup_data_from_variants(
             mapping_column_ref_df,
             col_to_look_up,
         ) in lookup_variant_data:
-            # link the mapping column to the column of data in the ref df
-            reference_dict = dict(
-                zip(
-                    reference_df[mapping_column_ref_df],
-                    reference_df[col_to_look_up],
-                )
+            refgene_df[new_column] = misc.lookup_df(
+                refgene_df,
+                mapping_column_target_df,
+                reference_df,
+                mapping_column_ref_df,
+                col_to_look_up,
             )
-            refgene_df[new_column] = refgene_df[mapping_column_target_df].map(
-                reference_dict
-            )
-            refgene_df[new_column] = refgene_df[new_column].fillna("-")
 
     if kwargs["fusion"] is not None:
         df_fusion = kwargs["fusion"]
@@ -754,19 +756,14 @@ def lookup_data_from_variants(
             for gene in gene_col:
                 column_to_write = new_column.format(gene.lower())
                 lookup_columns.append(column_to_write)
-                # link the mapping column to the column of data in the ref df
-                reference_dict = dict(
-                    zip(
-                        reference_df[gene],
-                        reference_df[col_to_look_up],
-                    )
+
+                refgene_df[column_to_write] = misc.lookup_df(
+                    refgene_df,
+                    mapping_column_target_df,
+                    reference_df,
+                    gene,
+                    col_to_look_up,
                 )
-                refgene_df[column_to_write] = refgene_df[
-                    mapping_column_target_df
-                ].map(reference_dict)
-                refgene_df[column_to_write] = refgene_df[
-                    column_to_write
-                ].fillna("-")
 
     refgene_df = refgene_df.query(
         " | ".join([f"{col} != '-'" for col in lookup_columns])
