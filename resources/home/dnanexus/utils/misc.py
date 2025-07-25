@@ -320,7 +320,7 @@ def convert_3_letter_protein_to_1(string_element: str) -> str:
 def lookup_df(
     target_df: pd.DataFrame,
     mapping_column_target_df: str,
-    reference_df: str,
+    reference_df: pd.DataFrame,
     mapping_column_ref_df: str,
     col_to_look_up: str,
 ) -> pd.Series:
@@ -336,7 +336,7 @@ def lookup_df(
     mapping_column_target_df : str
         Name of the column in the target dataframe to use to match to the
         reference dataframe
-    reference_df : str
+    reference_df : pd.DataFrame
         Dataframe containing reference data that we want to add to the target
         dataframe
     mapping_column_ref_df : str
