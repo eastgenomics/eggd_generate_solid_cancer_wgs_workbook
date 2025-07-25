@@ -195,6 +195,19 @@ def process_reported_variants_somatic(
     )
     df.fillna({"MTBP p.": ""}, inplace=True)
 
+    # move the [SVIG] info into a dedicated column
+    df.loc[:, "Canonical"] = ""
+    df["Canonical"] = df["CDS change and protein change"].apply(
+        misc.remove_everything_but_SVIG
+    )
+
+    # remove the SVIG info from the below columns
+    df["CDS change and protein change"] = df[
+        "CDS change and protein change"
+    ].str.replace("[SVIG]", "")
+    df["MTBP c."] = df["MTBP c."].str.replace("[SVIG]", "")
+    df["MTBP p."] = df["MTBP p."].str.replace("[SVIG]", "")
+
     df["HS mutation lookup"] = df["MTBP p."].apply(
         lambda x: re.sub(r"[A-Z]+$", "", x)
     )
@@ -283,6 +296,7 @@ def process_reported_variants_somatic(
             "Alt allele/total read depth",
             "Gene mode of action",
             "Variant class",
+            "Canonical",
             "TSG_NMD",
             "TSG_LOH",
             "Splice fs?",
