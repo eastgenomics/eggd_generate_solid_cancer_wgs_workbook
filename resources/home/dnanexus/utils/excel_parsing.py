@@ -139,6 +139,7 @@ def process_reported_variants_germline(
         ]
     ]
 
+    df["Gene mode of action"] = df["Gene mode of action"].astype(str)
     df.fillna("", inplace=True)
 
     return df
