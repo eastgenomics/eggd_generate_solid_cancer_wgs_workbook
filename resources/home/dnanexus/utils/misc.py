@@ -182,6 +182,34 @@ def remove_everything_but_SVIG(value: str) -> str:
     return match.group(0) if match else ""
 
 
+def clean_clinvar_id_column(value: str) -> list:
+    """Clean a given string for clinvar use
+
+    Parameters
+    ----------
+    value : str
+        String containing the value to modify
+
+    Returns
+    -------
+    list
+        List of elements cleaned from the original value
+    """
+
+    if value is np.nan:
+        return [""]
+
+    new_values = []
+    value = str(value)
+    values = value.split(";")
+
+    for value in values:
+        value = value.replace(".0", "")
+        new_values.append(re.sub(r"[^0-9]", "", value))
+
+    return new_values
+
+
 def get_column_letter_using_column_name(
     df: pd.DataFrame, column_name: str = None
 ) -> str:
