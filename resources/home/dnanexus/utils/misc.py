@@ -178,13 +178,8 @@ def remove_everything_but_SVIG(value: str) -> str:
         String value to add in column
     """
 
-    match = re.search(r"(.+?)(\[SVIG\]|$)", value)
-
-    if match:
-        non_word, word = match.groups()
-        return ("" * len(non_word)) + word
-    else:
-        return value
+    match = re.search(r"\[SVIG\]", value)
+    return match.group(0) if match else ""
 
 
 def get_column_letter_using_column_name(
