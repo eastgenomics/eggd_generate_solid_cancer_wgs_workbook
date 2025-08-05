@@ -31,6 +31,7 @@ CONFIG = {
                 "Alt allele/total read depth",
                 "Gene mode of action",
                 "Variant class",
+                "Canonical",
                 "TSG_NMD",
                 "TSG_LOH",
                 "Splice fs?",
@@ -59,7 +60,7 @@ CONFIG = {
             1,
         )
     },
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 38)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 39)],
     "col_width": [
         ("A", 5),
         ("B", 12),
@@ -74,38 +75,38 @@ CONFIG = {
     ]
     + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(21, 38)],
     "cells_to_colour": [
-        # letters N to U
+        # letters N to V
         (
             f"{string.ascii_uppercase[i]}1",
             PatternFill(patternType="solid", start_color="F2F2F2"),
         )
-        for i in range(13, 21)
+        for i in range(13, 22)
     ]
     + [
         (
             f"{letter}1",
             PatternFill(patternType="solid", start_color="fdeada"),
         )
-        for letter in ["V", "W", "X"]
+        for letter in ["W", "X", "Y"]
     ]
     + [
-        # letters Y to AJ
+        # letters Z to AK
         (
             f"{misc.convert_index_to_letters(i)}1",
             PatternFill(patternType="solid", start_color="dbeef4"),
         )
-        for i in range(24, 36)
+        for i in range(25, 37)
     ]
     + [
         (
             f"{col}1",
             PatternFill(patternType="solid", start_color="dabcff"),
         )
-        for col in ["AK", "AL"]
+        for col in ["AL", "AM"]
     ],
     "borders": {
         "cell_rows": [
-            ("A1:AL1", THIN_BORDER),
+            ("A1:AM1", THIN_BORDER),
         ],
     },
     "alignment_info": [
@@ -118,10 +119,10 @@ CONFIG = {
                 "text_rotation": 90,
             },
         )
-        for i in range(0, 38)
+        for i in range(0, 39)
     ],
     "row_height": [(1, 80)],
-    "auto_filter": "A:AL",
+    "auto_filter": "A:AM",
     "freeze_panes": "G1",
 }
 
@@ -169,13 +170,13 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         "data_bar": f"J2:J{nb_somatic_variants + 1}",
         "borders": {
             "cell_rows": [
-                (f"Y1:Y{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AA1:AA{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AC1:AC{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AE1:AE{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AG1:AG{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AI1:AI{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AK1:AK{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"Z1:Z{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AB1:AB{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AD1:AD{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AF1:AF{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AH1:AH{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AJ1:AJ{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AL1:AL{nb_somatic_variants+1}", LEFT_BORDER),
             ],
         },
     }

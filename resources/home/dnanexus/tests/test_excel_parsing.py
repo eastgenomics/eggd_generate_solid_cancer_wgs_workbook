@@ -76,7 +76,7 @@ def somatic_variant_data():
             "CDS change and protein change": [
                 "c.1;p.Leu40Arg",
                 "c.2;p.Gln61Arg",
-                "c.3;p.Leu2135Val",
+                "c.3;p.Leu2135Val[SVIG]",
             ],
             "Predicted consequences": [
                 "consequence1",
@@ -363,6 +363,7 @@ class TestProcessReportedVariantsSomatic:
                 "Alt allele/total read depth": ["depth1"],
                 "Gene mode of action": ["mode1"],
                 "Variant class": [""],
+                "Canonical": [""],
                 "TSG_NMD": [""],
                 "TSG_LOH": [""],
                 "Splice fs?": [""],
@@ -419,6 +420,7 @@ class TestProcessReportedVariantsSomatic:
                 "Alt allele/total read depth": ["depth1", "depth3"],
                 "Gene mode of action": ["mode1", "mode3"],
                 "Variant class": ["", ""],
+                "Canonical": ["", "[SVIG]"],
                 "TSG_NMD": ["", ""],
                 "TSG_LOH": ["", ""],
                 "Splice fs?": ["", ""],

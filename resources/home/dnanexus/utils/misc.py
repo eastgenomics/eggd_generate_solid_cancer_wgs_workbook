@@ -1,5 +1,6 @@
 import importlib
 from pathlib import Path
+import re
 import string
 from types import ModuleType
 from typing import Optional
@@ -161,6 +162,24 @@ def remove_duplicate_fusion_elements(value: str) -> str:
             values.append(semi_colon_split)
 
     return ";".join(values)
+
+
+def remove_everything_but_SVIG(value: str) -> str:
+    """Remove everything in the string but the SVIG element
+
+    Parameters
+    ----------
+    value : str
+        String value to substitute
+
+    Returns
+    -------
+    str
+        String value to add in column
+    """
+
+    match = re.search(r"\[SVIG\]", value)
+    return match.group(0) if match else ""
 
 
 def get_column_letter_using_column_name(

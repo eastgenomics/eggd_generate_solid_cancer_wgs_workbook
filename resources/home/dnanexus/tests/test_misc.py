@@ -119,6 +119,18 @@ class TestSplitConfidenceSupport:
         assert test_output == expected_output
 
 
+class TestRemoveEverythingButSVIG:
+    def test_remove_when_no_SVIG(self):
+        test_output = misc.remove_everything_but_SVIG("No SVIG")
+        assert test_output == ""
+
+    def test_remove_when_SVIG(self):
+        test_output = misc.remove_everything_but_SVIG(
+            "element _before-[SVIG] element after"
+        )
+        assert test_output == "[SVIG]"
+
+
 @pytest.fixture()
 def df_with_many_columns():
     test_input = pd.DataFrame(
@@ -210,3 +222,57 @@ class TestConvert3LetterProteinTo1:
     )
     def test_input_is_not_string(self, test_input, expected):
         assert misc.convert_3_letter_protein_to_1(test_input) == expected
+
+
+class TestLookupDf:
+    def test_lookup_df_no_equal_values(self):
+        test_target_df = pd.DataFrame({"col": ["gene1", "gene2"]})
+        test_ref_df = pd.DataFrame(
+            {"col1": ["gene3", "gene4"], "col2": ["value1", "value2"]}
+        )
+
+        test_output = misc.lookup_df(
+            test_target_df, "col", test_ref_df, "col1", "col2"
+        )
+        expected_output = pd.Series(["-", "-"])
+
+        assert test_output.equals(expected_output)
+
+    def test_lookup_df_single_equal_value(self):
+        test_target_df = pd.DataFrame({"col": ["gene1", "gene2"]})
+        test_ref_df = pd.DataFrame(
+            {"col1": ["gene2", "gene4"], "col2": ["value1", "value2"]}
+        )
+
+        test_output = misc.lookup_df(
+            test_target_df, "col", test_ref_df, "col1", "col2"
+        )
+        expected_output = pd.Series(["-", "value1"])
+
+        assert test_output.equals(expected_output)
+
+    def test_lookup_df_multiple_equal_value(self):
+        test_target_df = pd.DataFrame({"col": ["gene1", "gene2"]})
+        test_ref_df = pd.DataFrame(
+            {"col1": ["gene1", "gene2"], "col2": ["value1", "value2"]}
+        )
+
+        test_output = misc.lookup_df(
+            test_target_df, "col", test_ref_df, "col1", "col2"
+        )
+        expected_output = pd.Series(["value1", "value2"])
+
+        assert test_output.equals(expected_output)
+
+    def test_lookup_df_concatenate_values(self):
+        test_target_df = pd.DataFrame({"col": ["gene1", "gene2"]})
+        test_ref_df = pd.DataFrame(
+            {"col1": ["gene1", "gene1"], "col2": ["value1", "value2"]}
+        )
+
+        test_output = misc.lookup_df(
+            test_target_df, "col", test_ref_df, "col1", "col2"
+        )
+        expected_output = pd.Series(["value1,value2", "-"])
+
+        assert test_output.equals(expected_output)
