@@ -48,7 +48,8 @@ def main(**kwargs):
         file_type = info_dict["type"]
 
         if file_type == "vcf":
-            data = vcf.open_vcf(file)
+            vcf_reader = vcf.open_vcf(file)
+            data = vcf.get_clinvar_info(vcf_reader)
         elif file_type == "xls" or file_type == "csv":
             data = excel_parsing.open_file(file, file_type)
         elif file_type == "html":
