@@ -254,7 +254,15 @@ class TestProcessReportedVariantsGermline:
     ):
         mock_vcf_data.return_value = pd.DataFrame(
             {
-                "ClinVar ID": ["1"],
+                "Gene": ["gene1"],
+                "GRCh38 coordinates;ref/alt allele": ["coor1"],
+                "CDS change and protein change": ["c.1"],
+                "Predicted consequences": ["consequence1"],
+                "Genotype": ["0/1"],
+                "Population germline allele frequency (GE | gnomAD)": [
+                    "ge1|freq1"
+                ],
+                "Gene mode of action": ["deletion1"],
                 "clnsigconf": ["sig1"],
             }
         )
@@ -289,7 +297,16 @@ class TestProcessReportedVariantsGermline:
     ):
         mock_vcf_data.return_value = pd.DataFrame(
             {
-                "ClinVar ID": ["1", "2"],
+                "Gene": ["gene1", "gene3"],
+                "GRCh38 coordinates;ref/alt allele": ["coor1", "coor3"],
+                "CDS change and protein change": ["c.1", "c.3"],
+                "Predicted consequences": ["consequence1", "consequence3"],
+                "Genotype": ["0/1", "1|1"],
+                "Population germline allele frequency (GE | gnomAD)": [
+                    "ge1|freq1",
+                    "ge2|freq2",
+                ],
+                "Gene mode of action": ["deletion1", "deletion2"],
                 "clnsigconf": ["sig1", "sig2"],
             }
         )

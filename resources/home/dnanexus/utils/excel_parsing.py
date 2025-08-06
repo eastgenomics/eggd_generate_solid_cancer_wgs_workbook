@@ -32,7 +32,7 @@ def open_file(file: str, file_type: str) -> pd.DataFrame:
 
 
 def process_reported_variants_germline(
-    df: pd.DataFrame, clinvar_resource: vcfpy.Reader, panelapp_dfs: dict
+    df: pd.DataFrame, clinvar_dict: dict, panelapp_dfs: dict
 ) -> pd.DataFrame:
     """Process the data from the reported variants excel file
 
@@ -40,8 +40,8 @@ def process_reported_variants_germline(
     ----------
     df : pd.DataFrame
         Dataframe from parsing the reported variants excel file
-    clinvar_resource : vcfpy.Reader
-        vcfpy.Reader object from the Clinvar resource
+    clinvar_dict : dict
+        Dict containing Clinvar data
     panelapp_dfs : dict
         Dict containing dfs to Panelapp adult and childhood data
 
@@ -61,26 +61,25 @@ def process_reported_variants_germline(
 
     # convert the clinvar id column as a string and remove the trailing .0 that
     # the automatic conversion that pandas applies added
-    df["ClinVar ID"] = df["ClinVar ID"].astype("string")
-    df["ClinVar ID"] = df["ClinVar ID"].str.removesuffix(".0")
-    df["ClinVar ID"] = df["ClinVar ID"].str.replace(r"[^0-9]", "", regex=True)
+    df["ClinVar ID"] = df["ClinVar ID"].apply(misc.clean_clinvar_id_column)
 
     df.reset_index(drop=True, inplace=True)
 
-    clinvar_ids_to_find = list(
-        {
-            value
-            for value in df.loc[:, "ClinVar ID"].to_numpy()
-            if type(value) is str
-        }
+    df = vcf.find_clinvar_info(
+        clinvar_dict,
+        df[
+            [
+                "Gene",
+                "GRCh38 coordinates;ref/alt allele",
+                "CDS change and protein change",
+                "Predicted consequences",
+                "ClinVar ID",
+                "Genotype",
+                "Population germline allele frequency (GE | gnomAD)",
+                "Gene mode of action",
+            ]
+        ],
     )
-
-    clinvar_info = vcf.find_clinvar_info(
-        clinvar_resource, *clinvar_ids_to_find
-    )
-
-    # add the clinvar info by merging the clinvar dataframe
-    df = df.merge(clinvar_info, on="ClinVar ID", how="left")
 
     df.loc[:, "Tumour VAF"] = ""
 
@@ -140,6 +139,7 @@ def process_reported_variants_germline(
         ]
     ]
 
+    df["Gene mode of action"] = df["Gene mode of action"].astype(str)
     df.fillna("", inplace=True)
 
     return df
