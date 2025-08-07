@@ -1,7 +1,6 @@
 import re
 
 import pandas as pd
-import vcfpy
 
 from configs import tables, sv, refgene
 from utils import misc, vcf
