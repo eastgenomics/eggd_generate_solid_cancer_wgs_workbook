@@ -109,7 +109,17 @@ def find_clinvar_info(vcf_dict: dict, data: pd.DataFrame) -> pd.DataFrame:
                     )
 
         if significance:
-            significance = "; ".join([ele for s in significance for ele in s])
+            cleaned_significance = []
+
+            for s in significance:
+                if s:
+                    if type(s) is list:
+                        for ele in s:
+                            cleaned_significance.append(ele)
+                    else:
+                        cleaned_significance.append(s)
+
+            significance = "; ".join(cleaned_significance)
 
         new_data.append(
             (
