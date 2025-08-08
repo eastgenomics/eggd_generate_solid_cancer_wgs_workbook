@@ -81,10 +81,13 @@ CONFIG = {
     }
     # somatic snv consequences
     | {(row, 4): f"=G{row+39}" for row in range(25, 34)}
+    # somatic snv VAF
     | {
         (row, 5): f"=CONCATENATE(J{row+39},CHAR(10),K{row+39})"
         for row in range(25, 34)
     }
+    # somatic snv variant class
+    | {(row, 6): f"=N{row+39}" for row in range(25, 34)}
     ####
     # somatic cnv gene lookup
     | {
@@ -106,6 +109,8 @@ CONFIG = {
         (row, 4): f'=CONCATENATE(F{row+39}," (",G{row+39},")")'
         for row in range(37, 42)
     }
+    # somatic cnv variant class
+    | {(row, 6): f"=N{row+39}" for row in range(37, 42)}
     ####
     # somatic fusion gene lookup
     | {
