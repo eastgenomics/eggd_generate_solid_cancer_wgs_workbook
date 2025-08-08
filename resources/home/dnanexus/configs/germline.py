@@ -76,10 +76,17 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
             if c_idx != 1 and r_idx != 1
         }
         | {
-            (nb_germline_variants + 6, 1): "Pertinent variants/feedback",
+            (nb_germline_variants + 6, 1): "Pertinent germline variants",
             (nb_germline_variants + 7, 1): "None",
+        }
+        | {
+            (nb_germline_variants + 8, 1): "Germline feedback/comments",
+            (nb_germline_variants + 9, 1): "None",
         },
-        "to_bold": [f"A{nb_germline_variants + 6}"],
+        "to_bold": [
+            f"A{nb_germline_variants + 6}",
+            f"A{nb_germline_variants + 8}",
+        ],
         "alignment_info": [
             (
                 f"{col}{row}",
@@ -94,7 +101,10 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         ],
         "row_height": [(i, 40) for i in range(5, nb_germline_variants + 5)],
         "borders": {
-            "single_cells": [(f"A{nb_germline_variants + 6}", LOWER_BORDER)],
+            "single_cells": [
+                (f"A{nb_germline_variants + 6}", LOWER_BORDER),
+                (f"A{nb_germline_variants + 8}", LOWER_BORDER),
+            ],
             "cell_rows": [
                 (f"A{i}:K{i}", THIN_BORDER)
                 for i in range(4, nb_germline_variants + 5)
