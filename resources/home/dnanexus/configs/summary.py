@@ -11,7 +11,6 @@ THIN = Side(border_style="thin", color="000000")
 THICK = Side(border_style="thick", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
-THICK_LOWER_BORDER = Border(bottom=THICK, left=THIN, right=THIN, top=THIN)
 
 CONFIG = {
     "cells_to_write": {
@@ -172,12 +171,7 @@ CONFIG = {
         + [(f"A{row}:H{row}", THIN_BORDER) for row in range(36, 47)]
         + [(f"A{row}:I{row}", THIN_BORDER) for row in range(49, 54)]
         + [(f"A{row}:H{row}", THIN_BORDER) for row in range(56, 61)]
-        + [("A41:H41", THICK_LOWER_BORDER)],
     },
-    "images": [
-        {"cell": "A4", "img_index": 2, "size": (350, 700)},
-        {"cell": "G4", "img_index": 1, "size": (350, 350)},
-    ],
     "alignment_info": [
         (
             f"{col}{row}",
