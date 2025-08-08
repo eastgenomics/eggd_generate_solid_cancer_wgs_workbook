@@ -65,7 +65,10 @@ CONFIG = {
     }
     ####
     # somatic snv gene lookup
-    | {(row, 1): f"=B{row+39}" for row in range(25, 34)}
+    | {
+        (row, 1): f'=SUBSTITUTE(B{row+39},";",CHAR(10))'
+        for row in range(25, 34)
+    }
     # somatic snv coordinates
     | {
         (row, 2): f'=SUBSTITUTE(C{row+39},";",CHAR(10))'
