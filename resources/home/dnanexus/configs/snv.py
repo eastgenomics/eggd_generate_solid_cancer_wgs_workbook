@@ -73,8 +73,10 @@ CONFIG = {
         ("K", 8),
         ("M", 18),
         ("N", 14),
+        ("P", 10),
     ]
-    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(22, 39)],
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(16, 22)]
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(23, 39)],
     "cells_to_colour": [
         # letters N to W
         (
