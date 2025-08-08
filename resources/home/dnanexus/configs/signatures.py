@@ -49,7 +49,7 @@ CONFIG = {
     "dropdowns": [
         {
             "cells": {
-                "C36": (
+                ("C36",): (
                     '"MMRd,'
                     "MMRd + POLE,"
                     "HRD,"
