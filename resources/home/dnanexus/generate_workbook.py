@@ -40,12 +40,11 @@ def main(**kwargs):
         },
     }
 
-    print("Parsing data...")
-
     # loop through the inputs to parse the files
     for name, info_dict in inputs.items():
         file = info_dict["id"]
         file_type = info_dict["type"]
+        print(f"Parsing {file}...")
 
         if file_type == "vcf":
             vcf_reader = vcf.open_vcf(file)
@@ -57,11 +56,11 @@ def main(**kwargs):
 
         inputs[name]["data"] = data
 
-    print("Process parsed data...")
-
+    print("Process refgene data...")
     refgene_df = excel_parsing.process_refgene(
         inputs["reference_gene_groups"]["data"]
     )
+    print("Process panelapp data...")
     panelapp_dfs = excel_parsing.process_panelapp(inputs["panelapp"]["data"])
 
     # list of tuple allowing:
@@ -84,17 +83,20 @@ def main(**kwargs):
         ("Haem Entities", "Gene", refgene_df, "Gene", "Haem_Entities"),
     )
 
+    print("Process germline data...")
     germline_df = excel_parsing.process_reported_variants_germline(
         inputs["reported_variants"]["data"],
         inputs["clinvar"]["data"],
         panelapp_dfs,
     )
+    print("Process SNV data...")
     somatic_df = excel_parsing.process_reported_variants_somatic(
         inputs["reported_variants"]["data"],
         lookup_refgene_data,
         inputs["hotspots"]["data"],
         inputs["cytological_bands"]["data"],
     )
+    print("Process Gain data...")
     gain_df = excel_parsing.process_reported_SV(
         inputs["reported_structural_variants"]["data"],
         lookup_refgene_data,
@@ -103,6 +105,7 @@ def main(**kwargs):
         "Focality",
         "Full transcript",
     )
+    print("Process Loss data...")
     loss_df = excel_parsing.process_reported_SV(
         inputs["reported_structural_variants"]["data"],
         lookup_refgene_data,
@@ -110,6 +113,7 @@ def main(**kwargs):
         "TSG_Hom",
         "SNV_LOH",
     )
+    print("Process SV data...")
     fusion_df, fusion_count, alternative_columns = (
         excel_parsing.process_fusion_SV(
             inputs["reported_structural_variants"]["data"],
@@ -118,6 +122,7 @@ def main(**kwargs):
         )
     )
 
+    print("Run backwards lookup on refgene...")
     refgene_df = excel_parsing.lookup_data_from_variants(
         refgene_df,
         **{
@@ -150,6 +155,7 @@ def main(**kwargs):
         "Refgene": refgene.add_dynamic_values(refgene_df),
     }
 
+    print("Download HTML images...")
     # get images and tables from the html file
     html_images = html.download_images(inputs["supplementary_html"]["data"])
     html_tables = html.get_tables(inputs["supplementary_html"]["id"])
@@ -194,8 +200,6 @@ def main(**kwargs):
         {"sheet_name": "Bioinformatics"},
     ]
 
-    print("Writing sheets...")
-
     # get the common prefix from the input files
     sample_id = (
         os.path.commonprefix(
@@ -216,6 +220,7 @@ def main(**kwargs):
         f"output/{sample_id}.xlsx", engine="openpyxl"
     ) as output_excel:
         for sheet_data in sheets:
+            print(f"Writing {sheet_data['sheet_name']}...")
             excel_writing.write_sheet(output_excel, **sheet_data)
 
     print(f"Done! Wrote output/{sample_id}.xlsx")
