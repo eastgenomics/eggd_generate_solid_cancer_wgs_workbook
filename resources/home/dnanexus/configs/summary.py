@@ -122,6 +122,13 @@ CONFIG = {
         (row, 2): f'=SUBSTITUTE(E{row+42},";",CHAR(10))'
         for row in range(42, 47)
     }
+    | {
+        (
+            row,
+            4,
+        ): f'=SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(F{row+42},"BND","Translocation"),"INV","Inversion"),"DEL","Deletion"),"DUP","Tandem duplication")'
+        for row in range(42, 47)
+    }
     ####
     # germline snv gene lookup
     | {(row, 1): f"=A{row+42}" for row in range(50, 54)}
@@ -234,21 +241,6 @@ CONFIG = {
         for row in range(start, end)
     ],
     "dropdowns": [
-        {
-            "cells": {
-                (
-                    f"D{row}"
-                    for start, end in [(42, 47)]
-                    for row in range(start, end)
-                ): (
-                    '"Translocation,'
-                    "Deletion,"
-                    "Tandem duplication,"
-                    'Inversion"'
-                ),
-            },
-            "title": "Actionability",
-        },
         {
             "cells": {
                 (
