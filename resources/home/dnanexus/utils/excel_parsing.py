@@ -271,6 +271,7 @@ def process_reported_variants_somatic(
         df[["VAF", "LOH"]] = df["VAF"].str.split(";", expand=True)
 
     df.loc[:, "Variant class"] = ""
+    df.loc[:, "Comments"] = ""
     df.loc[:, "TSG_NMD"] = ""
     df.loc[:, "TSG_LOH"] = ""
     df.loc[:, "Splice fs?"] = ""
@@ -295,6 +296,7 @@ def process_reported_variants_somatic(
             "Alt allele/total read depth",
             "Gene mode of action",
             "Variant class",
+            "Comments",
             "Canonical",
             "TSG_NMD",
             "TSG_LOH",
@@ -383,6 +385,7 @@ def process_reported_SV(
         )
 
     sv_df.loc[:, "Variant class"] = ""
+    sv_df.loc[:, "Comments"] = ""
 
     for column in check_columns:
         sv_df.loc[:, column] = ""
@@ -423,6 +426,7 @@ def process_reported_SV(
             "Cyto 2",
             "Gene mode of action",
             "Variant class",
+            "Comments",
         ]
         + [column for column in check_columns]
         + [
@@ -554,6 +558,7 @@ def process_fusion_SV(
                 lookup_cols.append(column_to_write)
 
     df_SV.loc[:, "Variant class"] = ""
+    df_SV.loc[:, "Comments"] = ""
     df_SV.loc[:, "OG_Fusion"] = ""
     df_SV.loc[:, "OG_IntDup"] = ""
     df_SV.loc[:, "OG_IntDel"] = ""

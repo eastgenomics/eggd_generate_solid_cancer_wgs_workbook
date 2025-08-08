@@ -28,6 +28,7 @@ CONFIG = {
                 "Cyto 2",
                 "Gene mode of action",
                 "Variant class",
+                "Comments",
                 "OG_Amp",
                 "Focality",
                 "Full transcript",
@@ -47,7 +48,7 @@ CONFIG = {
             1,
         )
     },
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 27)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 28)],
     "col_width": [
         ("A", 10),
         ("B", 12),
@@ -60,14 +61,14 @@ CONFIG = {
         ("I", 10),
         ("J", 10),
         ("K", 22),
-        ("M", 6),
         ("N", 6),
         ("O", 6),
+        ("P", 6),
     ]
-    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(14, 27)],
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(15, 28)],
     "borders": {
         "cell_rows": [
-            ("A1:AA1", THIN_BORDER),
+            ("A1:AB1", THIN_BORDER),
         ],
     },
     "cells_to_colour": [
@@ -75,18 +76,18 @@ CONFIG = {
             f"{col}1",
             PatternFill(patternType="solid", start_color="F2F2F2"),
         )
-        for col in ["L", "M", "N", "O"]
+        for col in ["L", "M", "N", "O", "P"]
     ]
     + [
         (
-            # letters P to AA
+            # letters Q to AB
             f"{misc.convert_index_to_letters(i)}1",
             PatternFill(patternType="solid", start_color="fdeada"),
         )
-        for i in range(15, 27)
+        for i in range(16, 28)
     ],
     "row_height": [(1, 80)],
-    "auto_filter": "A:AA",
+    "auto_filter": "A:AB",
     "freeze_panes": "H1",
     "alignment_info": [
         (
@@ -98,7 +99,7 @@ CONFIG = {
                 "text_rotation": 90,
             },
         )
-        for i in range(0, 27)
+        for i in range(0, 28)
     ],
 }
 
@@ -149,13 +150,13 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         ],
         "borders": {
             "cell_rows": [
-                (f"P1:P{nb_sv_variants+1}", LEFT_BORDER),
-                (f"R1:R{nb_sv_variants+1}", LEFT_BORDER),
-                (f"T1:T{nb_sv_variants+1}", LEFT_BORDER),
-                (f"V1:V{nb_sv_variants+1}", LEFT_BORDER),
-                (f"X1:X{nb_sv_variants+1}", LEFT_BORDER),
-                (f"Z1:Z{nb_sv_variants+1}", LEFT_BORDER),
-                (f"AB1:AB{nb_sv_variants+1}", LEFT_BORDER),
+                (f"Q1:Q{nb_sv_variants+1}", LEFT_BORDER),
+                (f"S1:S{nb_sv_variants+1}", LEFT_BORDER),
+                (f"U1:U{nb_sv_variants+1}", LEFT_BORDER),
+                (f"W1:W{nb_sv_variants+1}", LEFT_BORDER),
+                (f"Y1:Y{nb_sv_variants+1}", LEFT_BORDER),
+                (f"AA1:AA{nb_sv_variants+1}", LEFT_BORDER),
+                (f"AC1:AC{nb_sv_variants+1}", LEFT_BORDER),
             ],
         },
     }

@@ -1,5 +1,3 @@
-import string
-
 from openpyxl.styles import Border, Side
 from openpyxl.styles.fills import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -29,6 +27,7 @@ CONFIG = {
                 "Cyto 2",
                 "Gene mode of action",
                 "Variant class",
+                "Comments",
                 "TSG_Hom",
                 "SNV_LOH",
                 "COSMIC Driver",
@@ -47,7 +46,7 @@ CONFIG = {
             1,
         )
     },
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 26)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 27)],
     "col_width": [
         ("A", 10),
         ("B", 12),
@@ -60,32 +59,32 @@ CONFIG = {
         ("I", 10),
         ("J", 10),
         ("K", 22),
-        ("M", 6),
         ("N", 6),
+        ("O", 6),
     ]
-    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(13, 26)],
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(14, 27)],
     "cells_to_colour": [
         (
             f"{col}1",
             PatternFill(patternType="solid", start_color="F2F2F2"),
         )
-        for col in ["L", "M", "N"]
+        for col in ["L", "M", "N", "O"]
     ]
     + [
         (
-            # letters O to Z
-            f"{string.ascii_uppercase[i]}1",
+            # letters P to AA
+            f"{misc.convert_index_to_letters(i)}1",
             PatternFill(patternType="solid", start_color="fdeada"),
         )
-        for i in range(14, 26)
+        for i in range(15, 27)
     ],
     "borders": {
         "cell_rows": [
-            ("A1:Z1", THIN_BORDER),
+            ("A1:AA1", THIN_BORDER),
         ],
     },
     "row_height": [(1, 80)],
-    "auto_filter": "A:Z",
+    "auto_filter": "A:AA",
     "freeze_panes": "H1",
     "alignment_info": [
         (
@@ -97,7 +96,7 @@ CONFIG = {
                 "text_rotation": 90,
             },
         )
-        for i in range(0, 26)
+        for i in range(0, 27)
     ],
 }
 
@@ -148,14 +147,14 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         ],
         "borders": {
             "cell_rows": [
-                (f"O1:O{nb_sv_variants+1}", LEFT_BORDER),
-                (f"Q1:Q{nb_sv_variants+1}", LEFT_BORDER),
-                (f"S1:S{nb_sv_variants+1}", LEFT_BORDER),
-                (f"U1:U{nb_sv_variants+1}", LEFT_BORDER),
-                (f"W1:W{nb_sv_variants+1}", LEFT_BORDER),
-                (f"Y1:Y{nb_sv_variants+1}", LEFT_BORDER),
+                (f"P1:P{nb_sv_variants+1}", LEFT_BORDER),
+                (f"R1:R{nb_sv_variants+1}", LEFT_BORDER),
+                (f"T1:T{nb_sv_variants+1}", LEFT_BORDER),
+                (f"V1:V{nb_sv_variants+1}", LEFT_BORDER),
+                (f"X1:X{nb_sv_variants+1}", LEFT_BORDER),
                 (f"Z1:Z{nb_sv_variants+1}", LEFT_BORDER),
                 (f"AA1:AA{nb_sv_variants+1}", LEFT_BORDER),
+                (f"AB1:AB{nb_sv_variants+1}", LEFT_BORDER),
             ],
         },
     }
