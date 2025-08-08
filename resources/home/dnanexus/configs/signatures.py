@@ -46,4 +46,23 @@ CONFIG = {
         for col in list("EF")
         for row in range(35, 37)
     ],
+    "dropdowns": [
+        {
+            "cells": {
+                "C36": (
+                    '"MMRd,'
+                    "MMRd + POLE,"
+                    "HRD,"
+                    "AID/APOBEC,"
+                    "UV exposure,"
+                    "Platinum,"
+                    "Tobacco,"
+                    "NER deficiency,"
+                    "Tobacco + AID/APOBEC,"
+                    'HRD + AID/APOBEC"'
+                ),
+            },
+            "title": "Pertinent signatures",
+        },
+    ],
 }
