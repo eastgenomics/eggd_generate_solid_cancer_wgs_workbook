@@ -854,6 +854,7 @@ class TestLookupDataFromVariants:
                 "CN": ["-", "1", "3"],
                 "SV_gene_1": ["type1", "-", "-"],
                 "SV_gene_2": ["-", "type1", "-"],
+                "On Target": ["Y", "Y", "Y"],
             }
         )
 

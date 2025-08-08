@@ -786,7 +786,7 @@ def lookup_data_from_variants(
     df = refgene_df.query(
         " | ".join([f"{col} != '-'" for col in lookup_columns])
     )
-    df.loc[:, "On Target"] = "T"
+    df.loc[:, "On Target"] = "Y"
 
     final_df = pd.merge(
         refgene_df, df, how="left", on=list(refgene_df.columns)
