@@ -55,8 +55,12 @@ def get_clinvar_info(vcf_reader: vcfpy.Reader) -> dict:
 
         data.setdefault(record_id, {})
         data[record_id]["change"] = f"{record.REF}>{alt}"
-        data[record_id].setdefault("clnsigconf", []).append(clnsigconf)
-        data[record_id].setdefault("clnsig", []).append(clnsig)
+
+        if clnsigconf:
+            data[record_id].setdefault("clnsigconf", []).append(clnsigconf)
+
+        if clnsig:
+            data[record_id].setdefault("clnsig", []).append(clnsig)
 
     return data
 
@@ -97,15 +101,15 @@ def find_clinvar_info(vcf_dict: dict, data: pd.DataFrame) -> pd.DataFrame:
                         in row["CDS change and protein change"]
                     ):
                         significance = (
-                            clinvar_data["clnsigconf"]
-                            if clinvar_data["clnsigconf"]
-                            else clinvar_data["clnsig"]
+                            clinvar_data.get("clnsigconf")
+                            if clinvar_data.get("clnsigconf")
+                            else clinvar_data.get("clnsig", "")
                         )
                 else:
                     significance = (
-                        clinvar_data["clnsigconf"]
-                        if clinvar_data["clnsigconf"]
-                        else clinvar_data["clnsig"]
+                        clinvar_data.get("clnsigconf")
+                        if clinvar_data.get("clnsigconf")
+                        else clinvar_data.get("clnsig", "")
                     )
 
         if significance:
