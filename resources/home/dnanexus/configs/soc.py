@@ -17,7 +17,7 @@ CONFIG = {
         (5, 1): "MRN",
         (6, 1): "NHS Number",
         (8, 1): "Histological diagnosis",
-        (12, 1): "Comments",
+        (12, 1): "SOC genes reported",
     },
     "to_merge": {
         "start_row": 1,

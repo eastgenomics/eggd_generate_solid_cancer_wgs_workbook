@@ -409,7 +409,9 @@ def lookup_df(
     # group data per key i.e. if multiple values are present for a key, create
     # a list that will get joined later
     for key, value in reference_tuple:
-        if not value or value is np.nan:
+        if value == 0:
+            value = str(value)
+        elif not value or value is np.nan:
             value = ""
         else:
             value = str(value)

@@ -36,6 +36,7 @@ CONFIG = {
         "Split reads",
         "Gene mode of action",
         "Variant class",
+        "Comments",
         "OG_Fusion",
         "OG_IntDup",
         "OG_IntDel",
@@ -94,7 +95,7 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
         column_letters[1]
     )
 
-    first_letter_lookup_groups = variant_class_column_index + 5
+    first_letter_lookup_groups = variant_class_column_index + 6
 
     lookup_start, last_column_index = (
         first_letter_lookup_groups,
@@ -150,7 +151,7 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
                 PatternFill(patternType="solid", start_color="F2F2F2"),
             )
             for i in range(
-                variant_class_column_index, variant_class_column_index + 5
+                variant_class_column_index, variant_class_column_index + 6
             )
         ]
         + [

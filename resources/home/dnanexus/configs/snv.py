@@ -31,6 +31,7 @@ CONFIG = {
                 "Alt allele/total read depth",
                 "Gene mode of action",
                 "Variant class",
+                "Comments",
                 "Canonical",
                 "TSG_NMD",
                 "TSG_LOH",
@@ -60,7 +61,7 @@ CONFIG = {
             1,
         )
     },
-    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 39)],
+    "to_bold": [f"{misc.convert_index_to_letters(i)}1" for i in range(0, 40)],
     "col_width": [
         ("A", 5),
         ("B", 12),
@@ -72,41 +73,43 @@ CONFIG = {
         ("K", 8),
         ("M", 18),
         ("N", 14),
+        ("P", 10),
     ]
-    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(21, 38)],
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(16, 22)]
+    + [(f"{misc.convert_index_to_letters(i)}", 5) for i in range(23, 39)],
     "cells_to_colour": [
-        # letters N to V
+        # letters N to W
         (
             f"{string.ascii_uppercase[i]}1",
             PatternFill(patternType="solid", start_color="F2F2F2"),
         )
-        for i in range(13, 22)
+        for i in range(13, 23)
     ]
     + [
         (
             f"{letter}1",
             PatternFill(patternType="solid", start_color="fdeada"),
         )
-        for letter in ["W", "X", "Y"]
+        for letter in ["X", "Y", "Z"]
     ]
     + [
-        # letters Z to AK
+        # letters AA to AL
         (
             f"{misc.convert_index_to_letters(i)}1",
             PatternFill(patternType="solid", start_color="dbeef4"),
         )
-        for i in range(25, 37)
+        for i in range(26, 38)
     ]
     + [
         (
             f"{col}1",
             PatternFill(patternType="solid", start_color="dabcff"),
         )
-        for col in ["AL", "AM"]
+        for col in ["AM", "AN"]
     ],
     "borders": {
         "cell_rows": [
-            ("A1:AM1", THIN_BORDER),
+            ("A1:AN1", THIN_BORDER),
         ],
     },
     "alignment_info": [
@@ -119,10 +122,10 @@ CONFIG = {
                 "text_rotation": 90,
             },
         )
-        for i in range(0, 39)
+        for i in range(0, 40)
     ],
     "row_height": [(1, 80)],
-    "auto_filter": "A:AM",
+    "auto_filter": "A:AN",
     "freeze_panes": "G1",
 }
 

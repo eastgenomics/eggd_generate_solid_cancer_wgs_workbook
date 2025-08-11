@@ -11,7 +11,6 @@ THIN = Side(border_style="thin", color="000000")
 THICK = Side(border_style="thick", color="000000")
 THIN_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 LOWER_BORDER = Border(bottom=THIN)
-THICK_LOWER_BORDER = Border(bottom=THICK, left=THIN, right=THIN, top=THIN)
 
 CONFIG = {
     "cells_to_write": {
@@ -63,10 +62,71 @@ CONFIG = {
         (82, 1): "Somatic_SV",
         (90, 1): "Germline_SNV",
         (97, 1): "Germline_CNV",
+        # summary to be pasted
+        (3, 8): "TMB (Mut/Mb)",
+        (3, 9): "=QC!G8",
+        (4, 8): "Pertinent Signatures",
+        (4, 9): "=Signatures!C36",
+        (5, 8): "Somatic Chr aberrations",
+        (5, 9): "=Plot!A35",
+        (6, 8): "Somatic SNV/indel",
+        (6, 9): '=_xlfn.TEXTJOIN(", ",TRUE(),A25:A33)',
+        (7, 8): "Somatic CNV Gain",
+        (7, 9): '=_xlfn.TEXTJOIN(", ",TRUE(),A37:A41)',
+        (8, 8): "Somatic CNV Loss",
+        (8, 9): '=_xlfn.TEXTJOIN(", ",TRUE(),A42:A46)',
+        (9, 8): "Somatic SV",
+        (10, 8): "Somatic VUS",
+        (11, 8): "Germline",
+        (11, 9): "=Germline!A11",
+        (12, 8): "GTAB date",
+        (13, 8): "SOC genes reported",
+        (13, 9): "=SOC!A13",
+        (14, 8): "Histological diagnosis",
+        (14, 9): "=SOC!A9",
+        (15, 8): "QC alerts",
+        (15, 9): "=QC!A16",
+        (16, 8): "Genotype = histo dx.",
+        (17, 8): "Actionable genes",
+        (18, 8): "Referral to ClinGen",
+        (19, 8): "GTAB advice",
+        (20, 8): "Forwarding recipients",
+        # outcode codes
+        (3, 11): "Outcome codes",
+        (4, 11): "412:  variant contributes to alternative dx",
+        (
+            5,
+            11,
+        ): "413:  variant reduces likelihood but does not exclude differential dx",
+        (
+            6,
+            11,
+        ): "421:  variant informs targeted treatment or prognostic/actionable information",
+        (
+            7,
+            11,
+        ): "422:  wild-type result, absence of variant means targeted treatment not available",
+        (
+            8,
+            11,
+        ): "423:  wild-type result, absence of variant means targeted treatment is available or where prognostic/actionable information is provided",
+        (9, 11): "971:  failure",
+        (10, 11): "961:  incidental finding",
+        (11, 11): "991:  other (not listed)",
+        (
+            12,
+            11,
+        ): "992:  caveated result (e.g. no actionable variant, but low tumour purity so could be false negative)",
+        (13, 11): "Tick as appropriate",
+        (14, 11): "Test indication code comments: CODE|CODE etc.",
+        (17, 11): "Lab comments",
     }
     ####
     # somatic snv gene lookup
-    | {(row, 1): f"=B{row+39}" for row in range(25, 34)}
+    | {
+        (row, 1): f'=SUBSTITUTE(B{row+39},";",CHAR(10))'
+        for row in range(25, 34)
+    }
     # somatic snv coordinates
     | {
         (row, 2): f'=SUBSTITUTE(C{row+39},";",CHAR(10))'
@@ -79,10 +139,13 @@ CONFIG = {
     }
     # somatic snv consequences
     | {(row, 4): f"=G{row+39}" for row in range(25, 34)}
+    # somatic snv VAF
     | {
         (row, 5): f"=CONCATENATE(J{row+39},CHAR(10),K{row+39})"
         for row in range(25, 34)
     }
+    # somatic snv variant class
+    | {(row, 6): f"=N{row+39}" for row in range(25, 34)}
     ####
     # somatic cnv gene lookup
     | {
@@ -104,6 +167,8 @@ CONFIG = {
         (row, 4): f'=CONCATENATE(F{row+39}," (",G{row+39},")")'
         for row in range(37, 42)
     }
+    # somatic cnv variant class
+    | {(row, 6): f"=N{row+39}" for row in range(37, 42)}
     ####
     # somatic fusion gene lookup
     | {
@@ -113,6 +178,13 @@ CONFIG = {
     # somatic fusion coordinates
     | {
         (row, 2): f'=SUBSTITUTE(E{row+42},";",CHAR(10))'
+        for row in range(42, 47)
+    }
+    | {
+        (
+            row,
+            4,
+        ): f'=SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(F{row+42},"BND","Translocation"),"INV","Inversion"),"DEL","Deletion"),"DUP","Tandem duplication")'
         for row in range(42, 47)
     }
     ####
@@ -146,7 +218,9 @@ CONFIG = {
     + [f"{col}24" for col in list("ABCDEFGH")]
     + [f"{col}36" for col in list("ABCDEFGH")]
     + [f"{col}49" for col in list("ABCDEFGHI")]
-    + [f"{col}56" for col in list("ABCDEFGH")],
+    + [f"{col}56" for col in list("ABCDEFGH")]
+    + [f"H{row}" for row in range(3, 21)]
+    + ["K3", "K17"],
     "col_width": [
         ("A", 10),
         ("B", 20),
@@ -166,18 +240,26 @@ CONFIG = {
         for row in [24, 36, 49, 56]
         for column in list("ABCDEFGH")
     ]
-    + [("I49", PatternFill(patternType="solid", start_color="F2F2F2"))],
+    + [("I49", PatternFill(patternType="solid", start_color="F2F2F2"))]
+    + [
+        (f"H{row}", PatternFill(patternType="solid", start_color="dce6f2"))
+        for row in range(3, 12)
+    ]
+    + [
+        (f"H{row}", PatternFill(patternType="solid", start_color="fdeada"))
+        for row in range(12, 21)
+    ]
+    + [
+        ("K3", PatternFill(patternType="solid", start_color="fdeada")),
+        ("K17", PatternFill(patternType="solid", start_color="fdeada")),
+    ],
     "borders": {
         "cell_rows": [(f"A{row}:H{row}", THIN_BORDER) for row in range(24, 34)]
         + [(f"A{row}:H{row}", THIN_BORDER) for row in range(36, 47)]
         + [(f"A{row}:I{row}", THIN_BORDER) for row in range(49, 54)]
         + [(f"A{row}:H{row}", THIN_BORDER) for row in range(56, 61)]
-        + [("A41:H41", THICK_LOWER_BORDER)],
+        + [("H11:I11", THIN_BORDER)]
     },
-    "images": [
-        {"cell": "A4", "img_index": 2, "size": (350, 700)},
-        {"cell": "G4", "img_index": 1, "size": (350, 350)},
-    ],
     "alignment_info": [
         (
             f"{col}{row}",
@@ -234,18 +316,15 @@ CONFIG = {
     "dropdowns": [
         {
             "cells": {
-                (
-                    f"D{row}"
-                    for start, end in [(42, 47)]
-                    for row in range(start, end)
-                ): (
-                    '"Translocation,'
-                    "Deletion,"
-                    "Tandem duplication,"
-                    'Inversion"'
-                ),
+                ("I16",): ('"Yes,' "No," '-"'),
             },
-            "title": "Actionability",
+            "title": "Genotype = histo dx.",
+        },
+        {
+            "cells": {
+                ("I18",): ('"Yes,' "No," 'Previously known"'),
+            },
+            "title": "Referral to ClinGen",
         },
         {
             "cells": {
