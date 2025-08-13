@@ -29,6 +29,7 @@ CONFIG = {
         (24, 6): "Variant Class",
         (24, 7): "Actionability",
         (24, 8): "Comments",
+        (24, 9): "TOC",
         (35, 1): "Somatic CNV_SV",
         (36, 1): "Gene/Locus",
         (36, 2): "GRCh38 Coordinates",
@@ -38,6 +39,7 @@ CONFIG = {
         (36, 6): "Variant Class",
         (36, 7): "Actionability",
         (36, 8): "Comments",
+        (36, 9): "TOC",
         (48, 1): "Germline SNV",
         (49, 1): "Gene",
         (49, 2): "GRCh38 Coordinates",
@@ -48,6 +50,7 @@ CONFIG = {
         (49, 7): "Variant Class",
         (49, 8): "Actionability",
         (49, 9): "Comments",
+        (49, 10): "TOC",
         (55, 1): "Germline CNV",
         (56, 1): "Gene",
         (56, 2): "GRCh38 Coordinates",
@@ -57,6 +60,7 @@ CONFIG = {
         (56, 6): "Variant Class",
         (56, 7): "Actionability",
         (56, 8): "Comments",
+        (56, 9): "TOC",
         (62, 1): "Somatic_SNV",
         (74, 1): "Somatic_CNV",
         (82, 1): "Somatic_SV",
@@ -82,43 +86,53 @@ CONFIG = {
         (12, 8): "GTAB date",
         (13, 8): "SOC genes reported",
         (13, 9): "=SOC!A13",
-        (14, 8): "Histological diagnosis",
-        (14, 9): "=SOC!A9",
-        (15, 8): "QC alerts",
-        (15, 9): "=QC!A16",
-        (16, 8): "Genotype = histo dx.",
-        (17, 8): "Actionable genes",
-        (18, 8): "Referral to ClinGen",
-        (19, 8): "GTAB advice",
-        (20, 8): "Forwarding recipients",
+        (14, 8): "WGS novel genes",
+        (15, 8): "Histological diagnosis",
+        (15, 9): "=SOC!A9",
+        (16, 8): "QC alerts",
+        (16, 9): "=QC!A16",
+        (17, 8): "Genotype = histo dx.",
+        (18, 8): "Actionable genes",
+        (19, 8): "Referral to ClinGen",
+        (20, 8): "GTAB advice",
+        (21, 8): "Forwarding recipients",
         # outcode codes
-        (3, 11): "Outcome codes",
-        (4, 11): "412:  variant contributes to alternative dx",
-        (
-            5,
-            11,
-        ): "413:  variant reduces likelihood but does not exclude differential dx",
+        (3, 11): "Testing outcome codes (TOC)",
+        (4, 11): "411",
+        (4, 12): "Variant contributes to dx",
+        (5, 11): "412",
+        (5, 12): "Variant contributes to alternative dx",
+        (6, 11): "413",
         (
             6,
-            11,
-        ): "421:  variant informs targeted treatment or prognostic/actionable information",
+            12,
+        ): "Variant reduces likelihood but does not exclude differential dx",
+        (7, 11): "421",
         (
             7,
-            11,
-        ): "422:  wild-type result, absence of variant means targeted treatment not available",
+            12,
+        ): "Variant informs targeted treatment or prognostic/actionable information",
+        (8, 11): "422",
         (
             8,
-            11,
-        ): "423:  wild-type result, absence of variant means targeted treatment is available or where prognostic/actionable information is provided",
-        (9, 11): "971:  failure",
-        (10, 11): "961:  incidental finding",
-        (11, 11): "991:  other (not listed)",
-        (
             12,
-            11,
-        ): "992:  caveated result (e.g. no actionable variant, but low tumour purity so could be false negative)",
-        (13, 11): "Tick as appropriate",
-        (14, 11): "Test indication code comments: CODE|CODE etc.",
+        ): "Wild-type result, absence of variant means targeted treatment not available",
+        (9, 11): "423",
+        (
+            9,
+            12,
+        ): "Wild-type result, absence of variant means targeted treatment is available or where Prognostic/actionable information is provided",
+        (10, 11): "971",
+        (10, 12): "Failure",
+        (11, 11): "961",
+        (11, 12): "Incidental finding",
+        (12, 11): "991",
+        (12, 12): "Other (not listed)",
+        (13, 11): "992",
+        (
+            13,
+            12,
+        ): "Caveated result (e.g. no actionable variant, but low tumour purity so could be false negative)",
         (17, 11): "Lab comments",
     }
     ####
@@ -215,11 +229,11 @@ CONFIG = {
         "A97",
     ]
     # table headers to be bolded
-    + [f"{col}24" for col in list("ABCDEFGH")]
-    + [f"{col}36" for col in list("ABCDEFGH")]
-    + [f"{col}49" for col in list("ABCDEFGHI")]
-    + [f"{col}56" for col in list("ABCDEFGH")]
-    + [f"H{row}" for row in range(3, 21)]
+    + [f"{col}24" for col in list("ABCDEFGHI")]
+    + [f"{col}36" for col in list("ABCDEFGHI")]
+    + [f"{col}49" for col in list("ABCDEFGHIJ")]
+    + [f"{col}56" for col in list("ABCDEFGHI")]
+    + [f"H{row}" for row in range(3, 22)]
     + ["K3", "K17"],
     "col_width": [
         ("A", 10),
@@ -238,27 +252,31 @@ CONFIG = {
             PatternFill(patternType="solid", start_color="F2F2F2"),
         )
         for row in [24, 36, 49, 56]
-        for column in list("ABCDEFGH")
+        for column in list("ABCDEFGHI")
     ]
-    + [("I49", PatternFill(patternType="solid", start_color="F2F2F2"))]
+    + [("J49", PatternFill(patternType="solid", start_color="F2F2F2"))]
     + [
         (f"H{row}", PatternFill(patternType="solid", start_color="dce6f2"))
         for row in range(3, 12)
     ]
     + [
         (f"H{row}", PatternFill(patternType="solid", start_color="fdeada"))
-        for row in range(12, 21)
+        for row in range(12, 22)
     ]
     + [
-        ("K3", PatternFill(patternType="solid", start_color="fdeada")),
-        ("K17", PatternFill(patternType="solid", start_color="fdeada")),
+        (f"{col}3", PatternFill(patternType="solid", start_color="fdeada"))
+        for col in list("KLM")
+    ]
+    + [
+        (f"{col}17", PatternFill(patternType="solid", start_color="fdeada"))
+        for col in list("KLM")
     ],
     "borders": {
-        "cell_rows": [(f"A{row}:H{row}", THIN_BORDER) for row in range(24, 34)]
-        + [(f"A{row}:H{row}", THIN_BORDER) for row in range(36, 47)]
-        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(49, 54)]
-        + [(f"A{row}:H{row}", THIN_BORDER) for row in range(56, 61)]
-        + [("H11:I11", THIN_BORDER)]
+        "cell_rows": [(f"A{row}:I{row}", THIN_BORDER) for row in range(24, 34)]
+        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(36, 47)]
+        + [(f"A{row}:J{row}", THIN_BORDER) for row in range(49, 54)]
+        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(56, 61)]
+        + [("H11:I11", LOWER_BORDER)]
     },
     "alignment_info": [
         (
@@ -293,7 +311,7 @@ CONFIG = {
                 "vertical": "center",
             },
         )
-        for col in list("ABCDEFGHI")
+        for col in list("ABCDEFGHIJ")
         for row in range(49, 54)
     ]
     + [
@@ -307,6 +325,18 @@ CONFIG = {
         )
         for col in list("ABCDEFGHI")
         for row in range(56, 61)
+    ]
+    + [
+        (
+            f"{col}{row}",
+            {
+                "wrapText": True,
+                "horizontal": "center",
+                "vertical": "center",
+            },
+        )
+        for col in list("KLM")
+        for row in [3, 17]
     ],
     "row_height": [
         (row, 30)
@@ -316,13 +346,13 @@ CONFIG = {
     "dropdowns": [
         {
             "cells": {
-                ("I16",): ('"Yes,' "No," '-"'),
+                ("I17",): ('"Yes,' "No," '-"'),
             },
             "title": "Genotype = histo dx.",
         },
         {
             "cells": {
-                ("I18",): ('"Yes,' "No," 'Previously known"'),
+                ("I19",): ('"Yes,' "No," 'Previously known"'),
             },
             "title": "Referral to ClinGen",
         },
@@ -387,6 +417,20 @@ CONFIG = {
                 ): ('"Pathogenic,Likely pathogenic,Uncertain"')
             },
             "title": "Variant class germline",
+        },
+    ],
+    "to_merge": [
+        {
+            "start_row": 3,
+            "end_row": 3,
+            "start_column": 11,
+            "end_column": 13,
+        },
+        {
+            "start_row": 17,
+            "end_row": 17,
+            "start_column": 11,
+            "end_column": 13,
         },
     ],
 }

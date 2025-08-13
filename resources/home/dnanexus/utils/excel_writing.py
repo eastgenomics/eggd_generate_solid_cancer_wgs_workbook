@@ -65,8 +65,9 @@ def write_sheet(
         )
 
     if sheet_config.get("to_merge"):
-        # merge columns that have longer text
-        sheet.merge_cells(**sheet_config["to_merge"])
+        for merge_args in sheet_config.get("to_merge"):
+            # merge columns that have longer text
+            sheet.merge_cells(**merge_args)
 
     if sheet_config.get("alignment_info"):
         apply_alignment_data(sheet, sheet_config["alignment_info"])
