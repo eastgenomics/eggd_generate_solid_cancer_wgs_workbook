@@ -29,6 +29,7 @@ CONFIG = {
         (24, 6): "Variant Class",
         (24, 7): "Actionability",
         (24, 8): "Comments",
+        (24, 9): "TOC",
         (35, 1): "Somatic CNV_SV",
         (36, 1): "Gene/Locus",
         (36, 2): "GRCh38 Coordinates",
@@ -38,6 +39,7 @@ CONFIG = {
         (36, 6): "Variant Class",
         (36, 7): "Actionability",
         (36, 8): "Comments",
+        (36, 9): "TOC",
         (48, 1): "Germline SNV",
         (49, 1): "Gene",
         (49, 2): "GRCh38 Coordinates",
@@ -48,6 +50,7 @@ CONFIG = {
         (49, 7): "Variant Class",
         (49, 8): "Actionability",
         (49, 9): "Comments",
+        (49, 10): "TOC",
         (55, 1): "Germline CNV",
         (56, 1): "Gene",
         (56, 2): "GRCh38 Coordinates",
@@ -57,6 +60,7 @@ CONFIG = {
         (56, 6): "Variant Class",
         (56, 7): "Actionability",
         (56, 8): "Comments",
+        (56, 9): "TOC",
         (62, 1): "Somatic_SNV",
         (74, 1): "Somatic_CNV",
         (82, 1): "Somatic_SV",
@@ -215,10 +219,10 @@ CONFIG = {
         "A97",
     ]
     # table headers to be bolded
-    + [f"{col}24" for col in list("ABCDEFGH")]
-    + [f"{col}36" for col in list("ABCDEFGH")]
-    + [f"{col}49" for col in list("ABCDEFGHI")]
-    + [f"{col}56" for col in list("ABCDEFGH")]
+    + [f"{col}24" for col in list("ABCDEFGHI")]
+    + [f"{col}36" for col in list("ABCDEFGHI")]
+    + [f"{col}49" for col in list("ABCDEFGHIJ")]
+    + [f"{col}56" for col in list("ABCDEFGHI")]
     + [f"H{row}" for row in range(3, 21)]
     + ["K3", "K17"],
     "col_width": [
@@ -238,9 +242,9 @@ CONFIG = {
             PatternFill(patternType="solid", start_color="F2F2F2"),
         )
         for row in [24, 36, 49, 56]
-        for column in list("ABCDEFGH")
+        for column in list("ABCDEFGHI")
     ]
-    + [("I49", PatternFill(patternType="solid", start_color="F2F2F2"))]
+    + [("J49", PatternFill(patternType="solid", start_color="F2F2F2"))]
     + [
         (f"H{row}", PatternFill(patternType="solid", start_color="dce6f2"))
         for row in range(3, 12)
@@ -254,10 +258,10 @@ CONFIG = {
         ("K17", PatternFill(patternType="solid", start_color="fdeada")),
     ],
     "borders": {
-        "cell_rows": [(f"A{row}:H{row}", THIN_BORDER) for row in range(24, 34)]
-        + [(f"A{row}:H{row}", THIN_BORDER) for row in range(36, 47)]
-        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(49, 54)]
-        + [(f"A{row}:H{row}", THIN_BORDER) for row in range(56, 61)]
+        "cell_rows": [(f"A{row}:I{row}", THIN_BORDER) for row in range(24, 34)]
+        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(36, 47)]
+        + [(f"A{row}:J{row}", THIN_BORDER) for row in range(49, 54)]
+        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(56, 61)]
         + [("H11:I11", THIN_BORDER)]
     },
     "alignment_info": [
@@ -293,7 +297,7 @@ CONFIG = {
                 "vertical": "center",
             },
         )
-        for col in list("ABCDEFGHI")
+        for col in list("ABCDEFGHIJ")
         for row in range(49, 54)
     ]
     + [
