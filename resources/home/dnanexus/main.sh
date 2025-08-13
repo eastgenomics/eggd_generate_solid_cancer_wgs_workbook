@@ -22,6 +22,6 @@ main() {
 
     python3 /home/dnanexus/final_check.py output/
 
-    file_id=$(dx upload "output/$(ls output/)" --brief)
+    file_id=$(dx upload "$(ls output/*xlsx)" --brief)
     dx-jobutil-add-output workbook $file_id
 }

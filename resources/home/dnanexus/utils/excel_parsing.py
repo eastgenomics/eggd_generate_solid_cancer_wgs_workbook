@@ -756,13 +756,24 @@ def lookup_data_from_variants(
 
     if kwargs["fusion"] is not None:
         df_fusion = kwargs["fusion"]
+        # i need to copy the df because i don't want to modify the original df
+        # which not copying it will do
+        df_sv = df_fusion.copy()
 
         gene_col = []
 
-        for i in range(df_fusion["Gene"].str.count(r"\;").max() + 1):
+        df_sv["Fusion_no_duplicate"] = df_sv["Gene"].apply(
+            misc.remove_duplicate_fusion_elements
+        )
+
+        for i in range(
+            df_sv["Fusion_no_duplicate"].str.count(r"\;").max() + 1
+        ):
             gene_col.append(f"Gene_{i+1}")
 
-        df_fusion[gene_col] = df_fusion["Gene"].str.split(";", expand=True)
+        df_sv[gene_col] = df_sv["Fusion_no_duplicate"].str.split(
+            ";", expand=True
+        )
 
         # dynamic number of columns to be generated out of fusion partners
         for (
@@ -770,7 +781,7 @@ def lookup_data_from_variants(
             mapping_column_target_df,
             reference_df,
             col_to_look_up,
-        ) in [("SV_{}", "Gene", df_fusion, "Type")]:
+        ) in [("SV_{}", "Gene", df_sv, "Type")]:
             for gene in gene_col:
                 column_to_write = new_column.format(gene.lower())
                 lookup_columns.append(column_to_write)
