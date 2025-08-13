@@ -19,12 +19,14 @@ CONFIG = {
         (8, 1): "Histological diagnosis",
         (12, 1): "SOC genes reported",
     },
-    "to_merge": {
-        "start_row": 1,
-        "end_row": 1,
-        "start_column": 3,
-        "end_column": 6,
-    },
+    "to_merge": [
+        {
+            "start_row": 1,
+            "end_row": 1,
+            "start_column": 3,
+            "end_column": 6,
+        }
+    ],
     "alignment_info": [("C1", {"horizontal": "center", "wrapText": True})],
     "to_bold": ["A1", "A8", "A12", "C1"],
     "col_width": [
