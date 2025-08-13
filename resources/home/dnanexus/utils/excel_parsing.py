@@ -756,6 +756,8 @@ def lookup_data_from_variants(
 
     if kwargs["fusion"] is not None:
         df_fusion = kwargs["fusion"]
+        # i need to copy the df because i don't want to modify the original df
+        # which not copying it will do
         df_sv = df_fusion.copy()
 
         gene_col = []
