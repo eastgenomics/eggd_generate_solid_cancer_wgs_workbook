@@ -106,7 +106,7 @@ CONFIG = {
         (
             6,
             12,
-        ): "Variant reduces liklihood but does not exclude differential dx",
+        ): "Variant reduces likelihood but does not exclude differential dx",
         (7, 11): "421",
         (
             7,
