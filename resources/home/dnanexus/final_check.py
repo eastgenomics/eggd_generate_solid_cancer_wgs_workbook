@@ -88,7 +88,9 @@ def compare_somatic_snvs(
         tuple(row)
         for i, row in output_somatic_snv[
             ["GRCh38 coordinates", "Variant", "Predicted consequences"]
-        ].iterrows()
+        ]
+        .fillna("")
+        .iterrows()
     }
 
     coor_SNV_input = rv[rv["Origin"].str.lower().str.contains("somatic")][
@@ -98,6 +100,11 @@ def compare_somatic_snvs(
             "Predicted consequences",
         ]
     ]
+    coor_SNV_input["CDS change and protein change"] = (
+        coor_SNV_input["CDS change and protein change"]
+        .str.replace("[SVIG]", "")
+        .str.replace("N/A", "")
+    )
 
     coor_SNV_input["Predicted consequences"] = coor_SNV_input[
         "Predicted consequences"
