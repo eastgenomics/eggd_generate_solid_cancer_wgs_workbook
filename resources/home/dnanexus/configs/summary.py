@@ -182,7 +182,7 @@ CONFIG = {
         for row in range(37, 42)
     }
     # somatic cnv variant class
-    | {(row, 6): f"=O{row+39}" for row in range(37, 42)}
+    | {(row, 6): f"=L{row+39}" for row in range(37, 42)}
     ####
     # somatic fusion gene lookup
     | {
