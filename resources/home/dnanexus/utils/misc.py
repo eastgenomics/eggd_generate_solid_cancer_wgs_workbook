@@ -378,8 +378,6 @@ def lookup_df(
     ----------
     target_df : pd.DataFrame
         Dataframe in which to add the new data
-    new_column : str
-        Name of the column that will get created
     mapping_column_target_df : str
         Name of the column in the target dataframe to use to match to the
         reference dataframe
@@ -423,4 +421,9 @@ def lookup_df(
     }
 
     # map the reference values to the target dataframe
-    return target_df[mapping_column_target_df].map(reference_dict).fillna("-")
+    return (
+        target_df[mapping_column_target_df]
+        .map(reference_dict)
+        .fillna("-")
+        .replace("", "-")
+    )
