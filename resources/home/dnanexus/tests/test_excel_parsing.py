@@ -649,6 +649,8 @@ class TestProcessFusion:
                 "OG_IntDup": [""],
                 "OG_IntDel": [""],
                 "Disruptive": [""],
+                "Gene_1": ["gene2"],
+                "Gene_2": ["gene3"],
             }
         )
 
@@ -690,6 +692,9 @@ class TestProcessFusion:
                 "OG_IntDup": ["", ""],
                 "OG_IntDel": ["", ""],
                 "Disruptive": ["", ""],
+                "Gene_1": ["gene2", "gene4"],
+                "Gene_2": ["gene3", "gene5"],
+                "Gene_3": [None, "gene6"],
             }
         )
 
