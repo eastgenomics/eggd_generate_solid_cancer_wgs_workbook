@@ -587,7 +587,7 @@ def process_fusion_SV(
     for col in fusion_col[::-1]:
         subset_column.insert(5, col)
 
-    selected_col = subset_column + lookup_cols
+    selected_col = subset_column + lookup_cols + gene_col
 
     return df_SV[selected_col], fusion_count, alternative_columns
 
