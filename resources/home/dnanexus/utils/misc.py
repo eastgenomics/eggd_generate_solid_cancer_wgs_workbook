@@ -153,15 +153,7 @@ def remove_duplicate_fusion_elements(value: str) -> str:
         String without duplicate elements separated by commas
     """
 
-    values = []
-
-    for semi_colon_split in value.split(";"):
-        if "," in semi_colon_split:
-            values.append("".join(set(semi_colon_split.split(","))))
-        else:
-            values.append(semi_colon_split)
-
-    return ";".join(values)
+    return ";".join(sorted(list(set(re.split(r"[;,]", value)))))
 
 
 def remove_everything_but_SVIG(value: str) -> str:
