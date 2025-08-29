@@ -1,7 +1,7 @@
 {
     "name": "eggd_generate_solid_cancer_wgs_workbook",
     "title": "eggd_generate_solid_cancer_wgs_workbook",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "summary": "Generates a workbook for solid cancer WGS data analysis",
     "dxapi": "1.0.0",
     "inputSpec": [
