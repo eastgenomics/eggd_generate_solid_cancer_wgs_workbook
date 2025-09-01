@@ -62,10 +62,11 @@ CONFIG = {
         (56, 8): "Comments",
         (56, 9): "TOC",
         (62, 1): "Somatic_SNV",
-        (74, 1): "Somatic_CNV",
-        (82, 1): "Somatic_SV",
-        (90, 1): "Germline_SNV",
-        (97, 1): "Germline_CNV",
+        (74, 1): "Somatic_CNV_GAIN",
+        (82, 1): "Somatic_CNV_LOSS",
+        (90, 1): "Somatic_SV",
+        (98, 1): "Germline_SNV",
+        (105, 1): "Germline_CNV",
         # summary to be pasted
         (3, 8): "TMB (Mut/Mb)",
         (3, 9): "=QC!G8",
@@ -82,7 +83,6 @@ CONFIG = {
         (9, 8): "Somatic SV",
         (10, 8): "Somatic VUS",
         (11, 8): "Germline",
-        (11, 9): "=Germline!A11",
         (12, 8): "GTAB date",
         (13, 8): "SOC genes reported",
         (13, 9): "=SOC!A13",
@@ -439,8 +439,10 @@ CONFIG = {
 def add_dynamic_values(
     SV_df: pd.DataFrame,
     fusion_count: int,
+    nb_germline_genes: int,
     SNV_df_columns: list = None,
     gain_df_columns: list = None,
+    loss_df_columns: list = None,
     SV_df_columns: list = None,
     germline_df_columns: list = None,
 ) -> dict:
@@ -457,6 +459,8 @@ def add_dynamic_values(
         List of columns for the SNV dataframe
     gain_df_columns : list
         List of columns for the gain dataframe
+    loss_df_columns : list
+        List of columns for the loss dataframe
     SV_df_columns : list
         List of columns for the SV dataframe
     germline_df_columns : list
@@ -500,6 +504,7 @@ def add_dynamic_values(
         for df_columns, row in [
             (SNV_df_columns, 63),
             (gain_df_columns, 75),
+            (loss_df_columns, 75),
             (SV_df_columns, 83),
             (germline_df_columns, 91),
         ]
@@ -523,6 +528,11 @@ def add_dynamic_values(
             key: value
             for data_dict in all_df_columns
             for key, value in data_dict.items()
+        }
+        | {
+            # 6 is the nb of rows before and after the germline table in the
+            # germline sheet
+            (12, 8): f"=Germline!A{nb_germline_genes + 6}",
         }
         # dynamic way to concatenate as many cyto bands as possible, i'm sorry
         | {
