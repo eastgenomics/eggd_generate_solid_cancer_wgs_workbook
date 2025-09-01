@@ -420,6 +420,16 @@ CONFIG = {
             },
             "title": "Actionability Germline",
         },
+        {
+            "cells": {
+                (
+                    f"E{row}"
+                    for start, end in [(54, 57), (60, 64)]
+                    for row in range(start, end)
+                ): ('"Heterozygous,Homozygous,Hemizygous"'),
+            },
+            "title": "Zygosity",
+        },
     ],
     "to_merge": [
         {
