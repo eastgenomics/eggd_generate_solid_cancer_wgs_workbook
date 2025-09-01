@@ -161,27 +161,27 @@ CONFIG = {
     # somatic snv variant class
     | {(row, 6): f"=N{row+39}" for row in range(25, 34)}
     ####
-    # somatic cnv gene lookup
+    # somatic cnv gain lookup
     | {
         (row, 1): f'=SUBSTITUTE(B{row+39},";",CHAR(10))'
         for row in range(37, 42)
     }
-    # somatic cnv coordinates
+    # somatic cnv gain coordinates
     | {
         (row, 2): f'=SUBSTITUTE(E{row+39},";",CHAR(10))'
         for row in range(37, 42)
     }
-    # somatic cnv cytological bands
+    # somatic cnv gain cytological bands
     | {
         (row, 3): f"=CONCATENATE(I{row+39},CHAR(10),J{row+39})"
         for row in range(37, 42)
     }
-    # somatic cnv variant type
+    # somatic cnv gain variant type
     | {
         (row, 4): f'=CONCATENATE(F{row+39}," (",G{row+39},")")'
         for row in range(37, 42)
     }
-    # somatic cnv variant class
+    # somatic cnv gain variant class
     | {(row, 6): f"=L{row+39}" for row in range(37, 42)}
     ####
     # somatic fusion gene lookup
