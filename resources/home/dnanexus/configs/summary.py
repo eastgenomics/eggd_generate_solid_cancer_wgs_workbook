@@ -424,7 +424,7 @@ CONFIG = {
             "cells": {
                 (
                     f"E{row}"
-                    for start, end in [(54, 57), (60, 64)]
+                    for start, end in [(55, 59), (62, 65)]
                     for row in range(start, end)
                 ): ('"Heterozygous,Homozygous,Hemizygous"'),
             },
