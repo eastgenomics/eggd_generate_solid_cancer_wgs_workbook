@@ -451,7 +451,7 @@ CONFIG = {
 def add_dynamic_values(
     SV_df: pd.DataFrame,
     fusion_count: int,
-    nb_germline_genes: int,
+    nb_germline_variants: int,
     SNV_df_columns: list = None,
     gain_df_columns: list = None,
     loss_df_columns: list = None,
@@ -467,6 +467,9 @@ def add_dynamic_values(
         additional data from inputs
     fusion_count : int
         Integer for the maximum number of fusion for a variant
+    nb_germline_variants : int
+        Number of germline variants in the germline data in order to find where
+        the appropriate lookup is in the germline sheet
     SNV_df_columns : list
         List of columns for the SNV dataframe
     gain_df_columns : list
@@ -544,7 +547,7 @@ def add_dynamic_values(
         | {
             # 7 is the nb of rows before and after the germline table in the
             # germline sheet
-            (11, 9): f"=Germline!A{nb_germline_genes + 7}",
+            (11, 9): f"=Germline!A{nb_germline_variants + 7}",
         }
         # dynamic way to concatenate as many cyto bands as possible, i'm sorry
         | {
