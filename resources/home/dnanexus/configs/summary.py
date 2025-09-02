@@ -40,32 +40,33 @@ CONFIG = {
         (36, 7): "Actionability",
         (36, 8): "Comments",
         (36, 9): "TOC",
-        (48, 1): "Germline SNV",
-        (49, 1): "Gene",
-        (49, 2): "GRCh38 Coordinates",
-        (49, 3): "Variant",
-        (49, 4): "Consequence",
-        (49, 5): "Zygosity",
-        (49, 6): "Tumour VAF",
-        (49, 7): "Variant Class",
-        (49, 8): "Actionability",
-        (49, 9): "Comments",
-        (49, 10): "TOC",
-        (55, 1): "Germline CNV",
-        (56, 1): "Gene",
-        (56, 2): "GRCh38 Coordinates",
-        (56, 3): "Variant",
-        (56, 4): "Consequence",
-        (56, 5): "Zygosity",
-        (56, 6): "Variant Class",
-        (56, 7): "Actionability",
-        (56, 8): "Comments",
-        (56, 9): "TOC",
-        (62, 1): "Somatic_SNV",
-        (74, 1): "Somatic_CNV",
-        (82, 1): "Somatic_SV",
-        (90, 1): "Germline_SNV",
-        (97, 1): "Germline_CNV",
+        (53, 1): "Germline SNV",
+        (54, 1): "Gene",
+        (54, 2): "GRCh38 Coordinates",
+        (54, 3): "Variant",
+        (54, 4): "Consequence",
+        (54, 5): "Zygosity",
+        (54, 6): "Tumour VAF",
+        (54, 7): "Variant Class",
+        (54, 8): "Actionability",
+        (54, 9): "Comments",
+        (54, 10): "TOC",
+        (60, 1): "Germline CNV",
+        (61, 1): "Gene",
+        (61, 2): "GRCh38 Coordinates",
+        (61, 3): "Variant",
+        (61, 4): "Consequence",
+        (61, 5): "Zygosity",
+        (61, 6): "Variant Class",
+        (61, 7): "Actionability",
+        (61, 8): "Comments",
+        (61, 9): "TOC",
+        (67, 1): "Somatic_SNV",
+        (79, 1): "Somatic_CNV_GAIN",
+        (87, 1): "Somatic_CNV_LOSS",
+        (95, 1): "Somatic_SV",
+        (103, 1): "Germline_SNV",
+        (110, 1): "Germline_CNV",
         # summary to be pasted
         (3, 8): "TMB (Mut/Mb)",
         (3, 9): "=QC!G8",
@@ -82,7 +83,6 @@ CONFIG = {
         (9, 8): "Somatic SV",
         (10, 8): "Somatic VUS",
         (11, 8): "Germline",
-        (11, 9): "=Germline!A11",
         (12, 8): "GTAB date",
         (13, 8): "SOC genes reported",
         (13, 9): "=SOC!A13",
@@ -138,101 +138,123 @@ CONFIG = {
     ####
     # somatic snv gene lookup
     | {
-        (row, 1): f'=SUBSTITUTE(B{row+39},";",CHAR(10))'
+        (row, 1): f'=SUBSTITUTE(B{row+44},";",CHAR(10))'
         for row in range(25, 34)
     }
     # somatic snv coordinates
     | {
-        (row, 2): f'=SUBSTITUTE(C{row+39},";",CHAR(10))'
+        (row, 2): f'=SUBSTITUTE(C{row+44},";",CHAR(10))'
         for row in range(25, 34)
     }
     # somatic snv variant
     | {
-        (row, 3): f'=SUBSTITUTE(F{row+39},";",CHAR(10))'
+        (row, 3): f'=SUBSTITUTE(F{row+44},";",CHAR(10))'
         for row in range(25, 34)
     }
     # somatic snv consequences
-    | {(row, 4): f"=G{row+39}" for row in range(25, 34)}
+    | {(row, 4): f"=G{row+44}" for row in range(25, 34)}
     # somatic snv VAF
     | {
-        (row, 5): f"=CONCATENATE(J{row+39},CHAR(10),K{row+39})"
+        (row, 5): f"=CONCATENATE(J{row+44},CHAR(10),K{row+44})"
         for row in range(25, 34)
     }
     # somatic snv variant class
-    | {(row, 6): f"=N{row+39}" for row in range(25, 34)}
+    | {(row, 6): f"=N{row+44}" for row in range(25, 34)}
     ####
-    # somatic cnv gene lookup
+    # somatic cnv gain lookup
     | {
-        (row, 1): f'=SUBSTITUTE(B{row+39},";",CHAR(10))'
+        (row, 1): f'=SUBSTITUTE(B{row+44},";",CHAR(10))'
         for row in range(37, 42)
     }
-    # somatic cnv coordinates
+    # somatic cnv gain coordinates
     | {
-        (row, 2): f'=SUBSTITUTE(E{row+39},";",CHAR(10))'
+        (row, 2): f'=SUBSTITUTE(E{row+44},";",CHAR(10))'
         for row in range(37, 42)
     }
-    # somatic cnv cytological bands
+    # somatic cnv gain cytological bands
     | {
-        (row, 3): f"=CONCATENATE(I{row+39},CHAR(10),J{row+39})"
+        (row, 3): f"=CONCATENATE(I{row+44},CHAR(10),J{row+44})"
         for row in range(37, 42)
     }
-    # somatic cnv variant type
+    # somatic cnv gain variant type
     | {
-        (row, 4): f'=CONCATENATE(F{row+39}," (",G{row+39},")")'
+        (row, 4): f'=CONCATENATE(F{row+44}," (",G{row+44},")")'
         for row in range(37, 42)
     }
-    # somatic cnv variant class
-    | {(row, 6): f"=L{row+39}" for row in range(37, 42)}
+    # somatic cnv gain variant class
+    | {(row, 6): f"=L{row+44}" for row in range(37, 42)}
+    ####
+    # somatic cnv loss lookup
+    | {
+        (row, 1): f'=SUBSTITUTE(B{row+47},";",CHAR(10))'
+        for row in range(42, 47)
+    }
+    # somatic cnv loss coordinates
+    | {
+        (row, 2): f'=SUBSTITUTE(E{row+47},";",CHAR(10))'
+        for row in range(42, 47)
+    }
+    # somatic cnv loss cytological bands
+    | {
+        (row, 3): f"=CONCATENATE(I{row+47},CHAR(10),J{row+47})"
+        for row in range(42, 47)
+    }
+    # somatic cnv loss variant type
+    | {
+        (row, 4): f'=CONCATENATE(F{row+47}," (",G{row+47},")")'
+        for row in range(42, 47)
+    }
+    # somatic cnv loss variant class
+    | {(row, 6): f"=L{row+47}" for row in range(42, 47)}
     ####
     # somatic fusion gene lookup
     | {
-        (row, 1): f'=SUBSTITUTE(B{row+42},";",CHAR(10))'
-        for row in range(42, 47)
+        (row, 1): f'=SUBSTITUTE(B{row+50},";",CHAR(10))'
+        for row in range(47, 52)
     }
     # somatic fusion coordinates
     | {
-        (row, 2): f'=SUBSTITUTE(E{row+42},";",CHAR(10))'
-        for row in range(42, 47)
+        (row, 2): f'=SUBSTITUTE(E{row+50},";",CHAR(10))'
+        for row in range(47, 52)
     }
     | {
         (
             row,
             4,
-        ): f'=SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(F{row+42},"BND","Translocation"),"INV","Inversion"),"DEL","Deletion"),"DUP","Tandem duplication")'
-        for row in range(42, 47)
+        ): f'=SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(F{row+50},"BND","Translocation"),"INV","Inversion"),"DEL","Deletion"),"DUP","Tandem duplication")'
+        for row in range(47, 52)
     }
     ####
     # germline snv gene lookup
-    | {(row, 1): f"=A{row+42}" for row in range(50, 54)}
+    | {(row, 1): f"=A{row+50}" for row in range(55, 59)}
     # germline snv coordinates lookup
-    | {(row, 2): f"=B{row+42}" for row in range(50, 54)}
+    | {(row, 2): f"=B{row+50}" for row in range(55, 59)}
     # germline snv variant lookup
-    | {(row, 3): f"=C{row+42}" for row in range(50, 54)}
+    | {(row, 3): f"=C{row+50}" for row in range(55, 59)}
     # germline snv consequence lookup
-    | {(row, 4): f"=D{row+42}" for row in range(50, 54)}
+    | {(row, 4): f"=D{row+50}" for row in range(55, 59)}
     # germline snv tumour vaf lookup
-    | {(row, 6): f"=I{row+42}" for row in range(50, 54)}
+    | {(row, 6): f"=I{row+50}" for row in range(55, 59)},
     ####
-    # germline cnv gene lookup
-    | {(row, 1): f"=A{row+42}" for row in range(57, 61)},
     "to_bold": [
         # table names to be bolded
         "A1",
         "A23",
         "A35",
-        "A48",
-        "A55",
-        "A62",
-        "A74",
-        "A82",
-        "A90",
-        "A97",
+        "A53",
+        "A60",
+        "A67",
+        "A79",
+        "A87",
+        "A95",
+        "A103",
+        "A110",
     ]
     # table headers to be bolded
     + [f"{col}24" for col in list("ABCDEFGHI")]
     + [f"{col}36" for col in list("ABCDEFGHI")]
-    + [f"{col}49" for col in list("ABCDEFGHIJ")]
-    + [f"{col}56" for col in list("ABCDEFGHI")]
+    + [f"{col}54" for col in list("ABCDEFGHIJ")]
+    + [f"{col}61" for col in list("ABCDEFGHI")]
     + [f"H{row}" for row in range(3, 22)]
     + ["K3", "K17"],
     "col_width": [
@@ -251,10 +273,10 @@ CONFIG = {
             f"{column}{row}",
             PatternFill(patternType="solid", start_color="F2F2F2"),
         )
-        for row in [24, 36, 49, 56]
+        for row in [24, 36, 54, 61]
         for column in list("ABCDEFGHI")
     ]
-    + [("J49", PatternFill(patternType="solid", start_color="F2F2F2"))]
+    + [("J54", PatternFill(patternType="solid", start_color="F2F2F2"))]
     + [
         (f"H{row}", PatternFill(patternType="solid", start_color="dce6f2"))
         for row in range(3, 12)
@@ -273,9 +295,9 @@ CONFIG = {
     ],
     "borders": {
         "cell_rows": [(f"A{row}:I{row}", THIN_BORDER) for row in range(24, 34)]
-        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(36, 47)]
-        + [(f"A{row}:J{row}", THIN_BORDER) for row in range(49, 54)]
-        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(56, 61)]
+        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(36, 52)]
+        + [(f"A{row}:J{row}", THIN_BORDER) for row in range(54, 59)]
+        + [(f"A{row}:I{row}", THIN_BORDER) for row in range(61, 65)]
         + [("H11:I11", LOWER_BORDER)]
     },
     "alignment_info": [
@@ -300,7 +322,7 @@ CONFIG = {
             },
         )
         for col in list("ABCDEFGHI")
-        for row in range(36, 47)
+        for row in range(36, 52)
     ]
     + [
         (
@@ -312,7 +334,7 @@ CONFIG = {
             },
         )
         for col in list("ABCDEFGHIJ")
-        for row in range(49, 54)
+        for row in range(54, 59)
     ]
     + [
         (
@@ -324,7 +346,7 @@ CONFIG = {
             },
         )
         for col in list("ABCDEFGHI")
-        for row in range(56, 61)
+        for row in range(61, 66)
     ]
     + [
         (
@@ -340,7 +362,7 @@ CONFIG = {
     ],
     "row_height": [
         (row, 30)
-        for start, end in [(25, 34), (37, 47), (50, 54), (57, 61)]
+        for start, end in [(25, 34), (37, 52), (54, 59), (61, 65)]
         for row in range(start, end)
     ],
     "dropdowns": [
@@ -360,7 +382,7 @@ CONFIG = {
             "cells": {
                 (
                     f"G{row}"
-                    for start, end in [(25, 34), (37, 47), (57, 61)]
+                    for start, end in [(25, 34), (37, 52)]
                     for row in range(start, end)
                 ): (
                     '"Predicts therapeutic response,'
@@ -375,18 +397,8 @@ CONFIG = {
         {
             "cells": {
                 (
-                    f"E{row}"
-                    for start, end in [(50, 54), (57, 61)]
-                    for row in range(start, end)
-                ): ('"Heterozygous,Homozygous,Hemizygous"'),
-            },
-            "title": "Zygosity",
-        },
-        {
-            "cells": {
-                (
                     f"G{row}"
-                    for start, end in [(50, 54)]
+                    for start, end in [(55, 60)]
                     for row in range(start, end)
                 ): ('"Pathogenic,Likely pathogenic,Uncertain"'),
             },
@@ -396,7 +408,7 @@ CONFIG = {
             "cells": {
                 (
                     f"H{row}"
-                    for start, end in [(50, 54)]
+                    for start, end in [(55, 60)]
                     for row in range(start, end)
                 ): (
                     '"Predicts therapeutic response,'
@@ -406,17 +418,17 @@ CONFIG = {
                     'Other"'
                 ),
             },
-            "title": "Actionability",
+            "title": "Actionability Germline",
         },
         {
             "cells": {
                 (
-                    f"F{row}"
-                    for start, end in [(57, 61)]
+                    f"E{row}"
+                    for start, end in [(55, 59), (62, 65)]
                     for row in range(start, end)
-                ): ('"Pathogenic,Likely pathogenic,Uncertain"')
+                ): ('"Heterozygous,Homozygous,Hemizygous"'),
             },
-            "title": "Variant class germline",
+            "title": "Zygosity",
         },
     ],
     "to_merge": [
@@ -439,8 +451,10 @@ CONFIG = {
 def add_dynamic_values(
     SV_df: pd.DataFrame,
     fusion_count: int,
+    nb_germline_variants: int,
     SNV_df_columns: list = None,
     gain_df_columns: list = None,
+    loss_df_columns: list = None,
     SV_df_columns: list = None,
     germline_df_columns: list = None,
 ) -> dict:
@@ -453,10 +467,15 @@ def add_dynamic_values(
         additional data from inputs
     fusion_count : int
         Integer for the maximum number of fusion for a variant
+    nb_germline_variants : int
+        Number of germline variants in the germline data in order to find where
+        the appropriate lookup is in the germline sheet
     SNV_df_columns : list
         List of columns for the SNV dataframe
     gain_df_columns : list
         List of columns for the gain dataframe
+    loss_df_columns : list
+        List of columns for the loss dataframe
     SV_df_columns : list
         List of columns for the SV dataframe
     germline_df_columns : list
@@ -498,10 +517,11 @@ def add_dynamic_values(
             for col_index, col_name in enumerate(df_columns, 1)
         }
         for df_columns, row in [
-            (SNV_df_columns, 63),
-            (gain_df_columns, 75),
-            (SV_df_columns, 83),
-            (germline_df_columns, 91),
+            (SNV_df_columns, 68),
+            (gain_df_columns, 80),
+            (loss_df_columns, 88),
+            (SV_df_columns, 96),
+            (germline_df_columns, 104),
         ]
         if df_columns is not None
     ]
@@ -524,24 +544,29 @@ def add_dynamic_values(
             for data_dict in all_df_columns
             for key, value in data_dict.items()
         }
+        | {
+            # 7 is the nb of rows before and after the germline table in the
+            # germline sheet
+            (11, 9): f"=Germline!A{nb_germline_variants + 7}",
+        }
         # dynamic way to concatenate as many cyto bands as possible, i'm sorry
         | {
             (row, 3): "=CONCATENATE("
             + ",CHAR(10),".join(
                 [
-                    f"{misc.convert_index_to_letters(cyto)}{row+42}"
+                    f"{misc.convert_index_to_letters(cyto)}{row+50}"
                     for cyto in cytos_column_index
                 ]
             )
             + ")"
-            for row in range(42, 47)
+            for row in range(47, 52)
         }
         | {
             (
                 row,
                 6,
-            ): f"={misc.convert_index_to_letters(variant_class_column_index)}{row+42}"
-            for row in range(42, 47)
+            ): f"={misc.convert_index_to_letters(variant_class_column_index)}{row+50}"
+            for row in range(47, 52)
         },
     }
 
