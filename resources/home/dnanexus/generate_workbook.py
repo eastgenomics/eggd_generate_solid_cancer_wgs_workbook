@@ -151,7 +151,10 @@ def main(**kwargs):
         "Loss": loss.add_dynamic_values(loss_df),
         "SV": sv.add_dynamic_values(fusion_df, alternative_columns),
         "Summary": summary.add_dynamic_values(
-            fusion_df, fusion_count, germline_df.shape[0], **df_columns
+            fusion_df,
+            fusion_count,
+            germline_df.shape[0] if germline_df is not None else 0,
+            **df_columns,
         ),
         "Refgene": refgene.add_dynamic_values(refgene_df),
     }
