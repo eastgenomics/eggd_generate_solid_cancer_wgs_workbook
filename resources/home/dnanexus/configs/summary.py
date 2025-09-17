@@ -190,6 +190,13 @@ CONFIG = {
     }
     # somatic cnv gain variant class
     | {(row, 6): f"=L{row+44}" for row in range(37, 42)}
+
+    #  somatic cnv gain comments
+    | {
+        (row, 8): f'=SUBSTITUTE(M{row+44},";",CHAR(10))'
+        for row in range(37, 42)
+    }
+
     ####
     # somatic cnv loss lookup
     | {
@@ -213,6 +220,12 @@ CONFIG = {
     }
     # somatic cnv loss variant class
     | {(row, 6): f"=L{row+47}" for row in range(42, 47)}
+    #  somatic cnv loss comments
+    | {
+        (row, 8): f'=SUBSTITUTE(M{row+47},";",CHAR(10))'
+        for row in range(42, 47)
+    }
+
     ####
     # somatic fusion gene lookup
     | {
@@ -566,6 +579,11 @@ def add_dynamic_values(
                 ]
             )
             + ")"
+            for row in range(47, 52)
+        }
+        # cyto columns are dynamic, but comments for SV are 3rd column after last cyto column
+        | {
+            (row, 8): f'=SUBSTITUTE({misc.convert_index_to_letters(max(cytos_column_index)+3)}{row+50},";",CHAR(10))'
             for row in range(47, 52)
         }
         | {
