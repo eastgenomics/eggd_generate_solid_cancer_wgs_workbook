@@ -160,6 +160,13 @@ CONFIG = {
     }
     # somatic snv variant class
     | {(row, 6): f"=N{row+44}" for row in range(25, 34)}
+
+    #  somatic snv comments
+    | {
+        (row, 8): f'=SUBSTITUTE(O{row+44},";",CHAR(10))'
+        for row in range(25, 34)
+    }
+
     ####
     # somatic cnv gain lookup
     | {
