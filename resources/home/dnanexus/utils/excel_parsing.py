@@ -559,17 +559,15 @@ def process_fusion_SV(
     # Want to reorder selected columns to group Driver and Entities of the same gene together for each lookup group
     lookup_reorder = []
     # Lookup column types
-    for col_type in ["COSMIC", "Paed", "Sarc", "Neuro", "Ovary", "Haem"]:
+    for lookup_type in ["COSMIC", "Paed", "Sarc", "Neuro", "Ovary", "Haem"]:
         # find Gene 1, then Gene 2 etc
         for gene_num in range(1, max_num_gene +1):
             # [\w\s]* any aphanumeric character and any whitespace character multiple times
             # will catch " Driver\n" and " Entities\n"
-            string_to_match= col_type + "[\w\s]*Gene_" + str(gene_num)
+            string_to_match= lookup_type + "[\w\s]*Gene_" + str(gene_num)
             pattern = re.compile(string_to_match)
             cols = list(filter(pattern.match,lookup_cols))
             lookup_reorder.extend(cols)
-
-    #   move cosmic entitties 1 next to cosmic driver 2 
 
     df_SV.loc[:, "Variant class"] = ""
     df_SV.loc[:, "Comments"] = ""
