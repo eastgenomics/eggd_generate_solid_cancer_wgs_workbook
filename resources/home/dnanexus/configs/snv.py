@@ -173,13 +173,13 @@ def add_dynamic_values(data: pd.DataFrame) -> dict:
         "data_bar": f"J2:J{nb_somatic_variants + 1}",
         "borders": {
             "cell_rows": [
-                (f"Z1:Z{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AB1:AB{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AD1:AD{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AF1:AF{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AH1:AH{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AJ1:AJ{nb_somatic_variants+1}", LEFT_BORDER),
-                (f"AL1:AL{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AA1:AA{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AC1:AC{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AE1:AE{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AG1:AG{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AI1:AI{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AK1:AK{nb_somatic_variants+1}", LEFT_BORDER),
+                (f"AM1:AM{nb_somatic_variants+1}", LEFT_BORDER),
             ],
         },
     }
