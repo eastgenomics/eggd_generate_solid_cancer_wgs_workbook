@@ -562,7 +562,7 @@ def process_fusion_SV(
     for lookup_type in ["COSMIC", "Paed", "Sarc", "Neuro", "Ovary", "Haem"]:
         # find Gene 1, then Gene 2 etc
         for gene_num in range(1, max_num_gene +1):
-            # [\w\s]* any aphanumeric character and any whitespace character multiple times
+            # [\w\s]* any alphanumeric character and any whitespace character multiple times
             # will catch " Driver\n" and " Entities\n"
             string_to_match= lookup_type + "[\w\s]*Gene_" + str(gene_num)
             pattern = re.compile(string_to_match)
