@@ -515,7 +515,7 @@ def process_fusion_SV(
     )
 
     # get gene counts and look up for each gene
-    max_num_gene = df_SV["Gene"].str.count(r"\;").max() + 1
+    max_num_gene = df_SV["Fusion_no_duplicate"].str.count(r"\;").max() + 1
 
     gene_col = []
 
