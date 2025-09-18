@@ -124,8 +124,10 @@ def add_dynamic_values(data: pd.DataFrame, alternative_columns: dict) -> dict:
     # build the info for borders in the lookup groups
     # +2 in order to add a left border between the lookup groups and the gene
     # columns
+    # number_genes*2 to add borders at start and end of each lookup group
+    # rather than between drivers and entities of each lookup
     for i, index in enumerate(range(lookup_start, last_column_index + 2)):
-        if i % number_genes == 0:
+        if i % (number_genes*2) == 0:
             col_letter = misc.convert_index_to_letters(index)
             border_cells.append(
                 (
